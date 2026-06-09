@@ -6,8 +6,13 @@ import { getStripe } from "@/lib/stripe/client";
 import { evaluateInvention } from "@/lib/evaluation/evaluate";
 import { toEvaluationRow } from "@/lib/evaluation/row";
 import { sendEmail } from "@/lib/email/send";
-import { evaluationFailedEmail } from "@/lib/email/templates";
+import { evaluationFailedEmail, reportReadyEmail } from "@/lib/email/templates";
 import { type SubmissionInput } from "@/lib/types";
+import { generateReportContent } from "@/lib/report/generate-content";
+import { renderReportPdf } from "@/lib/pdf/render";
+import { certIdFor } from "@/lib/report/cert-id";
+import { documentPath } from "@/lib/storage/paths";
+import { type ReportData } from "@/lib/report/types";
 
 export const evaluateSubmission = inngest.createFunction(
   {
@@ -51,7 +56,7 @@ export const evaluateSubmission = inngest.createFunction(
       const admin = createAdminClient();
       const { data, error } = await admin
         .from("submissions")
-        .select("id, title, description, problem, industry, inventor_name, email, status")
+        .select("id, user_id, title, description, problem, industry, inventor_name, email, status")
         .eq("id", submissionId)
         .single();
 
@@ -64,29 +69,108 @@ export const evaluateSubmission = inngest.createFunction(
       return data;
     });
 
+    const input: SubmissionInput = {
+      title: submission.title,
+      description: submission.description,
+      problem: submission.problem ?? undefined,
+      industry: submission.industry,
+      inventorName: submission.inventor_name,
+      email: submission.email,
+    };
+
     // Step 2 — call Claude. A throw here is retried, then hits onFailure.
     const result = await step.run("evaluate", async () => {
-      const input: SubmissionInput = {
-        title: submission.title,
-        description: submission.description,
-        problem: submission.problem ?? undefined,
-        industry: submission.industry,
-        inventorName: submission.inventor_name,
-        email: submission.email,
-      };
       return evaluateInvention(input, getAnthropic());
     });
 
-    // Step 3 — persist evaluation + mark complete.
-    await step.run("persist", async () => {
+    // Step 3 — generate the report narrative via a second Claude call.
+    const content = await step.run("generate-report-content", async () => {
+      return generateReportContent(
+        {
+          input,
+          scores: result.scores,
+          avgScore: result.avgScore,
+          verdict: result.verdict,
+        },
+        getAnthropic(),
+      );
+    });
+
+    // Step 4 — render the PDF, upload to private storage, record the certificate.
+    const reportPath = await step.run("render-and-upload-report", async () => {
+      const now = new Date();
+      const certId = certIdFor(submissionId, now.getFullYear());
+      const data: ReportData = {
+        submission: {
+          title: submission.title,
+          inventorName: submission.inventor_name,
+          industry: submission.industry,
+          problem: submission.problem ?? undefined,
+          description: submission.description,
+        },
+        scores: result.scores,
+        avgScore: result.avgScore,
+        verdict: result.verdict,
+        content,
+        certId,
+        issuedAt: now.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
+      };
+
+      const pdf = await renderReportPdf(data);
+      const path = documentPath(submission.user_id, submissionId, "report");
+
       const admin = createAdminClient();
-      const { error } = await admin.from("evaluations").insert(toEvaluationRow(submissionId, result));
+      const { error: upErr } = await admin.storage
+        .from("documents")
+        .upload(path, pdf, { contentType: "application/pdf", upsert: true });
+      if (upErr) throw new Error(`Report upload failed: ${upErr.message}`);
+
+      const { error: certErr } = await admin
+        .from("certificates")
+        .upsert(
+          { submission_id: submissionId, cert_id: certId, report_pdf_path: path },
+          { onConflict: "submission_id" },
+        );
+      if (certErr) throw new Error(`Certificate upsert failed: ${certErr.message}`);
+
+      return path;
+    });
+
+    // Step 5 — persist evaluation + mark complete (only now that the PDF exists).
+    await step.run("persist-and-complete", async () => {
+      const admin = createAdminClient();
+      const { error } = await admin
+        .from("evaluations")
+        .upsert(toEvaluationRow(submissionId, result), { onConflict: "submission_id" });
       if (error) throw new Error(`Failed to persist evaluation: ${error.message}`);
 
       await admin
         .from("submissions")
         .update({ status: "complete", completed_at: new Date().toISOString() })
         .eq("id", submissionId);
+    });
+
+    // Step 6 — best-effort email with the PDF attached. Must NOT throw: a flaky email
+    // must not reverse a paid, fully-generated evaluation via onFailure.
+    await step.run("send-report-email", async () => {
+      try {
+        const admin = createAdminClient();
+        const { data: file, error } = await admin.storage.from("documents").download(reportPath);
+        if (error || !file) throw new Error(error?.message ?? "download returned no file");
+        const buf = Buffer.from(await file.arrayBuffer());
+
+        await sendEmail(
+          submission.email,
+          reportReadyEmail({ title: submission.title, submissionId }),
+          [{ filename: "pre-patent-intelligence-report.pdf", content: buf }],
+        );
+      } catch (err) {
+        console.error(`[evaluate-submission] report email failed for ${submissionId}:`, err);
+      }
     });
   },
 );
