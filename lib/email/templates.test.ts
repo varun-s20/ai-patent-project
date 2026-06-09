@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { paymentConfirmationEmail, evaluationFailedEmail } from "@/lib/email/templates";
+import { paymentConfirmationEmail, evaluationFailedEmail, reportReadyEmail } from "@/lib/email/templates";
 
 describe("email templates", () => {
   it("confirmation email includes the invention title", () => {
@@ -18,5 +18,15 @@ describe("email templates", () => {
     const e = paymentConfirmationEmail({ title: "<script>x</script>" });
     expect(e.html).not.toContain("<script>");
     expect(e.html).toContain("&lt;script&gt;");
+  });
+});
+
+describe("reportReadyEmail", () => {
+  it("includes the (escaped) title, a status link, and the disclaimer", () => {
+    const out = reportReadyEmail({ title: "Bottle <X>", submissionId: "sub-123" });
+    expect(out.subject).toMatch(/report/i);
+    expect(out.html).toContain("Bottle &lt;X&gt;");
+    expect(out.html).toContain("/status/sub-123");
+    expect(out.html).toMatch(/not legal advice/i);
   });
 });

@@ -28,3 +28,16 @@ export function evaluationFailedEmail(args: { title: string }): EmailContent {
 <p>You were not charged. Please try again later.</p>`,
   };
 }
+
+export function reportReadyEmail(args: { title: string; submissionId: string }): EmailContent {
+  const title = escapeHtml(args.title);
+  const base = process.env.NEXT_PUBLIC_BASE_URL ?? "";
+  const link = `${base}/status/${args.submissionId}`;
+  return {
+    subject: "Your Pre-Patent Intelligence Report is ready",
+    html: `<p>Your 8-page Pre-Patent Intelligence Report for "<strong>${title}</strong>" is ready.</p>
+<p>The full report is attached as a PDF. You can also view your results and re-download it any time here:</p>
+<p><a href="${link}">${link}</a></p>
+<p style="font-size:12px;color:#6B7280;margin-top:24px">These are AI-generated estimates, not legal advice. This report confers no intellectual-property rights.</p>`,
+  };
+}

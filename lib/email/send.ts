@@ -13,11 +13,21 @@ function getResend(): Resend {
 // Resend's shared sandbox sender; swap for a verified domain in production.
 export const EMAIL_FROM = "AI Invention Registry <onboarding@resend.dev>";
 
-export async function sendEmail(to: string, content: EmailContent): Promise<void> {
+export interface EmailAttachment {
+  filename: string;
+  content: Buffer;
+}
+
+export async function sendEmail(
+  to: string,
+  content: EmailContent,
+  attachments?: EmailAttachment[],
+): Promise<void> {
   await getResend().emails.send({
     from: EMAIL_FROM,
     to,
     subject: content.subject,
     html: content.html,
+    ...(attachments && attachments.length > 0 ? { attachments } : {}),
   });
 }
