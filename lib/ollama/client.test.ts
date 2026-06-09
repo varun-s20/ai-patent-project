@@ -65,4 +65,17 @@ describe("getOllama adapter", () => {
       }),
     ).rejects.toThrow(/Ollama error: boom/);
   });
+
+  it("throws when the response has neither error nor message", async () => {
+    mockFetch({}, true, 200);
+
+    await expect(
+      getOllama().messages.create({
+        model: "llama3.1",
+        max_tokens: 10,
+        system: "S",
+        messages: [{ role: "user", content: "U" }],
+      }),
+    ).rejects.toThrow(/Ollama returned no message/);
+  });
 });

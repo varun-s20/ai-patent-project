@@ -35,8 +35,9 @@ async function ollamaChat(params: ChatCreateParams): Promise<ChatMessage> {
 
   const data = (await res.json()) as OllamaChatResponse;
   if (data.error) throw new Error(`Ollama error: ${data.error}`);
+  if (!data.message) throw new Error("Ollama returned no message");
 
-  return { content: [{ type: "text", text: data.message?.content ?? "" }] };
+  return { content: [{ type: "text", text: data.message.content }] };
 }
 
 let client: ChatClient | null = null;
