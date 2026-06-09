@@ -59,6 +59,23 @@ export default async function StatusPage({
     evaluation = data as EvaluationRow | null;
   }
 
+  let reportUrl: string | null = null;
+
+  if (submission.status === "complete") {
+    const { data: cert } = await supabase
+      .from("certificates")
+      .select("report_pdf_path")
+      .eq("submission_id", id)
+      .single();
+
+    if (cert?.report_pdf_path) {
+      const { data: signed } = await supabase.storage
+        .from("documents")
+        .createSignedUrl(cert.report_pdf_path, 60 * 60); // valid 1 hour
+      reportUrl = signed?.signedUrl ?? null;
+    }
+  }
+
   return (
     <main className="mx-auto max-w-md p-8">
       {/* Auto-refresh while the background evaluation runs. */}
@@ -89,6 +106,14 @@ export default async function StatusPage({
               </li>
             ))}
           </ul>
+          {reportUrl && (
+            <a
+              href={reportUrl}
+              className="mt-6 inline-block rounded bg-navy px-4 py-2 text-white"
+            >
+              Download report (PDF)
+            </a>
+          )}
         </section>
       )}
     </main>
