@@ -22,18 +22,23 @@ const json = JSON.stringify({
 function fakeClient(text: string): EvaluatorClient {
   return {
     messages: {
-      // Minimal stub of the one SDK method we call.
+      // Minimal stub of the one method we call; returns the chat-contract shape.
       create: async () => ({ content: [{ type: "text", text }] }),
     },
   } as unknown as EvaluatorClient;
 }
 
 describe("evaluateInvention", () => {
-  it("returns scores, avg, verdict, and model name", async () => {
-    const r = await evaluateInvention(input, fakeClient(json), "claude-sonnet-4-6");
+  it("returns scores, avg, verdict, and the explicit model name", async () => {
+    const r = await evaluateInvention(input, fakeClient(json), "llama3.1");
     expect(r.avgScore).toBe(80);
     expect(r.verdict).toBe("PROCEED_NOW");
-    expect(r.modelUsed).toBe("claude-sonnet-4-6");
+    expect(r.modelUsed).toBe("llama3.1");
     expect(r.scores.novelty.score).toBe(80);
+  });
+
+  it("defaults to the configured Ollama model when none is passed", async () => {
+    const r = await evaluateInvention(input, fakeClient(json));
+    expect(r.modelUsed).toBe("llama3.1");
   });
 });
