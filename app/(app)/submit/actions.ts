@@ -43,6 +43,6 @@ export async function createSubmission(formData: FormData) {
 
   if (error) redirect(`/submit?error=${encodeURIComponent(error.message)}`);
 
-  // Payment + processing arrive in Phase 2; for now land back with the new id.
-  redirect(`/submit?created=${data.id}`);
+  // Drafts go straight to payment; evaluation begins only after Stripe confirms.
+  redirect(`/pay/${data.id}`);
 }

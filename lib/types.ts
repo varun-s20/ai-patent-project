@@ -27,3 +27,28 @@ export interface SubmissionInput {
   inventorName: string;
   email: string;
 }
+
+export const DIMENSIONS = [
+  "novelty",
+  "commercial",
+  "defensibility",
+  "licensing",
+  "timing",
+] as const;
+
+export type Dimension = (typeof DIMENSIONS)[number];
+
+export interface DimensionScore {
+  /** Integer 0-100. */
+  score: number;
+  rationale: string;
+}
+
+export type EvaluationScores = Record<Dimension, DimensionScore>;
+
+export interface EvaluationResult {
+  scores: EvaluationScores;
+  avgScore: number;
+  verdict: Verdict;
+  modelUsed: string;
+}
