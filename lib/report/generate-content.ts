@@ -1,20 +1,17 @@
 // lib/report/generate-content.ts
-import type Anthropic from "@anthropic-ai/sdk";
+import { type ChatClient, extractText } from "@/lib/ai/types";
 import type { SubmissionInput, EvaluationScores, Verdict } from "@/lib/types";
-import { extractText } from "@/lib/anthropic/text";
 import { buildReportSystemPrompt, buildReportUserPrompt } from "@/lib/report/prompt";
 import { parseReportContent } from "@/lib/report/schema";
 import type { ReportContent } from "@/lib/report/types";
 
-export const REPORT_MODEL = "claude-sonnet-4-6";
+export const REPORT_MODEL = process.env.OLLAMA_MODEL ?? "llama3.1";
 // Headroom above realistic output: the full 8-page narrative JSON is well under this.
 // Too-low a cap truncates the JSON mid-structure → parse throws → retries exhaust → refund.
 export const REPORT_MAX_TOKENS = 4096;
 
-/** The slice of the Anthropic SDK this module depends on (keeps it test-injectable). */
-export interface ReportClient {
-  messages: Pick<Anthropic["messages"], "create">;
-}
+/** Re-export of the shared chat contract (keeps existing imports of ReportClient working). */
+export type ReportClient = ChatClient;
 
 export async function generateReportContent(
   args: {
@@ -26,12 +23,12 @@ export async function generateReportContent(
   client: ReportClient,
   model: string = REPORT_MODEL,
 ): Promise<ReportContent> {
-  const message = (await client.messages.create({
+  const message = await client.messages.create({
     model,
     max_tokens: REPORT_MAX_TOKENS,
     system: buildReportSystemPrompt(),
     messages: [{ role: "user", content: buildReportUserPrompt(args) }],
-  })) as Anthropic.Message;
+  });
 
   return parseReportContent(extractText(message));
 }

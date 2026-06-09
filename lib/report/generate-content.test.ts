@@ -40,7 +40,7 @@ function fakeMessage(text: string) {
 }
 
 describe("generateReportContent", () => {
-  it("passes invention + scores to Claude and returns parsed content", async () => {
+  it("passes invention + scores to the model and returns parsed content", async () => {
     const create = vi.fn().mockResolvedValue(fakeMessage(NARRATIVE));
     const client = { messages: { create } };
 

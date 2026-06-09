@@ -1,7 +1,6 @@
 import { NonRetriableError } from "inngest";
 import { inngest, submissionPaid } from "@/lib/inngest/client";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAnthropic } from "@/lib/anthropic/client";
 import { getOllama } from "@/lib/ollama/client";
 import { getStripe } from "@/lib/stripe/client";
 import { evaluateInvention } from "@/lib/evaluation/evaluate";
@@ -84,7 +83,7 @@ export const evaluateSubmission = inngest.createFunction(
       return evaluateInvention(input, getOllama());
     });
 
-    // Step 3 — generate the report narrative via a second Claude call.
+    // Step 3 — generate the report narrative via a second LLM call.
     const content = await step.run("generate-report-content", async () => {
       return generateReportContent(
         {
@@ -93,7 +92,7 @@ export const evaluateSubmission = inngest.createFunction(
           avgScore: result.avgScore,
           verdict: result.verdict,
         },
-        getAnthropic(),
+        getOllama(),
       );
     });
 
