@@ -7,7 +7,9 @@ import { parseReportContent } from "@/lib/report/schema";
 import type { ReportContent } from "@/lib/report/types";
 
 export const REPORT_MODEL = "claude-sonnet-4-6";
-export const REPORT_MAX_TOKENS = 2048;
+// Headroom above realistic output: the full 8-page narrative JSON is well under this.
+// Too-low a cap truncates the JSON mid-structure → parse throws → retries exhaust → refund.
+export const REPORT_MAX_TOKENS = 4096;
 
 /** The slice of the Anthropic SDK this module depends on (keeps it test-injectable). */
 export interface ReportClient {
