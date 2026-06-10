@@ -20,21 +20,30 @@ export function polarPoint(
 }
 
 /**
- * SVG arc path from startAngle to endAngle along radius r.
- * For our top semicircle, callers pass sweepFlag = 0 so the arc bows upward.
+ * Arc from startAngle to endAngle along radius r, approximated as a chain of straight
+ * line segments (M..L..L). @react-pdf/renderer renders elliptical-arc (`A`) commands
+ * unreliably, so we sample the arc into `segments` straight pieces it can draw correctly.
+ * Consecutive coincident points are collapsed (so a zero-length arc yields just a move).
  */
-export function describeArc(
+export function segmentedArcPath(
   cx: number,
   cy: number,
   r: number,
   startAngle: number,
   endAngle: number,
-  sweepFlag: 0 | 1 = 0,
+  segments = 24,
 ): string {
-  const start = polarPoint(cx, cy, r, startAngle);
-  const end = polarPoint(cx, cy, r, endAngle);
-  const largeArc = Math.abs(endAngle - startAngle) > 180 ? 1 : 0;
-  return `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} A ${r} ${r} 0 ${largeArc} ${sweepFlag} ${end.x.toFixed(2)} ${end.y.toFixed(2)}`;
+  const cmds: string[] = [];
+  let prev = "";
+  for (let i = 0; i <= segments; i++) {
+    const angle = startAngle + ((endAngle - startAngle) * i) / segments;
+    const p = polarPoint(cx, cy, r, angle);
+    const coord = `${p.x.toFixed(2)} ${p.y.toFixed(2)}`;
+    if (coord === prev) continue;
+    cmds.push(`${cmds.length === 0 ? "M" : "L"} ${coord}`);
+    prev = coord;
+  }
+  return cmds.join(" ");
 }
 
 /** Spec §8 color bands: red <40, amber 40–64, green 65+. */

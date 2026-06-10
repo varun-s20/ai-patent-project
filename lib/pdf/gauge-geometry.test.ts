@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import {
   angleForScore,
   polarPoint,
-  describeArc,
+  segmentedArcPath,
   colorForScore,
   clampScore,
 } from "@/lib/pdf/gauge-geometry";
@@ -30,10 +30,15 @@ describe("gauge geometry", () => {
     expect(left.y).toBeCloseTo(50, 5);
   });
 
-  it("describes a top semicircle arc as an SVG path", () => {
-    expect(describeArc(50, 50, 40, 180, 0, 0)).toBe(
-      "M 10.00 50.00 A 40 40 0 0 0 90.00 50.00",
+  it("builds a segmented arc path of straight line segments (react-pdf renders these reliably)", () => {
+    // 2 segments across the 180->0 semicircle sample angles 180, 90, 0.
+    expect(segmentedArcPath(50, 50, 40, 180, 0, 2)).toBe(
+      "M 10.00 50.00 L 50.00 10.00 L 90.00 50.00",
     );
+  });
+
+  it("collapses to a single move when start and end angles are equal (score 0 value arc)", () => {
+    expect(segmentedArcPath(50, 50, 40, 180, 180, 24)).toBe("M 10.00 50.00");
   });
 
   it("color-codes by spec band (red <40 / amber 40-64 / green 65+)", () => {
