@@ -32,7 +32,14 @@ export function buildReportSystemPrompt(): string {
     '  "nextSteps": ["<specific, actionable item>"],',
     '  "topBuyers": [{ "name": "<company/type>", "segment": "<market segment>", "why": "<why a fit>" }]',
     "}",
-    "Provide 2-4 comparablePatents, 2-4 keyDifferentiators, exactly 3 nextSteps, and 3-5 topBuyers.",
+    "Array rules — these are mandatory and the most common mistake, so follow them exactly:",
+    "- NEVER return an empty array. Every array below must contain real, specific items.",
+    "- comparablePatents: 2-4 entries (each with both name and why). If you cannot name an exact patent number, name the closest real product or technique and explain the overlap.",
+    "- keyDifferentiators: 2-4 entries.",
+    "- bestFitBuyers: 2-4 entries.",
+    "- nextSteps: exactly 3 entries.",
+    "- topBuyers: 3-5 entries (each with name, segment, and why).",
+    "Every string field must be non-empty. Do not output null, placeholders, or the words 'N/A'. Fill every field with substantive content drawn from the invention.",
   ].join("\n");
 }
 

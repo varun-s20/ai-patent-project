@@ -42,7 +42,7 @@ async function ollamaChat(params: ChatCreateParams): Promise<ChatMessage> {
 
 let client: ChatClient | null = null;
 
-/** Returns a memoized Ollama-backed ChatClient (shape-compatible with the old getAnthropic()). */
+/** Returns a memoized Ollama-backed ChatClient implementing the shared lib/ai/types contract. */
 export function getOllama(): ChatClient {
   if (!client) {
     client = { messages: { create: ollamaChat } };

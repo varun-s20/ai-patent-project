@@ -56,4 +56,20 @@ describe("generateReportContent", () => {
     expect(content.ideaSummary).toBe("A self-cooling bottle.");
     expect(content.topBuyers[0].name).toBe("Outdoor Brand X");
   });
+
+  it("falls back to a scores-derived report when the model emits unparseable output", async () => {
+    const create = vi.fn().mockResolvedValue(fakeMessage("Sorry, I cannot do that."));
+    const client = { messages: { create } };
+
+    const content = await generateReportContent(
+      { input: INPUT, scores: SCORES, avgScore: 66, verdict: "REFINE_FIRST" },
+      client,
+    );
+
+    // Never throws; delivers a valid report grounded in the scores we already have.
+    expect(content.ideaSummary).toContain("Phase-change sleeve");
+    expect(content.novelty.priorArtSummary).toBe("Uncommon.");
+    expect(content.decisionRationale).toContain("REFINE_FIRST");
+    expect(content.topBuyers).toEqual([]);
+  });
 });

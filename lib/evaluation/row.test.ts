@@ -12,7 +12,7 @@ const result: EvaluationResult = {
   },
   avgScore: 70,
   verdict: "PROCEED_NOW",
-  modelUsed: "claude-sonnet-4-6",
+  modelUsed: "llama3.1",
 };
 
 describe("toEvaluationRow", () => {
@@ -23,7 +23,7 @@ describe("toEvaluationRow", () => {
     expect(row.timing_rationale).toBe("t");
     expect(row.avg_score).toBe(70);
     expect(row.verdict).toBe("PROCEED_NOW");
-    expect(row.model_used).toBe("claude-sonnet-4-6");
+    expect(row.model_used).toBe("llama3.1");
     expect(row.report_json).toEqual(result.scores);
   });
 });

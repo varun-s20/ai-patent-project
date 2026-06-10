@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "inngest": "npx inngest-cli@latest dev -u http://localhost:3000/api/inngest",
+    "stripe": "stripe listen --forward-to localhost:3000/api/stripe/webhook",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -11,7 +13,6 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.102.0",
     "@react-pdf/renderer": "^4.5.1",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.108.0",

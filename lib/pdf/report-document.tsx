@@ -98,17 +98,25 @@ export function ReportDocument({ data }: { data: ReportData }) {
         <DimensionHeader data={data} dimension="novelty" />
         <Text style={styles.h2}>Prior art</Text>
         <Text style={styles.body}>{content.novelty.priorArtSummary}</Text>
-        <Text style={styles.h2}>Key differentiators</Text>
-        {content.novelty.keyDifferentiators.map((d, i) => (
-          <Text key={i} style={styles.listItem}>• {d}</Text>
-        ))}
-        <Text style={styles.h2}>Comparable patents</Text>
-        {content.novelty.comparablePatents.map((p, i) => (
-          <View key={i} style={styles.card}>
-            <Text style={styles.cardTitle}>{p.name}</Text>
-            <Text style={styles.body}>{p.why}</Text>
-          </View>
-        ))}
+        {content.novelty.keyDifferentiators.length > 0 && (
+          <>
+            <Text style={styles.h2}>Key differentiators</Text>
+            {content.novelty.keyDifferentiators.map((d, i) => (
+              <Text key={i} style={styles.listItem}>• {d}</Text>
+            ))}
+          </>
+        )}
+        {content.novelty.comparablePatents.length > 0 && (
+          <>
+            <Text style={styles.h2}>Comparable patents</Text>
+            {content.novelty.comparablePatents.map((p, i) => (
+              <View key={i} style={styles.card}>
+                <Text style={styles.cardTitle}>{p.name}</Text>
+                <Text style={styles.body}>{p.why}</Text>
+              </View>
+            ))}
+          </>
+        )}
       </ReportPage>
 
       {/* Page 4 — Commercial */}
@@ -118,10 +126,14 @@ export function ReportDocument({ data }: { data: ReportData }) {
         <Text style={styles.body}>{content.commercial.marketSize}</Text>
         <Text style={styles.h2}>Demand</Text>
         <Text style={styles.body}>{content.commercial.demandAssessment}</Text>
-        <Text style={styles.h2}>Best-fit buyers</Text>
-        {content.commercial.bestFitBuyers.map((b, i) => (
-          <Text key={i} style={styles.listItem}>• {b}</Text>
-        ))}
+        {content.commercial.bestFitBuyers.length > 0 && (
+          <>
+            <Text style={styles.h2}>Best-fit buyers</Text>
+            {content.commercial.bestFitBuyers.map((b, i) => (
+              <Text key={i} style={styles.listItem}>• {b}</Text>
+            ))}
+          </>
+        )}
       </ReportPage>
 
       {/* Page 5 — Defensibility */}
@@ -148,19 +160,33 @@ export function ReportDocument({ data }: { data: ReportData }) {
         </View>
         <Text style={styles.body}>{content.decisionRationale}</Text>
         <Text style={styles.h2}>Recommended next steps</Text>
-        {content.nextSteps.map((s, i) => (
-          <Text key={i} style={styles.listItem}>{i + 1}. {s}</Text>
-        ))}
+        {content.nextSteps.length > 0 ? (
+          content.nextSteps.map((s, i) => (
+            <Text key={i} style={styles.listItem}>{i + 1}. {s}</Text>
+          ))
+        ) : (
+          <Text style={styles.body}>
+            Commission a professional prior-art search and consult a registered patent
+            attorney before filing.
+          </Text>
+        )}
       </ReportPage>
 
       {/* Page 8 — Top Buyers */}
       <ReportPage data={data} pageNo={8} title="Top Buyers & Licensing Targets">
-        {content.topBuyers.map((b, i) => (
-          <View key={i} style={styles.card}>
-            <Text style={styles.cardTitle}>{b.name} — {b.segment}</Text>
-            <Text style={styles.body}>{b.why}</Text>
-          </View>
-        ))}
+        {content.topBuyers.length > 0 ? (
+          content.topBuyers.map((b, i) => (
+            <View key={i} style={styles.card}>
+              <Text style={styles.cardTitle}>{b.name} — {b.segment}</Text>
+              <Text style={styles.body}>{b.why}</Text>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.body}>
+            No specific licensing targets were identified for this submission. Use the
+            commercial and competition analysis above to shortlist potential buyers.
+          </Text>
+        )}
       </ReportPage>
     </Document>
   );

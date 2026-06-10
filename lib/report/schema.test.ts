@@ -55,7 +55,39 @@ describe("parseReportContent", () => {
     expect(out.novelty.keyDifferentiators).toHaveLength(6);
   });
 
-  it("throws on malformed input", () => {
-    expect(() => parseReportContent('{"ideaSummary":""}')).toThrow();
+  it("tolerates empty arrays instead of throwing (the real llama3.1 failure mode)", () => {
+    const underfilled = {
+      ...VALID,
+      novelty: { ...VALID.novelty, comparablePatents: [], keyDifferentiators: [] },
+      commercial: { ...VALID.commercial, bestFitBuyers: [] },
+      topBuyers: [],
+    };
+    const out = parseReportContent(JSON.stringify(underfilled));
+    expect(out.novelty.comparablePatents).toEqual([]);
+    expect(out.novelty.keyDifferentiators).toEqual([]);
+    expect(out.commercial.bestFitBuyers).toEqual([]);
+    expect(out.topBuyers).toEqual([]);
+    // Fields that WERE provided are preserved.
+    expect(out.ideaSummary).toContain("self-cooling");
+    expect(out.commercial.marketSize).toContain("billion");
+  });
+
+  it("fills neutral defaults for missing scalar fields and objects", () => {
+    const out = parseReportContent('{"ideaSummary":"Just an idea."}');
+    expect(out.ideaSummary).toBe("Just an idea.");
+    expect(out.novelty.priorArtSummary).toBe("Not assessed in this report.");
+    expect(out.defensibility.copyRiskRating).toBe("Unknown");
+    expect(out.nextSteps).toEqual([]);
+  });
+
+  it("drops blank entries from string lists", () => {
+    const out = parseReportContent(
+      JSON.stringify({ ...VALID, nextSteps: ["Do this", "", "  ", "Then that"] }),
+    );
+    expect(out.nextSteps).toEqual(["Do this", "Then that"]);
+  });
+
+  it("still throws on input that is not valid JSON at all", () => {
+    expect(() => parseReportContent("this is not json")).toThrow();
   });
 });

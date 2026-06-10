@@ -12,7 +12,7 @@ export interface TopBuyer {
   why: string;
 }
 
-/** AI-generated narrative for the 8-page report (produced by a second Claude call). */
+/** AI-generated narrative for the 8-page report (produced by a second model call). */
 export interface ReportContent {
   ideaSummary: string;
   novelty: {
