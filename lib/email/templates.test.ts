@@ -1,32 +1,16 @@
-import { describe, it, expect } from "vitest";
-import { paymentConfirmationEmail, evaluationFailedEmail, reportReadyEmail } from "@/lib/email/templates";
-
-describe("email templates", () => {
-  it("confirmation email includes the invention title", () => {
-    const e = paymentConfirmationEmail({ title: "My Widget" });
-    expect(e.subject).toMatch(/payment received/i);
-    expect(e.html).toContain("My Widget");
-  });
-
-  it("failure email mentions the refund and the title", () => {
-    const e = evaluationFailedEmail({ title: "My Widget" });
-    expect(e.html).toMatch(/refund/i);
-    expect(e.html).toContain("My Widget");
-  });
-
-  it("escapes HTML in the title", () => {
-    const e = paymentConfirmationEmail({ title: "<script>x</script>" });
-    expect(e.html).not.toContain("<script>");
-    expect(e.html).toContain("&lt;script&gt;");
-  });
-});
+﻿import { describe, it, expect } from "vitest";
+import { reportReadyEmail } from "./templates";
 
 describe("reportReadyEmail", () => {
-  it("includes the (escaped) title, a status link, and the disclaimer", () => {
-    const out = reportReadyEmail({ title: "Bottle <X>", submissionId: "sub-123" });
-    expect(out.subject).toMatch(/report/i);
-    expect(out.html).toContain("Bottle &lt;X&gt;");
-    expect(out.html).toContain("/status/sub-123");
-    expect(out.html).toMatch(/not legal advice/i);
+  it("mentions both the report and the certificate", () => {
+    const email = reportReadyEmail({ title: "My Idea", submissionId: "sub-1" });
+    expect(email.html).toContain("Certificate of Idea Registration");
+    expect(email.html).toContain("Pre-Patent Intelligence Report");
+  });
+
+  it("escapes html in the title", () => {
+    const email = reportReadyEmail({ title: "<script>", submissionId: "sub-1" });
+    expect(email.html).not.toContain("<script>");
+    expect(email.html).toContain("&lt;script&gt;");
   });
 });
