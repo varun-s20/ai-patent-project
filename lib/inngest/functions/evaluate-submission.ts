@@ -137,7 +137,12 @@ export const evaluateSubmission = inngest.createFunction(
       const { error: certErr } = await admin
         .from("certificates")
         .upsert(
-          { submission_id: submissionId, cert_id: certId, report_pdf_path: path },
+          {
+            submission_id: submissionId,
+            cert_id: certId,
+            report_pdf_path: path,
+            issued_at: now.toISOString(),
+          },
           { onConflict: "submission_id" },
         );
       if (certErr) throw new Error(`Certificate upsert failed: ${certErr.message}`);

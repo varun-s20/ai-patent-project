@@ -1,6 +1,6 @@
 // lib/certificate/qr.ts
 import QRCode from "qrcode";
-import { brand } from "@/lib/pdf/theme";
+import { cert } from "@/lib/pdf/certificate-theme";
 
 /**
  * Render `url` to a PNG data URL suitable for an @react-pdf `<Image src>`.
@@ -10,6 +10,6 @@ export async function generateQrDataUrl(url: string): Promise<string> {
   return QRCode.toDataURL(url, {
     margin: 1,
     width: 240,
-    color: { dark: brand.navy, light: "#FFFFFF" },
+    color: { dark: cert.black, light: cert.white },
   });
 }
