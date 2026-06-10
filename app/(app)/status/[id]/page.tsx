@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DIMENSIONS } from "@/lib/types";
+import { AutoDownload } from "./auto-download";
 
 export const dynamic = "force-dynamic";
 
@@ -60,11 +61,12 @@ export default async function StatusPage({
   }
 
   let reportUrl: string | null = null;
+  let certificateUrl: string | null = null;
 
   if (submission.status === "complete") {
     const { data: cert } = await supabase
       .from("certificates")
-      .select("report_pdf_path")
+      .select("report_pdf_path, certificate_pdf_path")
       .eq("submission_id", id)
       .single();
 
@@ -73,6 +75,15 @@ export default async function StatusPage({
         .from("documents")
         .createSignedUrl(cert.report_pdf_path, 60 * 60); // valid 1 hour
       reportUrl = signed?.signedUrl ?? null;
+    }
+
+    if (cert?.certificate_pdf_path) {
+      const { data: signed } = await supabase.storage
+        .from("documents")
+        .createSignedUrl(cert.certificate_pdf_path, 60 * 60, {
+          download: "certificate-of-idea-registration.pdf",
+        });
+      certificateUrl = signed?.signedUrl ?? null;
     }
   }
 
@@ -106,13 +117,26 @@ export default async function StatusPage({
               </li>
             ))}
           </ul>
-          {reportUrl && (
-            <a
-              href={reportUrl}
-              className="mt-6 inline-block rounded bg-navy px-4 py-2 text-white"
-            >
-              Download report (PDF)
-            </a>
+          <div className="mt-6 flex flex-col gap-3">
+            {reportUrl && (
+              <a
+                href={reportUrl}
+                className="inline-block rounded bg-navy px-4 py-2 text-center text-white"
+              >
+                Download report (PDF)
+              </a>
+            )}
+            {certificateUrl && (
+              <a
+                href={certificateUrl}
+                className="inline-block rounded border border-[#C8A020] px-4 py-2 text-center font-medium text-[#9a7d18]"
+              >
+                Download certificate (PDF)
+              </a>
+            )}
+          </div>
+          {certificateUrl && (
+            <AutoDownload url={certificateUrl} storageKey={`cert-dl-${id}`} />
           )}
         </section>
       )}
