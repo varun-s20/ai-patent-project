@@ -68,6 +68,8 @@ function BackPage({ data }: { data: CertificateData }) {
 
           <View style={{ alignItems: "center" }}>
             <View style={s.qrBox}>
+              {/* @react-pdf Image is not a DOM <img>; the jsx-a11y alt rule does not apply. */}
+              {/* eslint-disable-next-line jsx-a11y/alt-text */}
               <Image src={data.qrDataUrl} style={s.qrImage} />
             </View>
             <Text style={s.qrCaption}>Scan to verify this certificate online</Text>
