@@ -14,6 +14,13 @@ async function ollamaChat(params: ChatCreateParams): Promise<ChatMessage> {
   // Ollama takes the system instruction as a system-role message, not a top-level field.
   const messages = [{ role: "system", content: params.system }, ...params.messages];
 
+  // OLLAMA_NUM_GPU caps how many model layers Ollama offloads to the GPU. On a
+  // small GPU (e.g. a 4 GB GTX 1650) an 8B model can't fit in VRAM and the
+  // llama-server worker dies with "cudaMalloc out of memory"; set it to 0 to run
+  // fully on CPU. Unset = let Ollama auto-decide (fine on a GPU with enough VRAM).
+  const numGpuRaw = process.env.OLLAMA_NUM_GPU;
+  const numGpu = numGpuRaw !== undefined && numGpuRaw !== "" ? Number(numGpuRaw) : undefined;
+
   const res = await fetch(`${baseUrl}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -24,7 +31,11 @@ async function ollamaChat(params: ChatCreateParams): Promise<ChatMessage> {
       // Force valid JSON output — both prompts already demand a bare JSON object.
       format: "json",
       // temperature 0 keeps scoring reproducible; num_predict caps generation length.
-      options: { temperature: 0, num_predict: params.max_tokens },
+      options: {
+        temperature: 0,
+        num_predict: params.max_tokens,
+        ...(numGpu !== undefined ? { num_gpu: numGpu } : {}),
+      },
     }),
   });
 

@@ -35,10 +35,26 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const needsAuth = PROTECTED_PREFIXES.some((p) => request.nextUrl.pathname.startsWith(p));
+
   if (needsAuth && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
+  }
+
+  // Disabled users are bounced from every protected surface.
+  if (needsAuth && user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_disabled")
+      .eq("id", user.id)
+      .single();
+    if (profile?.is_disabled) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("error", "Your account has been disabled.");
+      return NextResponse.redirect(url);
+    }
   }
 
   return response;
