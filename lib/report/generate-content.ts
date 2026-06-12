@@ -46,7 +46,9 @@ export async function generateReportContent(
 /** First 1-2 sentences of the description, as a safe idea summary. */
 function leadSentences(text: string): string {
   const trimmed = text.trim();
-  const match = trimmed.match(/^.*?[.!?](?:\s+.*?[.!?])?/s);
+  // `[\s\S]` matches across newlines without the `/s` (dotAll) flag, so this
+  // compiles regardless of the TS `target` (the `/s` flag needs ES2018+).
+  const match = trimmed.match(/^[\s\S]*?[.!?](?:\s+[\s\S]*?[.!?])?/);
   return (match?.[0] ?? trimmed).trim();
 }
 

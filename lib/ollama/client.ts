@@ -21,9 +21,21 @@ async function ollamaChat(params: ChatCreateParams): Promise<ChatMessage> {
   const numGpuRaw = process.env.OLLAMA_NUM_GPU;
   const numGpu = numGpuRaw !== undefined && numGpuRaw !== "" ? Number(numGpuRaw) : undefined;
 
+  // Ollama has no auth of its own, so when it's reached over a public tunnel
+  // (e.g. a Cloudflare Tunnel) we gate it with a Cloudflare Access service token.
+  // These headers are validated at Cloudflare's edge before the request ever
+  // reaches the tunnel; absent the env vars (local dev) no headers are added.
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const accessId = process.env.OLLAMA_ACCESS_CLIENT_ID;
+  const accessSecret = process.env.OLLAMA_ACCESS_CLIENT_SECRET;
+  if (accessId && accessSecret) {
+    headers["CF-Access-Client-Id"] = accessId;
+    headers["CF-Access-Client-Secret"] = accessSecret;
+  }
+
   const res = await fetch(`${baseUrl}/api/chat`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({
       model: params.model,
       messages,

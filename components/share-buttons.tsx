@@ -25,7 +25,7 @@ export function ShareButtons({ url, title }: { url: string; title: string }) {
 
   return (
     <div className="mt-6">
-      <p className="text-[10px] uppercase tracking-[0.18em] text-[#80796a]">Share</p>
+      <p className="text-[10px] uppercase tracking-[0.18em] text-muted">Share</p>
       <div className="mt-3 flex flex-wrap gap-2">
         {links.map((l) => (
           <a
@@ -33,14 +33,14 @@ export function ShareButtons({ url, title }: { url: string; title: string }) {
             href={l.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-full border border-[#caa657]/40 px-4 py-1.5 text-xs font-semibold text-[#d8b35d] transition-colors duration-200 hover:bg-[#caa657]/10"
+            className="rounded-full border border-gold/40 px-4 py-1.5 text-xs font-semibold text-gold transition-colors duration-200 hover:bg-gold/10"
           >
             {l.label}
           </a>
         ))}
         <button
           onClick={copy}
-          className="rounded-full border border-white/20 px-4 py-1.5 text-xs font-semibold text-white/80 transition-colors hover:bg-white/10"
+          className="rounded-full border border-ink/15 px-4 py-1.5 text-xs font-semibold text-ink-2 transition-colors hover:bg-ink/[0.04]"
         >
           {copied ? "Copied!" : "Copy link"}
         </button>

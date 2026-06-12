@@ -10,7 +10,7 @@ export function Badge({
 }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${className}`}
+      className={`inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-medium ${className}`}
     >
       {children}
     </span>
@@ -27,7 +27,7 @@ export function Eyebrow({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-2 rounded-full border border-ink/10 bg-cream/60 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.22em] text-muted ${className}`}
+      className={`inline-flex items-center gap-2 rounded-md border border-ink/10 bg-cream/60 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.22em] text-muted ${className}`}
     >
       <span className="h-1.5 w-1.5 rounded-full bg-gold" aria-hidden />
       {children}

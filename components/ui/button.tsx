@@ -5,13 +5,13 @@ import { ArrowUpRight } from "@/components/ui/icons";
 type Variant = "primary" | "gold" | "ghost";
 
 const base =
-  "inline-flex select-none items-center justify-center rounded-full text-sm font-medium tracking-tight " +
-  "transition-[transform,background-color,color,box-shadow] duration-300 ease-[var(--ease-out)] " +
-  "active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50";
+  "inline-flex select-none items-center justify-center rounded-lg text-sm font-medium tracking-tight " +
+  "transition-[background-color,color,box-shadow] duration-200 ease-[var(--ease-out)] " +
+  "disabled:pointer-events-none disabled:opacity-50";
 
 const VARIANTS: Record<Variant, string> = {
   primary: "bg-ink text-cream hover:bg-ink-2 shadow-[0_1px_2px_rgba(20,25,40,0.18)]",
-  gold: "bg-gold text-[#1c1404] hover:bg-gold-bright shadow-[0_1px_2px_rgba(120,90,20,0.22)]",
+  gold: "bg-gold text-ink hover:bg-gold-bright shadow-[0_1px_2px_rgba(120,90,20,0.22)]",
   ghost: "text-ink ring-1 ring-ink/15 hover:bg-ink/[0.04]",
 };
 
@@ -57,7 +57,7 @@ export function CtaLink({
     >
       <span>{children}</span>
       <span
-        className={`flex h-8 w-8 items-center justify-center rounded-full transition-transform duration-500 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:-translate-y-px group-hover:scale-105 ${ICON_BG[variant]}`}
+        className={`flex h-8 w-8 items-center justify-center rounded-md transition-transform duration-300 ease-[var(--ease-out)] group-hover:translate-x-0.5 ${ICON_BG[variant]}`}
       >
         <ArrowUpRight className="h-3.5 w-3.5" />
       </span>

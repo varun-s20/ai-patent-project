@@ -39,6 +39,13 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local scratch — dev logs and screenshot captures, never part of the shipping app
+dev-server.log
+*-server.log
+shot.mjs
+shot*.png
+*-full.png
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
@@ -50,3 +57,6 @@ AGENTS.md
 CLAUDE.md
 .claude/
 docs/
+
+# design reference scratch (mockups / screenshots used while building — not shipped)
+ref/

@@ -1,7 +1,7 @@
 import { NonRetriableError } from "inngest";
 import { inngest, submissionPaid } from "@/lib/inngest/client";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getOllama } from "@/lib/ollama/client";
+import { getChatClient } from "@/lib/ai/provider";
 import { getStripe } from "@/lib/stripe/client";
 import { evaluateInvention } from "@/lib/evaluation/evaluate";
 import { toEvaluationRow } from "@/lib/evaluation/row";
@@ -84,7 +84,7 @@ export const evaluateSubmission = inngest.createFunction(
 
     // Step 2 — call Ollama. A throw here is retried, then hits onFailure.
     const result = await step.run("evaluate", async () => {
-      return evaluateInvention(input, getOllama());
+      return evaluateInvention(input, getChatClient());
     });
 
     // Step 3 — generate the report narrative via a second LLM call.
@@ -96,7 +96,7 @@ export const evaluateSubmission = inngest.createFunction(
           avgScore: result.avgScore,
           verdict: result.verdict,
         },
-        getOllama(),
+        getChatClient(),
       );
     });
 

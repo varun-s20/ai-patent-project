@@ -1,114 +1,117 @@
 // lib/pdf/certificate-theme.ts
 import { StyleSheet } from "@react-pdf/renderer";
 
-/** Gold-on-black identity for the registration certificate (distinct from the navy report). */
+/** White certificate with a black outer frame + gold inner rule — matches the client reference (ref/). */
 export const cert = {
-  black: "#0B0B0C",
-  panel: "#141417",
+  black: "#111111",
+  navy: "#1A2B4A",
   gold: "#C8A020",
-  goldBright: "#E4C45A",
+  goldSoft: "#E4C45A",
   white: "#FFFFFF",
-  muted: "#A89F86",
+  ink: "#1F2937",
+  muted: "#6B7280",
 } as const;
 
 /** Three seals printed on the back of the certificate. */
-export const SEALS: { label: string; caption: string }[] = [
-  { label: "VERIFIED", caption: "Authenticity confirmed" },
-  { label: "TIMESTAMPED", caption: "Issued & dated" },
-  { label: "AI CERTIFIED", caption: "AI-evaluated" },
+export const SEALS: { label: string }[] = [
+  { label: "VERIFIED" },
+  { label: "TIMESTAMPED" },
+  { label: "AI CERTIFIED" },
 ];
 
 export const certStyles = StyleSheet.create({
   page: {
-    backgroundColor: cert.black,
+    backgroundColor: cert.white,
     fontFamily: "Helvetica",
-    color: cert.white,
-    padding: 28,
+    color: cert.ink,
+    padding: 22,
   },
-  frameOuter: { flexGrow: 1, borderWidth: 2, borderColor: cert.gold, padding: 6 },
+  // Thick black outer frame, thin gold inner rule (double-rule gold frame).
+  frameOuter: { flexGrow: 1, borderWidth: 3, borderColor: cert.black, padding: 7 },
   frameInner: {
     flexGrow: 1,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: cert.gold,
-    paddingVertical: 30,
-    paddingHorizontal: 44,
-    alignItems: "center",
-    justifyContent: "space-between",
+    paddingVertical: 34,
+    paddingHorizontal: 50,
   },
-  wordmark: {
-    fontFamily: "Helvetica-Bold",
-    fontSize: 12,
-    letterSpacing: 3,
-    color: cert.gold,
-    textAlign: "center",
+
+  // Boxed serif wordmark, top-left.
+  wordmarkBox: {
+    alignSelf: "flex-start",
+    borderWidth: 1,
+    borderColor: cert.ink,
+    paddingVertical: 8,
+    paddingHorizontal: 20,
   },
-  rule: { width: 120, borderBottomWidth: 1, borderBottomColor: cert.gold, marginVertical: 14 },
+  wordmark: { fontFamily: "Times-Bold", fontSize: 11, letterSpacing: 1.5, color: cert.ink },
+
+  center: { alignItems: "center" },
   title: {
     fontFamily: "Helvetica-Bold",
-    fontSize: 28,
-    letterSpacing: 2,
-    color: cert.white,
-    textAlign: "center",
-  },
-  subtitle: { fontSize: 11, color: cert.muted, textAlign: "center", marginTop: 10 },
-  inventor: {
-    fontFamily: "Helvetica-Bold",
-    fontSize: 24,
-    color: cert.goldBright,
-    textAlign: "center",
-    marginTop: 6,
-  },
-  inventionTitle: {
-    fontFamily: "Helvetica-Bold",
-    fontSize: 16,
-    color: cert.white,
-    textAlign: "center",
-    marginTop: 4,
-  },
-  industry: {
-    fontSize: 10,
+    fontSize: 30,
     letterSpacing: 1,
-    color: cert.muted,
+    color: cert.navy,
+    textAlign: "center",
+  },
+  subtitle: { fontSize: 11, color: cert.muted, textAlign: "center", marginTop: 8 },
+
+  certifyLine: { fontSize: 11, color: cert.ink, textAlign: "center" },
+  bigName: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 22,
+    color: cert.ink,
     textAlign: "center",
     marginTop: 6,
   },
-  metaRow: { flexDirection: "row", justifyContent: "space-between", width: "100%", marginTop: 8 },
-  metaCol: { alignItems: "center", flex: 1 },
-  metaLabel: { fontSize: 8, color: cert.muted, letterSpacing: 1 },
-  metaValue: { fontFamily: "Helvetica-Bold", fontSize: 11, color: cert.white, marginTop: 2 },
-  disclaimer: { fontSize: 7, color: cert.muted, textAlign: "center", marginTop: 10 },
 
-  // Back page
-  backTitle: {
-    fontFamily: "Helvetica-Bold",
-    fontSize: 18,
-    letterSpacing: 2,
-    color: cert.gold,
-    textAlign: "center",
-  },
-  qrBox: { backgroundColor: cert.white, padding: 10, borderRadius: 4 },
-  qrImage: { width: 150, height: 150 },
-  qrCaption: { fontSize: 9, color: cert.muted, textAlign: "center", marginTop: 8 },
-  qrUrl: { fontSize: 8, color: cert.goldBright, textAlign: "center", marginTop: 2 },
-  sealRow: { flexDirection: "row", justifyContent: "center", marginTop: 4 },
-  sealCell: { alignItems: "center", marginHorizontal: 18 },
-  sealBadge: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    borderWidth: 2,
+  metaLine: { fontSize: 12, color: cert.ink, textAlign: "center", marginTop: 4 },
+  metaLabel: { fontFamily: "Helvetica-Bold" },
+
+  footer: { fontSize: 9, color: cert.muted, textAlign: "center", lineHeight: 1.4 },
+  disclaimer: { fontSize: 7, color: cert.muted, textAlign: "center", marginTop: 6 },
+
+  // Back page — three concentric gold seals.
+  sealRow: { flexDirection: "row", justifyContent: "space-around", width: "100%" },
+  sealOuter: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    borderWidth: 2.5,
     borderColor: cert.gold,
-    backgroundColor: cert.panel,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 6,
+  },
+  sealInner: {
+    width: 86,
+    height: 86,
+    borderRadius: 43,
+    borderWidth: 1,
+    borderColor: cert.gold,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
   },
   sealLabel: {
-    fontFamily: "Helvetica-Bold",
-    fontSize: 9,
-    letterSpacing: 1,
-    color: cert.goldBright,
+    fontFamily: "Times-Bold",
+    fontSize: 8,
+    letterSpacing: 0.4,
+    color: cert.ink,
     textAlign: "center",
   },
-  sealCaption: { fontSize: 7, color: cert.muted, textAlign: "center", marginTop: 6, width: 96 },
+
+  // Signature line + QR, side by side.
+  bottomRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "flex-end",
+    width: "100%",
+    marginTop: 46,
+  },
+  sigCol: { alignItems: "center", marginHorizontal: 34 },
+  sigLine: { width: 150, height: 30, borderBottomWidth: 1, borderBottomColor: cert.ink, marginBottom: 6 },
+  sigLabel: { fontSize: 9, color: cert.ink },
+  qrCol: { alignItems: "center", marginHorizontal: 34 },
+  qrImage: { width: 96, height: 96 },
+  qrCaption: { fontSize: 9, color: cert.ink, marginTop: 6 },
 });

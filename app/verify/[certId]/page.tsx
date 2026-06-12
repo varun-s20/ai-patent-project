@@ -53,9 +53,9 @@ export async function generateMetadata({
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between gap-4 border-b border-white/[0.08] py-3">
-      <dt className="text-[#9b937f]">{label}</dt>
-      <dd className="text-right font-medium text-[#f3ecdc]">{value}</dd>
+    <div className="flex justify-between gap-4 border-b border-line py-3">
+      <dt className="text-muted">{label}</dt>
+      <dd className="text-right font-medium text-ink">{value}</dd>
     </div>
   );
 }
@@ -74,33 +74,26 @@ export default async function VerifyPage({
 
   return (
     <main className="mx-auto w-full max-w-lg px-6 py-10">
-      {/* Outer machined tray (gold), inner OLED certificate. */}
-      <div className="rounded-[2.25rem] bg-gradient-to-b from-[#caa657] to-[#8a6c22] p-[3px] shadow-[0_30px_80px_-30px_rgba(120,90,20,0.5)]">
-        <div className="relative overflow-hidden rounded-[2.1rem] bg-[#0c0c0e] px-8 py-10">
-          {/* Soft gold orb glow */}
-          <div
-            className="pointer-events-none absolute -top-24 right-0 h-56 w-56 rounded-full opacity-50 blur-3xl"
-            style={{ background: "radial-gradient(circle, rgba(216,179,93,0.4), transparent 70%)" }}
-            aria-hidden
-          />
-
-          <div className="relative flex items-center justify-between">
-            <p className="text-[11px] font-semibold tracking-[0.28em] text-[#caa657]">
+      {/* Black outer frame, gold inner rule, white certificate — mirrors the PDF. */}
+      <div className="rounded-[2rem] bg-ink p-[3px] shadow-[0_30px_80px_-40px_rgba(26,43,74,0.45)]">
+        <div className="rounded-[1.85rem] border border-gold/50 bg-card px-8 py-10">
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] font-semibold tracking-[0.28em] text-gold">
               AI INVENTION REGISTRY
             </p>
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#caa657]/10 ring-1 ring-[#caa657]/30">
-              <Seal className="h-5 w-5 text-[#d8b35d]" />
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/10 ring-1 ring-gold/30">
+              <Seal className="h-5 w-5 text-gold" />
             </span>
           </div>
 
-          <h1 className="relative mt-7 font-display text-4xl tracking-tight text-[#f6efe0]">
+          <h1 className="mt-7 font-display text-4xl tracking-tight text-ink">
             Certificate Verified
           </h1>
-          <p className="relative mt-2 text-sm text-[#9b937f]">
+          <p className="mt-2 text-sm text-muted">
             This certificate is authentic and on record.
           </p>
 
-          <dl className="relative mt-7 text-sm">
+          <dl className="mt-7 text-sm">
             <Row label="Certificate ID" value={cert.cert_id} />
             <Row label="Invention" value={submission?.title ?? "—"} />
             <Row label="Inventor" value={submission?.inventor_name ?? "—"} />
@@ -110,22 +103,20 @@ export default async function VerifyPage({
             {evaluation && <Row label="Verdict" value={verdictLabel(evaluation.verdict)} />}
           </dl>
 
-          <div className="relative mt-7 flex flex-wrap gap-2">
+          <div className="mt-7 flex flex-wrap gap-2">
             {["VERIFIED", "TIMESTAMPED", "AI CERTIFIED"].map((badge) => (
               <span
                 key={badge}
-                className="rounded-full border border-[#caa657]/40 px-3 py-1 text-[10px] font-semibold tracking-[0.12em] text-[#d8b35d]"
+                className="rounded-full border border-gold/40 px-3 py-1 text-[10px] font-semibold tracking-[0.12em] text-gold"
               >
                 {badge}
               </span>
             ))}
           </div>
 
-          <div className="relative">
-            <ShareButtons url={verifyUrl} title={submission?.title ?? "my invention"} />
-          </div>
+          <ShareButtons url={verifyUrl} title={submission?.title ?? "my invention"} />
 
-          <p className="relative mt-7 text-[11px] leading-relaxed text-[#80796a]">
+          <p className="mt-7 text-[11px] leading-relaxed text-muted">
             These are AI-generated estimates, not legal advice. This certificate confers no
             intellectual-property rights.
           </p>

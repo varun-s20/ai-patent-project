@@ -1,0 +1,143 @@
+import { CtaLink } from "@/components/ui/button";
+import { Check, X, Seal } from "@/components/ui/icons";
+import { Eyebrow } from "@/components/ui/badge";
+import { InView } from "@/components/motion/in-view";
+
+type Line = { ok: boolean; text: string };
+
+const OPTIONS: {
+  name: string;
+  cost: string;
+  lines: Line[];
+}[] = [
+  {
+    name: "Hire a patent lawyer",
+    cost: "$5,000–$15,000",
+    lines: [
+      { ok: true, text: "They evaluate and file for you" },
+      { ok: false, text: "Paid whether or not it's worth filing" },
+      { ok: false, text: "Takes weeks, not minutes" },
+    ],
+  },
+  {
+    name: "Ask free AI",
+    cost: "$0",
+    lines: [
+      { ok: true, text: "Instant, and costs nothing" },
+      { ok: false, text: "A generic, hedged answer" },
+      { ok: false, text: "No verdict, record, or accountability" },
+    ],
+  },
+  {
+    name: "File blind",
+    cost: "$1,000–$5,000",
+    lines: [
+      { ok: true, text: "Goes straight to the patent office" },
+      { ok: false, text: "Easy to burn fees on an unviable idea" },
+      { ok: false, text: "No read on whether it's novel" },
+    ],
+  },
+];
+
+const OURS: Line[] = [
+  { ok: true, text: "A real verdict, not a hedge" },
+  { ok: true, text: "Timestamped, verifiable record" },
+  { ok: true, text: "Full report in minutes" },
+  { ok: true, text: "Refunded if it ever fails to generate" },
+];
+
+/** One open comparison column — label, headline cost, and a pro/con list. */
+function OptionColumn({ name, cost, lines }: (typeof OPTIONS)[number]) {
+  return (
+    <div className="flex flex-col p-7 sm:p-8">
+      <p className="text-sm font-medium text-ink-2">{name}</p>
+      <p className="mt-4 font-display text-3xl tracking-tight text-ink">{cost}</p>
+      <ul className="mt-6 space-y-3">
+        {lines.map((l) => (
+          <li key={l.text} className="flex items-start gap-2.5 text-sm">
+            {l.ok ? (
+              <Check className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
+            ) : (
+              <X className="mt-0.5 h-4 w-4 shrink-0 text-muted/50" />
+            )}
+            <span className={l.ok ? "text-ink-2" : "text-muted"}>{l.text}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export function Comparison() {
+  return (
+    <section className="w-full px-4 py-24 sm:px-6">
+      <InView>
+        <div className="overflow-hidden rounded-2xl border border-line bg-card shadow-[0_30px_70px_-50px_rgba(26,43,74,0.4)]">
+          {/* Header row — eyebrow + heading on the left, a framing cell on the right,
+              divided by the same column hairline that runs down the grid (ref3). */}
+          <div className="grid border-b border-line lg:grid-cols-4">
+            <div className="p-8 sm:p-10 lg:col-span-3">
+              <Eyebrow>The options</Eyebrow>
+              <h2 className="mt-5 font-display text-4xl font-medium leading-[1.05] tracking-tight text-ink sm:text-5xl">
+                Four ways to answer{" "}
+                <span className="italic text-ink-2">one question.</span>
+              </h2>
+            </div>
+            <div className="flex items-end border-t border-line p-8 sm:p-10 lg:border-l lg:border-t-0">
+              <p className="text-sm leading-relaxed text-muted">
+                Every inventor faces the same fork before filing. Three of the four cost
+                more and tell you less.
+              </p>
+            </div>
+          </div>
+
+          {/* Tier grid — the featured card sits second, lifted out of the line grid
+              with a warm bloom rising from its base, exactly like ref3's "Popular". */}
+          <div className="grid divide-y divide-line lg:grid-cols-4 lg:divide-x lg:divide-y-0">
+            <OptionColumn {...OPTIONS[0]} />
+
+            {/* Our column — the dark glow card, elevated above the grid. */}
+            <div>
+              <div className="relative z-10 flex h-full flex-col overflow-hidden bg-gradient-to-b from-navy-800 to-navy-900 p-6 text-cream ring-1 ring-ink/30 shadow-[0_30px_70px_-40px_rgba(13,22,38,0.85)]">
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-[radial-gradient(90%_130%_at_50%_120%,rgba(228,196,90,0.24),transparent_72%)]"
+                />
+                <div className="relative flex items-center justify-between gap-3">
+                  <p className="text-sm font-medium text-cream">AI Invention Registry</p>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-cream px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink shadow-sm">
+                    <Seal className="h-3 w-3 text-gold" />
+                    Recommended
+                  </span>
+                </div>
+                <p className="relative mt-4 flex items-baseline gap-1.5">
+                  <span className="font-display text-3xl tracking-tight text-foil">$49</span>
+                  <span className="text-sm text-cream/55">flat</span>
+                </p>
+                <ul className="relative mt-6 space-y-3">
+                  {OURS.map((l) => (
+                    <li
+                      key={l.text}
+                      className="flex items-start gap-2.5 text-sm text-cream/85"
+                    >
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-gold-bright" />
+                      <span>{l.text}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="relative mt-auto pt-7">
+                  <CtaLink href="/submit" variant="gold">
+                    Evaluate for $49
+                  </CtaLink>
+                </div>
+              </div>
+            </div>
+
+            <OptionColumn {...OPTIONS[1]} />
+            <OptionColumn {...OPTIONS[2]} />
+          </div>
+        </div>
+      </InView>
+    </section>
+  );
+}
