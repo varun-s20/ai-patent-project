@@ -7,5 +7,15 @@ export async function SiteHeader() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  return <SiteNav authed={!!user} />;
+  let isAdmin = false;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single();
+    isAdmin = !!profile?.is_admin;
+  }
+
+  return <SiteNav authed={!!user} isAdmin={isAdmin} />;
 }

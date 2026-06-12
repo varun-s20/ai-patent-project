@@ -161,18 +161,6 @@ export default async function StatusPage({
           </section>
         )}
       </Card>
-
-      {evaluation && (
-        <div className="mt-4 rounded-2xl border border-line bg-paper/50 p-5">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-gold">
-            Coming soon · Phase 2
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-ink-2">
-            Got a &ldquo;Proceed&rdquo; verdict? The AI Provisional Patent Generator will turn
-            it into a filing-ready draft — claims, drawings, and USPTO instructions — for $99.
-          </p>
-        </div>
-      )}
     </main>
   );
 }

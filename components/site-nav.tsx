@@ -16,7 +16,7 @@ type NavLink = { href: string; label: string; desc: string };
 
 const EASE = [0.32, 0.72, 0, 1] as const;
 
-export function SiteNav({ authed }: { authed: boolean }) {
+export function SiteNav({ authed, isAdmin = false }: { authed: boolean; isAdmin?: boolean }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [hovered, setHovered] = useState<string | null>(null);
@@ -52,6 +52,9 @@ export function SiteNav({ authed }: { authed: boolean }) {
     ? [
         { href: "/#how", label: "How it works", desc: "From an idea to a verifiable record" },
         { href: "/dashboard", label: "Dashboard", desc: "Your evaluations & certificates" },
+        ...(isAdmin
+          ? [{ href: "/admin", label: "Admin", desc: "Submissions, users & moderation" }]
+          : []),
       ]
     : [{ href: "/#how", label: "How it works", desc: "From an idea to a verifiable record" }];
 

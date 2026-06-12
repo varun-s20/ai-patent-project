@@ -1,8 +1,10 @@
 import { CtaLink, buttonClasses } from "@/components/ui/button";
 import { Seal } from "@/components/ui/icons";
+import { SealMark } from "@/components/motion/seal-mark";
 import { InView } from "@/components/motion/in-view";
 import { CountUp } from "@/components/motion/count-up";
 import { AnimatedBar } from "@/components/motion/animated-bar";
+import { ScoreRing } from "@/components/motion/score-ring";
 
 // Scored on the live evaluation card (right tile).
 const DIMENSIONS = [
@@ -31,26 +33,47 @@ export function Hero() {
   return (
     <section className="section-tint -mt-24 overflow-x-clip">
       <div className="mx-auto w-full max-w-[1500px] px-6 pt-36 pb-20 sm:px-10 lg:px-16 lg:pt-40 lg:pb-28">
-      {/* Row 1 — headline left, supporting copy and CTAs right. */}
-      <div className="grid items-end gap-10 lg:grid-cols-[1.2fr_0.8fr]">
-        <InView>
-          <h1 className="max-w-2xl pb-1.5 font-display text-5xl font-medium leading-[1.04] tracking-tight text-ink sm:text-6xl lg:text-7xl">
-            Save thousands{" "}
-            <span className="italic text-foil">before you file.</span>
-          </h1>
-        </InView>
+      {/* Row 1 — asymmetric split: the value-prop masthead on the left, the
+          registry seal on the right (the product issues timestamped certificates,
+          so the seal earns its place). The seal is decorative on small screens. */}
+      <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+        <div>
+          <InView>
+            <h1 className="max-w-2xl pb-1.5 font-display text-5xl font-medium leading-[1.05] tracking-tight text-ink sm:text-6xl lg:text-7xl">
+              Save thousands{" "}
+              <span className="italic text-foil">before you file.</span>
+            </h1>
+          </InView>
 
-        <InView delay={0.1} className="lg:pb-3">
-          <p className="max-w-md text-[15px] leading-relaxed text-ink-2 sm:text-base">
-            An AI evaluation, an 8-section intelligence report, and a timestamped
-            certificate of registration. <span className="text-ink">$49</span>, not the
-            $2,000 to $10,000 an attorney charges.
-          </p>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <CtaLink href="/submit">Evaluate My Idea for $49</CtaLink>
-            <a href="#how" className={buttonClasses("ghost")}>
-              See how it works
-            </a>
+          <InView delay={0.1}>
+            <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-ink-2 sm:text-base">
+              An AI evaluation, an 8-section intelligence report, and a timestamped
+              certificate of registration. <span className="text-ink">$49</span>, not the
+              $2,000 to $10,000 an attorney charges.
+            </p>
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <CtaLink href="/submit">Evaluate My Idea for $49</CtaLink>
+              <a href="#how" className={buttonClasses("ghost")}>
+                See how it works
+              </a>
+            </div>
+          </InView>
+        </div>
+
+        <InView delay={0.15} className="hidden justify-center lg:flex">
+          <div className="relative flex flex-col items-center text-center">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -inset-10 -z-10 rounded-full bg-[radial-gradient(closest-side,rgba(200,160,32,0.18),transparent)] blur-2xl"
+            />
+            <span className="relative flex h-44 w-44 items-center justify-center rounded-full bg-gradient-to-br from-gold-bright to-gold ring-1 ring-gold-bright/50 shadow-[inset_0_2px_3px_rgba(255,255,255,0.6),0_24px_50px_-22px_rgba(120,90,20,0.55)]">
+              <span aria-hidden className="absolute inset-3 rounded-full border border-navy-900/15" />
+              <span aria-hidden className="absolute inset-[1.15rem] rounded-full border border-navy-900/10" />
+              <SealMark className="relative h-20 w-20 text-navy-900" />
+            </span>
+            <p className="mt-7 font-display text-lg tracking-tight text-ink">
+              Your idea, <span className="italic text-foil">on record.</span>
+            </p>
           </div>
         </InView>
       </div>
@@ -114,7 +137,7 @@ export function Hero() {
                 </div>
 
                 <div className="mt-8 flex items-center gap-6">
-                  <ScoreRing value={76} />
+                  <ScoreRing value={76} delay={0.25} />
                   <div className="flex-1 space-y-2.5">
                     {DIMENSIONS.map((d, i) => (
                       <div key={d.name} className="flex items-center gap-3">
@@ -141,24 +164,5 @@ export function Hero() {
       </div>
       </div>
     </section>
-  );
-}
-
-/** Conic-gradient score ring with an animated numeric core. */
-function ScoreRing({ value }: { value: number }) {
-  return (
-    <div
-      className="relative flex h-24 w-24 shrink-0 items-center justify-center rounded-full"
-      style={{
-        background: `conic-gradient(var(--color-gold) ${value * 3.6}deg, rgba(26,43,74,0.07) 0deg)`,
-      }}
-    >
-      <div className="flex h-[78px] w-[78px] flex-col items-center justify-center rounded-full bg-card">
-        <span className="font-display text-2xl text-ink">
-          <CountUp to={value} />
-        </span>
-        <span className="text-[9px] uppercase tracking-[0.15em] text-muted">Overall</span>
-      </div>
-    </div>
   );
 }
