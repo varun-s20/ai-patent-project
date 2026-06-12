@@ -2,6 +2,7 @@ import { signUp } from "@/app/auth/actions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/badge";
+import { PasswordField } from "@/components/ui/password-field";
 
 const inputClass =
   "w-full rounded-xl border border-line bg-paper/40 px-4 py-3 text-ink outline-none transition-colors duration-200 placeholder:text-muted/60 focus:border-gold focus:bg-card";
@@ -27,14 +28,7 @@ export default async function RegisterPage({
         <form action={signUp} className="space-y-4">
           <input name="fullName" placeholder="Full name" required className={inputClass} />
           <input name="email" type="email" placeholder="Email" required className={inputClass} />
-          <input
-            name="password"
-            type="password"
-            placeholder="Password"
-            required
-            minLength={8}
-            className={inputClass}
-          />
+          <PasswordField minLength={8} autoComplete="new-password" className={inputClass} />
           <Button className="w-full">Register</Button>
         </form>
         <p className="mt-5 text-sm text-muted">

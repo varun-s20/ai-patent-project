@@ -2,6 +2,7 @@ import { signIn } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/badge";
 import { Patent } from "@/components/ui/icons";
+import { PasswordField } from "@/components/ui/password-field";
 
 const inputClass =
   "w-full rounded-xl border border-line bg-paper/40 px-4 py-3 text-ink outline-none transition-colors duration-200 placeholder:text-muted/60 focus:border-gold focus:bg-card";
@@ -83,13 +84,7 @@ export default async function LoginPage({
 
           <form action={signIn} className="mt-6 space-y-4">
             <input name="email" type="email" placeholder="Email" required className={inputClass} />
-            <input
-              name="password"
-              type="password"
-              placeholder="Password"
-              required
-              className={inputClass}
-            />
+            <PasswordField autoComplete="current-password" className={inputClass} />
             <Button className="w-full">Log in</Button>
           </form>
 

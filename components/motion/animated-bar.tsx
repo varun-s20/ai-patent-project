@@ -17,11 +17,14 @@ export function AnimatedBar({
     <span
       className={`relative block h-1.5 w-full overflow-hidden rounded-full bg-ink/[0.08] ${className}`}
     >
+      {/* Gold fill is sized to `value%`; the scaleX reveal grows it from the left.
+          Animates on mount (not whileInView) so the fill is reliable even when the
+          bar sits below the fold's visibility threshold on load. */}
       <motion.span
-        className="absolute inset-y-0 left-0 w-full origin-left rounded-full bg-gradient-to-r from-gold to-gold-bright"
+        className="absolute inset-y-0 left-0 origin-left rounded-full bg-gradient-to-r from-gold to-gold-bright"
+        style={{ width: `${value}%` }}
         initial={reduce ? false : { scaleX: 0 }}
-        whileInView={{ scaleX: value / 100 }}
-        viewport={{ once: true, amount: 0.6 }}
+        animate={{ scaleX: 1 }}
         transition={{ duration: 1, delay, ease: [0.16, 1, 0.3, 1] }}
       />
     </span>
