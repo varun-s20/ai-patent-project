@@ -1,7 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createCheckoutSession } from "../actions";
-import { PRICE_CENTS } from "@/lib/stripe/checkout";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Eyebrow } from "@/components/ui/badge";
+import { Check } from "@/components/ui/icons";
 
 export default async function PayPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,19 +25,43 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
   if (submission.status !== "draft") redirect(`/status/${id}`);
 
   return (
-    <main className="mx-auto max-w-md p-8">
-      <h1 className="text-2xl font-semibold">Evaluate your invention</h1>
-      <p className="mt-2 text-gray-600">{submission.title}</p>
-      <p className="mt-4 text-lg font-medium">${(PRICE_CENTS / 100).toFixed(0)} — one-time</p>
-      <form action={createCheckoutSession} className="mt-6">
-        <input type="hidden" name="submissionId" value={submission.id} />
-        <button
-          type="submit"
-          className="rounded bg-black px-4 py-2 text-white hover:bg-gray-800"
-        >
-          Pay &amp; Evaluate
-        </button>
-      </form>
+    <main className="mx-auto w-full max-w-md px-6 py-16">
+      <Eyebrow>Describe › Pay › Receive</Eyebrow>
+      <h1 className="mt-5 font-display text-4xl tracking-tight text-ink">
+        Evaluate your invention
+      </h1>
+      <Card className="mt-7">
+        <p className="text-sm text-muted">{submission.title}</p>
+        <p className="mt-5 text-sm text-muted line-through">
+          Patent lawyers charge $2,000–$10,000
+        </p>
+        <p className="mt-1 font-display text-6xl tracking-tight text-ink">
+          $49<span className="ml-2 align-middle text-sm font-sans text-muted">one-time</span>
+        </p>
+
+        <ul className="mt-6 flex flex-col gap-2.5 text-sm text-ink-2">
+          {[
+            "Five-dimension AI evaluation",
+            "8-section pre-patent intelligence report",
+            "Timestamped certificate of registration",
+          ].map((f) => (
+            <li key={f} className="flex items-start gap-2.5">
+              <Check className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
+              {f}
+            </li>
+          ))}
+        </ul>
+
+        <form action={createCheckoutSession} className="mt-7">
+          <input type="hidden" name="submissionId" value={submission.id} />
+          <Button type="submit" className="w-full">
+            Pay &amp; Evaluate
+          </Button>
+        </form>
+        <p className="mt-3 text-center text-xs text-muted">
+          Secure checkout via Stripe · Apple Pay &amp; Google Pay supported.
+        </p>
+      </Card>
     </main>
   );
 }

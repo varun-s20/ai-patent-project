@@ -10,6 +10,9 @@ import { INDUSTRIES } from "@/lib/types";
 const EXAMPLE =
   "A golf ball with a built-in GPS chip so golfers can track lost balls";
 
+const inputClass =
+  "w-full rounded-xl border border-line bg-paper/40 px-4 py-3 text-base text-ink outline-none transition-colors duration-200 placeholder:text-muted/60 focus:border-gold focus:bg-card";
+
 export function SubmissionForm() {
   const [description, setDescription] = useState("");
   const [fields, setFields] = useState<Record<string, string>>({});
@@ -29,18 +32,13 @@ export function SubmissionForm() {
 
   return (
     <form action={createSubmission} className="space-y-5">
-      <div className="flex items-center gap-2 text-sm font-medium text-navy/60">
-        <span className="text-navy">1. Describe Idea</span> ›
-        <span>2. Pay</span> › <span>3. Receive Report</span>
-      </div>
-
       <input
         name="title"
         placeholder="Invention title"
         required
         value={fields.title ?? ""}
         onChange={(e) => persist({ ...fields, title: e.target.value })}
-        className="w-full rounded border p-3 text-base"
+        className={inputClass}
       />
 
       <div>
@@ -54,7 +52,7 @@ export function SubmissionForm() {
             setDescription(e.target.value);
             persist({ ...fields, description: e.target.value });
           }}
-          className="w-full rounded border p-3 text-base"
+          className={inputClass}
         />
         <CharacterCounter count={description.length} min={DESCRIPTION_MIN} max={DESCRIPTION_MAX} />
       </div>
@@ -65,7 +63,7 @@ export function SubmissionForm() {
         rows={3}
         value={fields.problem ?? ""}
         onChange={(e) => persist({ ...fields, problem: e.target.value })}
-        className="w-full rounded border p-3 text-base"
+        className={inputClass}
       />
 
       <select
@@ -73,7 +71,7 @@ export function SubmissionForm() {
         required
         value={fields.industry ?? ""}
         onChange={(e) => persist({ ...fields, industry: e.target.value })}
-        className="w-full rounded border p-3 text-base"
+        className={inputClass}
       >
         <option value="" disabled>
           Select industry / category
@@ -91,7 +89,7 @@ export function SubmissionForm() {
         required
         value={fields.inventorName ?? ""}
         onChange={(e) => persist({ ...fields, inventorName: e.target.value })}
-        className="w-full rounded border p-3 text-base"
+        className={inputClass}
       />
 
       <input
@@ -101,10 +99,10 @@ export function SubmissionForm() {
         required
         value={fields.email ?? ""}
         onChange={(e) => persist({ ...fields, email: e.target.value })}
-        className="w-full rounded border p-3 text-base"
+        className={inputClass}
       />
 
-      <button className="w-full rounded-lg bg-navy py-4 text-lg font-semibold text-white">
+      <button className="w-full rounded-full bg-ink py-4 text-base font-medium text-cream transition-transform duration-300 ease-[var(--ease-out)] active:scale-[0.98]">
         Get My Report
       </button>
     </form>

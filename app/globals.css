@@ -1,32 +1,120 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  /* Official Registry palette — clean white, PRD navy, PRD gold */
+  --color-paper: #f6f7f9;
+  --color-cream: #ffffff;
+  --color-card: #ffffff;
+  --color-ink: #1a2b4a;
+  --color-ink-2: #34466a;
+  --color-muted: #64748b;
+  --color-gold: #c8a020;
+  --color-gold-bright: #e4c45a;
+  --color-line: #e2e8f0;
+  /* Deep-navy stops for richer dark surfaces */
+  --color-navy-900: #0d1626;
+  --color-navy-800: #12203a;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
+  --font-display: var(--font-display);
   --font-mono: var(--font-geist-mono);
 }
 
-/* Brand tokens — generate bg-navy, text-navy, text-gold, etc. */
-@theme {
-  --color-navy: #1a2b4a;
-  --color-gold: #c8a020;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: #f6f7f9;
+  --foreground: #1a2b4a;
+  /* Emil-tier custom easing curves */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Plaid-style full-bleed section gradients — soft, navy/gold, never garish.
+   Used to give edge-to-edge sections atmosphere instead of flat fills. */
+.section-light {
+  background: linear-gradient(180deg, #ffffff 0%, var(--color-paper) 100%);
+}
+.section-tint {
+  background:
+    radial-gradient(56rem 34rem at 50% -8rem, rgba(200, 160, 32, 0.08), transparent 62%),
+    linear-gradient(180deg, var(--color-paper) 0%, #ffffff 60%);
+}
+.section-navy {
+  background:
+    radial-gradient(60% 100% at 50% 0%, rgba(228, 196, 90, 0.16), transparent 70%),
+    linear-gradient(180deg, var(--color-navy-800) 0%, var(--color-navy-900) 100%);
+}
+
+/* Soft gold bloom anchored top-center — the only warm light on the page. */
+.atmos-bloom {
+  background:
+    radial-gradient(48rem 30rem at 50% -6rem, rgba(200, 160, 32, 0.12), transparent 70%),
+    radial-gradient(60rem 40rem at 85% 8rem, rgba(26, 43, 74, 0.05), transparent 70%);
+}
+
+/* Fine film grain — fixed, pointer-events-none, never on scrolling content. */
+.atmos-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.035;
+}
+
+/* Brushed-gold foil text for hero accents and headline numbers. */
+.text-foil {
+  background-image: linear-gradient(120deg, #a9821a 0%, #e7c862 42%, #c8a020 60%, #d8b53f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Hairline that brightens to gold left-to-right — section openers. */
+.rule-foil {
+  background-image: linear-gradient(to right, var(--color-gold), transparent);
+}
+
+/* Scroll-entry reveal — heavy fade-up with blur, GPU-only properties. */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  filter: blur(8px);
+  transition:
+    opacity 0.85s var(--ease-out),
+    transform 0.85s var(--ease-out),
+    filter 0.85s var(--ease-out);
+  will-change: transform, opacity;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* Slow, premium gradient drift for the gold foil seal. */
+@keyframes foil-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(45deg);
+  }
+  50% {
+    transform: translate3d(0, -2px, 0) rotate(45deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    transition: opacity 0.4s ease;
+    transform: none;
+    filter: none;
+  }
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

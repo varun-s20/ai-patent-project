@@ -34,9 +34,14 @@ export function reportReadyEmail(args: { title: string; submissionId: string }):
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "";
   const link = `${base}/status/${args.submissionId}`;
   return {
-    subject: "Your Pre-Patent Intelligence Report is ready",
+    subject: "Your Pre-Patent Intelligence Report & Certificate are ready",
     html: `<p>Your 8-page Pre-Patent Intelligence Report for "<strong>${title}</strong>" is ready.</p>
-<p>The full report is attached as a PDF. You can also view your results and re-download it any time here:</p>
+<p>Two PDFs are attached to this email:</p>
+<ul>
+  <li>Your <strong>Pre-Patent Intelligence Report</strong></li>
+  <li>Your <strong>Certificate of Idea Registration</strong></li>
+</ul>
+<p>You can also view your results and re-download both any time here:</p>
 <p><a href="${link}">${link}</a></p>
 <p style="font-size:12px;color:#6B7280;margin-top:24px">These are AI-generated estimates, not legal advice. This report confers no intellectual-property rights.</p>`,
   };

@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Newsreader } from "next/font/google";
 import "./globals.css";
+import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteAtmosphere } from "@/components/site-atmosphere";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -12,9 +15,19 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Report-grade institutional serif for display headings (italic carries emphasis).
+const newsreader = Newsreader({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "AI Invention Registry",
-  description: "Find out if your idea is worth patenting before you spend thousands.",
+  title: "AI Invention Registry: know if your idea is worth patenting",
+  description:
+    "A five-dimension AI evaluation, a pre-patent intelligence report, and a timestamped certificate of registration. For $49, not $10,000.",
 };
 
 export default function RootLayout({
@@ -25,9 +38,18 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="flex min-h-full flex-col overflow-x-clip bg-paper text-ink">
+        {/* Without JS, scroll-reveal elements must still be visible (crawlers/no-JS). */}
+        <noscript>
+          <style>{`.reveal{opacity:1!important;transform:none!important;filter:none!important}`}</style>
+        </noscript>
+        <SiteAtmosphere />
+        <SiteHeader />
+        <div className="flex flex-1 flex-col pt-24">{children}</div>
+        <SiteFooter />
+      </body>
     </html>
   );
 }

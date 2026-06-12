@@ -11,9 +11,9 @@ export function CharacterCounter({
 }) {
   const tooShort = count < min;
   const tooLong = count > max;
-  const color = tooShort || tooLong ? "text-red-600" : "text-navy/60";
+  const color = tooShort || tooLong ? "text-red-600" : "text-muted";
   return (
-    <p className={`text-xs ${color}`} aria-live="polite">
+    <p className={`mt-2 text-xs ${color}`} aria-live="polite">
       {count}/{max}
       {tooShort && ` (min ${min})`}
     </p>

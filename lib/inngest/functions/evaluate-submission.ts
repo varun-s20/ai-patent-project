@@ -1,7 +1,7 @@
 import { NonRetriableError } from "inngest";
 import { inngest, submissionPaid } from "@/lib/inngest/client";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getOllama } from "@/lib/ollama/client";
+import { getChatClient } from "@/lib/ai/provider";
 import { getStripe } from "@/lib/stripe/client";
 import { evaluateInvention } from "@/lib/evaluation/evaluate";
 import { toEvaluationRow } from "@/lib/evaluation/row";
@@ -13,6 +13,10 @@ import { renderReportPdf } from "@/lib/pdf/render";
 import { certIdFor } from "@/lib/report/cert-id";
 import { documentPath } from "@/lib/storage/paths";
 import { type ReportData } from "@/lib/report/types";
+import { renderCertificatePdf } from "@/lib/pdf/certificate-render";
+import { certificateVerifyUrl } from "@/lib/certificate/verify-url";
+import { generateQrDataUrl } from "@/lib/certificate/qr";
+import { type CertificateData } from "@/lib/certificate/types";
 
 export const evaluateSubmission = inngest.createFunction(
   {
@@ -80,7 +84,7 @@ export const evaluateSubmission = inngest.createFunction(
 
     // Step 2 — call Ollama. A throw here is retried, then hits onFailure.
     const result = await step.run("evaluate", async () => {
-      return evaluateInvention(input, getOllama());
+      return evaluateInvention(input, getChatClient());
     });
 
     // Step 3 — generate the report narrative via a second LLM call.
@@ -92,14 +96,19 @@ export const evaluateSubmission = inngest.createFunction(
           avgScore: result.avgScore,
           verdict: result.verdict,
         },
-        getOllama(),
+        getChatClient(),
       );
     });
 
     // Step 4 — render the PDF, upload to private storage, record the certificate.
-    const reportPath = await step.run("render-and-upload-report", async () => {
+    const report = await step.run("render-and-upload-report", async () => {
       const now = new Date();
       const certId = certIdFor(submissionId, now.getFullYear());
+      const issuedAt = now.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
       const data: ReportData = {
         submission: {
           title: submission.title,
@@ -113,11 +122,7 @@ export const evaluateSubmission = inngest.createFunction(
         verdict: result.verdict,
         content,
         certId,
-        issuedAt: now.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        }),
+        issuedAt,
       };
 
       const pdf = await renderReportPdf(data);
@@ -132,10 +137,49 @@ export const evaluateSubmission = inngest.createFunction(
       const { error: certErr } = await admin
         .from("certificates")
         .upsert(
-          { submission_id: submissionId, cert_id: certId, report_pdf_path: path },
+          {
+            submission_id: submissionId,
+            cert_id: certId,
+            report_pdf_path: path,
+            issued_at: now.toISOString(),
+          },
           { onConflict: "submission_id" },
         );
       if (certErr) throw new Error(`Certificate upsert failed: ${certErr.message}`);
+
+      return { reportPath: path, certId, issuedAt };
+    });
+
+    const { reportPath, certId, issuedAt } = report;
+
+    // Step 4b — render the landscape certificate, upload it, record its path.
+    const certPath = await step.run("render-and-upload-certificate", async () => {
+      const verifyUrl = certificateVerifyUrl(certId);
+      const qrDataUrl = await generateQrDataUrl(verifyUrl);
+      const data: CertificateData = {
+        certId,
+        title: submission.title,
+        inventorName: submission.inventor_name,
+        industry: submission.industry,
+        issuedAt,
+        verifyUrl,
+        qrDataUrl,
+      };
+
+      const pdf = await renderCertificatePdf(data);
+      const path = documentPath(submission.user_id, submissionId, "certificate");
+
+      const admin = createAdminClient();
+      const { error: upErr } = await admin.storage
+        .from("documents")
+        .upload(path, pdf, { contentType: "application/pdf", upsert: true });
+      if (upErr) throw new Error(`Certificate upload failed: ${upErr.message}`);
+
+      const { error: updErr } = await admin
+        .from("certificates")
+        .update({ certificate_pdf_path: path })
+        .eq("submission_id", submissionId);
+      if (updErr) throw new Error(`Certificate path update failed: ${updErr.message}`);
 
       return path;
     });
@@ -154,19 +198,31 @@ export const evaluateSubmission = inngest.createFunction(
         .eq("id", submissionId);
     });
 
-    // Step 6 — best-effort email with the PDF attached. Must NOT throw: a flaky email
+    // Step 6 — best-effort email with both PDFs attached. Must NOT throw: a flaky email
     // must not reverse a paid, fully-generated evaluation via onFailure.
     await step.run("send-report-email", async () => {
       try {
         const admin = createAdminClient();
-        const { data: file, error } = await admin.storage.from("documents").download(reportPath);
-        if (error || !file) throw new Error(error?.message ?? "download returned no file");
-        const buf = Buffer.from(await file.arrayBuffer());
+        const [reportFile, certFile] = await Promise.all([
+          admin.storage.from("documents").download(reportPath),
+          admin.storage.from("documents").download(certPath),
+        ]);
+        if (reportFile.error || !reportFile.data) {
+          throw new Error(reportFile.error?.message ?? "report download returned no file");
+        }
+        if (certFile.error || !certFile.data) {
+          throw new Error(certFile.error?.message ?? "certificate download returned no file");
+        }
+        const reportBuf = Buffer.from(await reportFile.data.arrayBuffer());
+        const certBuf = Buffer.from(await certFile.data.arrayBuffer());
 
         await sendEmail(
           submission.email,
           reportReadyEmail({ title: submission.title, submissionId }),
-          [{ filename: "pre-patent-intelligence-report.pdf", content: buf }],
+          [
+            { filename: "pre-patent-intelligence-report.pdf", content: reportBuf },
+            { filename: "certificate-of-idea-registration.pdf", content: certBuf },
+          ],
         );
       } catch (err) {
         console.error(`[evaluate-submission] report email failed for ${submissionId}:`, err);
