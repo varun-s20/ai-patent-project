@@ -1,5 +1,5 @@
-import { ChevronDown } from "@/components/ui/icons";
 import { InView } from "@/components/motion/in-view";
+import { FaqList } from "@/components/home/faq-list";
 
 const FAQS = [
   {
@@ -41,16 +41,8 @@ export function Faq() {
           </p>
         </InView>
 
-        <InView delay={0.05} className="divide-y divide-line border-t border-line">
-          {FAQS.map((f) => (
-            <details key={f.q} className="group py-1">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-left">
-                <span className="font-display text-xl tracking-tight text-ink">{f.q}</span>
-                <ChevronDown className="h-5 w-5 shrink-0 text-muted transition-transform duration-300 group-open:rotate-180" />
-              </summary>
-              <p className="max-w-2xl pb-6 text-[15px] leading-relaxed text-muted">{f.a}</p>
-            </details>
-          ))}
+        <InView delay={0.05}>
+          <FaqList items={FAQS} />
         </InView>
       </div>
     </section>
