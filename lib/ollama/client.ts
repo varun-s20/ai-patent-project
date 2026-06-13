@@ -2,6 +2,13 @@
 import type { ChatClient, ChatCreateParams, ChatMessage } from "@/lib/ai/types";
 
 const DEFAULT_BASE_URL = "http://localhost:11434";
+const DEFAULT_MODEL = "llama3.1";
+
+/** The model Ollama will actually run — what to record as `model_used`. */
+export function ollamaModel(): string {
+  // `||` so an empty OLLAMA_MODEL="" also falls back to the default.
+  return process.env.OLLAMA_MODEL || DEFAULT_MODEL;
+}
 
 interface OllamaChatResponse {
   message?: { role: string; content: string };

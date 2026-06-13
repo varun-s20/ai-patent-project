@@ -1,7 +1,7 @@
 import { NonRetriableError } from "inngest";
 import { inngest, submissionPaid } from "@/lib/inngest/client";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getChatClient } from "@/lib/ai/provider";
+import { getChatClient, activeModel } from "@/lib/ai/provider";
 import { getStripe } from "@/lib/stripe/client";
 import { evaluateInvention } from "@/lib/evaluation/evaluate";
 import { toEvaluationRow } from "@/lib/evaluation/row";
@@ -82,9 +82,11 @@ export const evaluateSubmission = inngest.createFunction(
       email: submission.email,
     };
 
-    // Step 2 — call Ollama. A throw here is retried, then hits onFailure.
+    // Step 2 — call the active AI provider. A throw here is retried, then hits
+    // onFailure. Pass activeModel() so `model_used` reflects the model the
+    // provider actually ran (Groq ignores the caller's model name otherwise).
     const result = await step.run("evaluate", async () => {
-      return evaluateInvention(input, getChatClient());
+      return evaluateInvention(input, getChatClient(), activeModel());
     });
 
     // Step 3 — generate the report narrative via a second LLM call.
