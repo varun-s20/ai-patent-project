@@ -25,7 +25,7 @@ const OPTIONS: {
     lines: [
       { ok: true, text: "Instant, and costs nothing" },
       { ok: false, text: "A generic, hedged answer" },
-      { ok: false, text: "No verdict, record, or accountability" },
+      { ok: false, text: "Can't date-stamp your idea against the registry" },
     ],
   },
   {
@@ -41,9 +41,9 @@ const OPTIONS: {
 
 const OURS: Line[] = [
   { ok: true, text: "A real verdict, not a hedge" },
-  { ok: true, text: "Timestamped, verifiable record" },
-  { ok: true, text: "Full report in minutes" },
-  { ok: true, text: "Refunded if it ever fails to generate" },
+  { ok: true, text: "Date-stamped against every idea on the registry" },
+  { ok: true, text: "Private — shared only if you ask us to" },
+  { ok: true, text: "Full report in minutes, refund-backed" },
 ];
 
 /** One open comparison column — label, headline cost, and a pro/con list. */
@@ -85,8 +85,9 @@ export function Comparison() {
             </div>
             <div className="flex items-end border-t border-line p-8 sm:p-10 lg:border-l lg:border-t-0">
               <p className="text-sm leading-relaxed text-muted">
-                Every inventor faces the same fork before filing. Three of the four cost
-                more and tell you less.
+                Every inventor faces the same fork before filing. Only one gives you a
+                verdict <span className="text-ink-2">and</span> a dated record of who had
+                the idea first.
               </p>
             </div>
           </div>
