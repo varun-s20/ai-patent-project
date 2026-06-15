@@ -1,7 +1,7 @@
 import { CtaLink } from "@/components/ui/button";
-import { Check } from "@/components/ui/icons";
 import { InView } from "@/components/motion/in-view";
 import { CountUp } from "@/components/motion/count-up";
+import { AnimatedCheck } from "@/components/motion/animated-check";
 
 const INCLUDED = [
   {
@@ -25,11 +25,11 @@ const INCLUDED = [
 export function Pricing() {
   return (
     <section id="pricing" className="mx-auto max-w-[1500px] px-6 py-24 sm:px-10 lg:px-16">
-      <InView className="max-w-2xl">
-        <h2 className="font-display text-4xl font-semibold leading-[1.1] tracking-tight text-ink sm:text-5xl">
+      <InView className="max-w-none">
+        <h2 className="font-display text-[2.5rem] font-semibold leading-[1.05] tracking-tight text-ink sm:text-5xl lg:text-6xl">
           One flat price. The whole picture.
         </h2>
-        <p className="mt-4 text-lg leading-relaxed text-muted">
+        <p className="mt-4 max-w-7xl text-xl leading-relaxed text-muted">
           No tiers, no upsells, no hourly meter. A single payment unlocks the complete
           evaluation, report and certificate included.
         </p>
@@ -44,16 +44,16 @@ export function Pricing() {
             {/* The figure. */}
             <div className="relative flex flex-col p-8 sm:p-10 lg:border-r lg:border-line">
               <span className="h-px w-12 bg-gradient-to-r from-gold to-transparent" />
-              <p className="mt-5 text-[10px] uppercase tracking-[0.22em] text-muted">
+              <p className="mt-5 text-[11px] uppercase tracking-[0.22em] text-muted">
                 The price
               </p>
-              <p className="mt-4 text-sm text-muted line-through decoration-line">
+              <p className="mt-4 text-base text-muted line-through decoration-line">
                 Patent lawyers charge $2,000 to $10,000
               </p>
               <p className="mt-1 font-display text-7xl font-semibold leading-none tracking-tight text-ink">
                 <CountUp to={49} prefix="$" />
               </p>
-              <p className="mt-4 text-[15px] leading-relaxed text-muted">
+              <p className="mt-4 text-base leading-relaxed text-muted">
                 One evaluation. Full report. Certificate on record.
               </p>
               <div className="mt-8 flex">
@@ -61,7 +61,7 @@ export function Pricing() {
                   Evaluate for $49
                 </CtaLink>
               </div>
-              <p className="mt-6 text-xs leading-relaxed text-muted">
+              <p className="mt-6 text-[13px] leading-relaxed text-muted">
                 Automatic full refund if the evaluation ever fails to generate. No tiers, no
                 hourly meter, no upsell.
               </p>
@@ -69,18 +69,18 @@ export function Pricing() {
 
             {/* The itemised receipt. */}
             <div className="flex flex-col bg-paper p-8 sm:p-10">
-              <p className="text-[10px] uppercase tracking-[0.22em] text-muted">
+              <p className="text-[11px] uppercase tracking-[0.22em] text-muted">
                 Every $49 evaluation includes
               </p>
               <ul className="mt-2 divide-y divide-line">
-                {INCLUDED.map((f) => (
+                {INCLUDED.map((f, i) => (
                   <li key={f.lead} className="flex items-start gap-4 py-4">
                     <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-gold/12 ring-1 ring-gold/20">
-                      <Check className="h-3.5 w-3.5 text-gold" />
+                      <AnimatedCheck delay={0.15 + i * 0.12} className="h-3.5 w-3.5 text-gold" />
                     </span>
                     <span>
                       <span className="font-medium text-ink">{f.lead}</span>
-                      <span className="mt-0.5 block text-sm leading-relaxed text-muted">
+                      <span className="mt-0.5 block text-base leading-relaxed text-muted">
                         {f.detail}
                       </span>
                     </span>
@@ -88,7 +88,7 @@ export function Pricing() {
                 ))}
               </ul>
               <div className="mt-auto flex items-baseline justify-between border-t border-line pt-5">
-                <span className="text-sm font-medium text-ink">Everything above</span>
+                <span className="text-base font-medium text-ink">Everything above</span>
                 <span className="font-display text-xl font-semibold tracking-tight text-ink">
                   $49 flat
                 </span>

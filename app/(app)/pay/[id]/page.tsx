@@ -32,7 +32,7 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
       </h1>
       <Card className="mt-7">
         <p className="text-sm text-muted">{submission.title}</p>
-        <p className="mt-5 text-sm text-muted line-through">
+        <p className="mt-5 text-sm text-muted line-through decoration-red-500 important">
           Patent lawyers charge $2,000–$10,000
         </p>
         <p className="mt-1 font-display text-6xl tracking-tight text-ink">

@@ -73,7 +73,7 @@ export default async function LoginPage({
             <Patent className="h-5 w-5 text-navy-900" />
           </span>
 
-          <Eyebrow>Welcome back</Eyebrow>
+          
           <h1 className="mt-5 font-display text-4xl tracking-tight text-ink">
             Log <span className="italic text-foil">in.</span>
           </h1>

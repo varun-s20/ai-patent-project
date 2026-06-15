@@ -94,7 +94,7 @@ export default async function DashboardPage() {
       {/* Header band — editorial, foil-accented, echoing the homepage hero. */}
       <InView className="flex flex-wrap items-end justify-between gap-6">
         <div>
-          <Eyebrow>Your registry</Eyebrow>
+          
           <h1 className="mt-5 font-display text-4xl font-medium leading-[1.05] tracking-tight text-ink sm:text-5xl">
             Your ideas, <span className="italic text-foil">on record.</span>
           </h1>

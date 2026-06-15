@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CtaLink } from "@/components/ui/button";
+import { Patent } from "@/components/ui/icons";
 
 const COLUMNS = [
   {
@@ -31,15 +32,19 @@ export function SiteFooter() {
           {/* Brand block with an action slot — the reference's footer CTA area. */}
           <div className="max-w-md">
             <div className="flex items-center gap-2.5">
-              <span
-                className="block h-3 w-3 rounded-[3px] bg-gold ring-1 ring-gold-bright/60"
-                style={{ transform: "rotate(45deg)" }}
-              />
-              <span className="font-display text-lg font-semibold tracking-tight text-ink">
+              {/* Same machined gold-foil patent medallion as the navbar logo. */}
+              <span className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-gold-bright to-gold ring-1 ring-gold-bright/50 shadow-[inset_0_1px_1px_rgba(255,255,255,0.55),0_1px_2px_rgba(120,90,20,0.28)]">
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-b from-white/25 to-transparent"
+                />
+                <Patent className="relative h-[18px] w-[18px] text-navy-900" />
+              </span>
+              <span className="font-display text-xl font-semibold tracking-tight text-ink">
                 AI Invention Registry
               </span>
             </div>
-            <p className="mt-4 text-sm leading-relaxed text-muted">
+            <p className="mt-4 text-[15px] leading-relaxed text-muted">
               Know whether your idea is worth patenting before you spend a dollar filing. A
               five-dimension AI evaluation, an 8-section report, and a timestamped certificate
               of registration.
@@ -50,10 +55,10 @@ export function SiteFooter() {
           </div>
 
           {/* Nav columns. */}
-          <div className="grid grid-cols-2 gap-8 text-sm sm:gap-16">
+          <div className="grid grid-cols-2 gap-8 text-[15px] sm:gap-16">
             {COLUMNS.map((col) => (
               <div key={col.heading} className="flex flex-col gap-3">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-muted/70">
+                <p className="text-xs uppercase tracking-[0.18em] text-muted/70">
                   {col.heading}
                 </p>
                 {col.links.map((l) => (
@@ -71,12 +76,12 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-14 border-t border-line pt-6">
-          <p className="max-w-2xl text-xs leading-relaxed text-muted">
+          <p className="text-[13px] leading-relaxed text-muted">
             These are AI-generated estimates, not legal advice. This service confers no
             intellectual-property rights and is not a substitute for a registered patent
             attorney.
           </p>
-          <p className="mt-3 text-xs text-muted/70">© 2026 AI Invention Registry</p>
+          <p className="mt-3 text-[13px] text-muted/70">© 2026 AI Invention Registry</p>
         </div>
       </div>
     </footer>

@@ -77,11 +77,11 @@ export function SiteNav({ authed, isAdmin = false }: { authed: boolean; isAdmin?
     ) : null;
 
   const itemClass =
-    "relative rounded-md px-4 py-2 text-[13px] text-ink-2 transition-colors duration-200 hover:text-ink";
+    "relative rounded-md px-4 py-2 text-[15px] text-ink-2 transition-colors duration-200 hover:text-ink";
 
   // Collapsed island is wider when logged in (more entries) so the row breathes;
   // it never exceeds the viewport (insets ~12px each side on phones).
-  const collapsedWidth = Math.min(authed ? 820 : 660, vw - 24);
+  const collapsedWidth = Math.min(authed ? 880 : 710, vw - 24);
   const geometry = {
     maxWidth: scrolled ? collapsedWidth : vw,
     marginTop: scrolled ? 12 : 0,
@@ -115,7 +115,7 @@ export function SiteNav({ authed, isAdmin = false }: { authed: boolean; isAdmin?
               tightens to a pill when collapsed. */}
           <div
             className={`mx-auto flex w-full max-w-[1500px] items-center justify-between gap-3 transition-[padding] duration-500 ease-[var(--ease-out)] ${
-              scrolled ? "px-1.5 py-1.5" : "px-5 py-3.5 sm:px-10 lg:px-16"
+              scrolled ? "px-1.5 py-1.5" : "px-5 py-5 sm:px-10 sm:py-6 lg:px-16"
             }`}
           >
             <Link
@@ -133,7 +133,7 @@ export function SiteNav({ authed, isAdmin = false }: { authed: boolean; isAdmin?
                 />
                 <Patent className="relative h-[18px] w-[18px] text-navy-900" />
               </span>
-              <span className="text-[13px] font-medium tracking-tight text-ink">
+              <span className="text-[15px] font-medium tracking-tight text-ink">
                 AI Invention Registry
               </span>
             </Link>
@@ -178,7 +178,7 @@ export function SiteNav({ authed, isAdmin = false }: { authed: boolean; isAdmin?
 
               <Link
                 href="/submit"
-                className="group/cta inline-flex select-none items-center gap-2 rounded-lg bg-ink py-2 pl-5 pr-2 text-[13px] font-medium tracking-tight text-cream shadow-[0_1px_2px_rgba(20,25,40,0.22)] transition-colors duration-200 ease-[var(--ease-out)] hover:bg-navy-800"
+                className="group/cta inline-flex select-none items-center gap-2 rounded-lg bg-ink py-2 pl-5 pr-2 text-[15px] font-medium tracking-tight text-cream shadow-[0_1px_2px_rgba(20,25,40,0.22)] transition-colors duration-200 ease-[var(--ease-out)] hover:bg-navy-800"
               >
                 <span>Evaluate for $49</span>
                 <span className="flex h-7 w-7 items-center justify-center rounded-md bg-cream/15 transition-transform duration-300 ease-[var(--ease-out)] group-hover/cta:translate-x-0.5">
@@ -258,7 +258,7 @@ export function SiteNav({ authed, isAdmin = false }: { authed: boolean; isAdmin?
             <Link
               href="/submit"
               onClick={close}
-              className="group/cta inline-flex select-none items-center gap-2 rounded-lg bg-ink py-3 pl-6 pr-2.5 text-sm font-medium tracking-tight text-cream shadow-[0_1px_2px_rgba(20,25,40,0.22)] transition-colors duration-200 ease-[var(--ease-out)]"
+              className="group/cta inline-flex select-none items-center gap-2 rounded-lg bg-ink py-3 pl-6 pr-2.5 text-base font-medium tracking-tight text-cream shadow-[0_1px_2px_rgba(20,25,40,0.22)] transition-colors duration-200 ease-[var(--ease-out)]"
             >
               <span>Evaluate for $49</span>
               <span className="flex h-8 w-8 items-center justify-center rounded-md bg-cream/15 transition-transform duration-300 ease-[var(--ease-out)] group-hover/cta:translate-x-0.5">
@@ -270,7 +270,7 @@ export function SiteNav({ authed, isAdmin = false }: { authed: boolean; isAdmin?
 
         <div
           style={{ transitionDelay: `${open ? 220 + (links.length + 1) * 60 : 0}ms` }}
-          className={`mt-auto flex items-center gap-2.5 px-8 pb-10 text-xs text-muted transition-all duration-500 ease-[var(--ease-out)] ${
+          className={`mt-auto flex items-center gap-2.5 px-8 pb-10 text-[13px] text-muted transition-all duration-500 ease-[var(--ease-out)] ${
             open ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
           }`}
         >
@@ -306,7 +306,7 @@ function MobileRow({
         <span className="block font-display text-[2rem] leading-none tracking-tight text-ink">
           {label}
         </span>
-        <span className="mt-2 block text-sm text-muted">{desc}</span>
+        <span className="mt-2 block text-[15px] text-muted">{desc}</span>
       </span>
       <ArrowUpRight className="mb-1 h-5 w-5 shrink-0 text-muted transition-transform duration-300 ease-[var(--ease-out)] group-hover/row:translate-x-0.5" />
     </>

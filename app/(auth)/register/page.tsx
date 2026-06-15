@@ -15,7 +15,7 @@ export default async function RegisterPage({
   const { error } = await searchParams;
   return (
     <main className="mx-auto flex w-full max-w-md flex-col px-6 py-16">
-      <Eyebrow>Get started</Eyebrow>
+      
       <h1 className="mt-5 font-display text-4xl tracking-tight text-ink">
         Create your account
       </h1>

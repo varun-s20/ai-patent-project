@@ -57,7 +57,7 @@ export function FaqList({ items }: { items: Item[] }) {
                   }}
                   className="overflow-hidden"
                 >
-                  <p className="max-w-2xl pb-6 text-[15px] leading-relaxed text-muted">{f.a}</p>
+                  <p className="max-w-2xl pb-6 text-base leading-relaxed text-muted">{f.a}</p>
                 </motion.div>
               )}
             </AnimatePresence>
