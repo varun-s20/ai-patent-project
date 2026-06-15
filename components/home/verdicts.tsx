@@ -26,7 +26,7 @@ export function Verdicts() {
     <section className="border-y border-line bg-cream/50">
       <div className="mx-auto max-w-[1500px] px-6 py-24 sm:px-10 lg:px-16">
         <InView className="max-w-2xl">
-          <h2 className="font-display text-4xl font-medium leading-[1.1] tracking-tight text-ink sm:text-5xl">
+          <h2 className="font-display text-4xl font-semibold leading-[1.1] tracking-tight text-ink sm:text-5xl">
             A verdict, not a hedge.
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-muted">

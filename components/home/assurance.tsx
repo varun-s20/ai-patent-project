@@ -17,12 +17,12 @@ export function Assurance() {
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gold/[0.12] ring-1 ring-gold/25">
               <ShieldCheck className="h-5 w-5 text-gold" />
             </div>
-            <h3 className="mt-6 font-display text-2xl font-medium tracking-tight text-ink sm:text-3xl">
+            <h3 className="mt-6 font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
               Your idea never leaves your hands.
             </h3>
             <p className="mt-4 max-w-md text-[15px] leading-relaxed text-ink-2">
               We don&apos;t share your submission with anyone. If you decide to file,
-              we&apos;ll forward your report to the attorney of your choice — and only
+              we&apos;ll forward your report to the attorney of your choice, and only
               then, only with your say-so.
             </p>
           </div>
@@ -36,14 +36,13 @@ export function Assurance() {
             <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-gold/15 ring-1 ring-gold-bright/30">
               <Clock className="h-5 w-5 text-gold-bright" />
             </div>
-            <h3 className="relative mt-6 font-display text-2xl font-medium tracking-tight text-cream sm:text-3xl">
-              An unprotected idea has no{" "}
-              <span className="italic text-foil">record.</span>
+            <h3 className="relative mt-6 font-display text-2xl font-semibold tracking-tight text-cream sm:text-3xl">
+              An unprotected idea has no record.
             </h3>
             <p className="relative mt-4 max-w-md text-[15px] leading-relaxed text-cream/75">
               IP theft costs the U.S. an estimated{" "}
-              <span className="text-foil">$225–600 billion</span> a year — yet only about{" "}
-              <span className="text-cream">1 in 10</span> inventors take even the first
+              <span className="text-gold-bright">$225 to $600 billion</span> a year, yet only
+              about <span className="text-cream">1 in 10</span> inventors take even the first
               step to protect an idea. A timestamped registration is proof of who had it
               first.
             </p>

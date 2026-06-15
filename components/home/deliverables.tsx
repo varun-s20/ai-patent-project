@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { CtaLink } from "@/components/ui/button";
-import { Eyebrow } from "@/components/ui/badge";
 import { InView } from "@/components/motion/in-view";
 import { FileText, Seal } from "@/components/ui/icons";
 
@@ -14,7 +13,7 @@ const ITEMS = [
   {
     icon: FileText,
     title: "8-section intelligence report",
-    body: "The full pre-patent analysis — scores, rationale, and competitive read — as a downloadable PDF.",
+    body: "The full pre-patent analysis (scores, rationale, and competitive read) as a downloadable PDF.",
   },
   {
     icon: Seal,
@@ -27,8 +26,7 @@ export function Deliverables() {
   return (
     <section className="mx-auto max-w-[1500px] px-6 py-24 sm:px-10 lg:px-16">
       <InView className="max-w-2xl">
-        <Eyebrow>What you get</Eyebrow>
-        <h2 className="mt-5 font-display text-4xl font-medium leading-[1.1] tracking-tight text-ink sm:text-5xl">
+        <h2 className="font-display text-4xl font-semibold leading-[1.1] tracking-tight text-ink sm:text-5xl">
           Everything you walk away with.
         </h2>
         <p className="mt-4 text-lg leading-relaxed text-muted">
@@ -50,7 +48,7 @@ export function Deliverables() {
                       <it.icon className="h-5 w-5 text-navy-900" />
                     </span>
                     <div>
-                      <h3 className="font-display text-xl tracking-tight text-ink">{it.title}</h3>
+                      <h3 className="font-display text-xl font-semibold tracking-tight text-ink">{it.title}</h3>
                       <p className="mt-1.5 max-w-sm text-[15px] leading-relaxed text-muted">
                         {it.body}
                       </p>

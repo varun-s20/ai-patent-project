@@ -33,7 +33,7 @@ export function FaqList({ items }: { items: Item[] }) {
                 aria-controls={panelId}
                 className="flex w-full items-center justify-between gap-4 py-5 text-left"
               >
-                <span className="font-display text-xl tracking-tight text-ink">{f.q}</span>
+                <span className="font-display text-xl font-semibold tracking-tight text-ink">{f.q}</span>
                 <ChevronDown
                   className={`h-5 w-5 shrink-0 text-muted transition-transform duration-300 ease-[var(--ease-out)] ${
                     isOpen ? "rotate-180" : ""

@@ -33,7 +33,7 @@ export function Faq() {
     <section className="border-t border-line bg-cream/50">
       <div className="mx-auto grid max-w-[1400px] gap-12 px-6 py-24 sm:px-10 lg:grid-cols-[0.7fr_1.3fr] lg:px-16">
         <InView>
-          <h2 className="font-display text-4xl font-medium leading-[1.1] tracking-tight text-ink sm:text-5xl">
+          <h2 className="font-display text-4xl font-semibold leading-[1.1] tracking-tight text-ink sm:text-5xl">
             Questions, answered plainly.
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-muted">
