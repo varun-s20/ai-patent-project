@@ -26,12 +26,12 @@ export function Pricing() {
   return (
     <section id="pricing" className="mx-auto max-w-[1500px] px-6 py-24 sm:px-10 lg:px-16">
       <InView className="max-w-2xl">
-        <h2 className="font-display text-4xl font-medium leading-[1.1] tracking-tight text-ink sm:text-5xl">
+        <h2 className="font-display text-4xl font-semibold leading-[1.1] tracking-tight text-ink sm:text-5xl">
           One flat price. The whole picture.
         </h2>
         <p className="mt-4 text-lg leading-relaxed text-muted">
           No tiers, no upsells, no hourly meter. A single payment unlocks the complete
-          evaluation — report and certificate included.
+          evaluation, report and certificate included.
         </p>
       </InView>
 
@@ -50,19 +50,19 @@ export function Pricing() {
               <p className="mt-4 text-sm text-muted line-through decoration-line">
                 Patent lawyers charge $2,000 to $10,000
               </p>
-              <p className="mt-1 font-display text-7xl leading-none tracking-tight">
-                <CountUp to={49} prefix="$" className="text-foil" />
+              <p className="mt-1 font-display text-7xl font-semibold leading-none tracking-tight text-ink">
+                <CountUp to={49} prefix="$" />
               </p>
               <p className="mt-4 text-[15px] leading-relaxed text-muted">
                 One evaluation. Full report. Certificate on record.
               </p>
               <div className="mt-8 flex">
                 <CtaLink href="/submit" variant="gold">
-                  Evaluate My Idea for $49
+                  Evaluate for $49
                 </CtaLink>
               </div>
               <p className="mt-6 text-xs leading-relaxed text-muted">
-                Automatic full refund if the evaluation ever fails to generate — no tiers, no
+                Automatic full refund if the evaluation ever fails to generate. No tiers, no
                 hourly meter, no upsell.
               </p>
             </div>
@@ -89,7 +89,7 @@ export function Pricing() {
               </ul>
               <div className="mt-auto flex items-baseline justify-between border-t border-line pt-5">
                 <span className="text-sm font-medium text-ink">Everything above</span>
-                <span className="font-display text-xl tracking-tight text-ink">
+                <span className="font-display text-xl font-semibold tracking-tight text-ink">
                   $49 flat
                 </span>
               </div>

@@ -13,6 +13,12 @@ const DEFAULT_BASE_URL = "https://api.groq.com/openai/v1";
 // unlike the local 8B, which under-fills arrays. Overridable via GROQ_MODEL.
 const DEFAULT_MODEL = "llama-3.3-70b-versatile";
 
+/** The model Groq will actually run — what to record as `model_used`. */
+export function groqModel(): string {
+  // `||` so an empty GROQ_MODEL="" also falls back to the default.
+  return process.env.GROQ_MODEL || DEFAULT_MODEL;
+}
+
 interface GroqChatResponse {
   choices?: { message?: { role: string; content: string } }[];
   error?: { message?: string } | string;
@@ -30,7 +36,7 @@ async function groqChat(params: ChatCreateParams): Promise<ChatMessage> {
   // model name (e.g. "llama3.1"), which is meaningless to Groq. So Groq sources
   // its own model from GROQ_MODEL and ignores params.model by design — switching
   // providers is then purely a matter of flipping AI_PROVIDER.
-  const model = process.env.GROQ_MODEL ?? DEFAULT_MODEL;
+  const model = groqModel();
 
   // OpenAI-shaped: the system instruction is just a system-role message.
   const messages = [{ role: "system", content: params.system }, ...params.messages];

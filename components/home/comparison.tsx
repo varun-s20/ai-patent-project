@@ -1,6 +1,5 @@
 import { CtaLink } from "@/components/ui/button";
 import { Check, X, Seal } from "@/components/ui/icons";
-import { Eyebrow } from "@/components/ui/badge";
 import { InView } from "@/components/motion/in-view";
 
 type Line = { ok: boolean; text: string };
@@ -12,7 +11,7 @@ const OPTIONS: {
 }[] = [
   {
     name: "Hire a patent lawyer",
-    cost: "$5,000–$15,000",
+    cost: "$5,000 to $15,000",
     lines: [
       { ok: true, text: "They evaluate and file for you" },
       { ok: false, text: "Paid whether or not it's worth filing" },
@@ -25,12 +24,12 @@ const OPTIONS: {
     lines: [
       { ok: true, text: "Instant, and costs nothing" },
       { ok: false, text: "A generic, hedged answer" },
-      { ok: false, text: "No verdict, record, or accountability" },
+      { ok: false, text: "Can't date-stamp your idea against the registry" },
     ],
   },
   {
     name: "File blind",
-    cost: "$1,000–$5,000",
+    cost: "$1,000 to $5,000",
     lines: [
       { ok: true, text: "Goes straight to the patent office" },
       { ok: false, text: "Easy to burn fees on an unviable idea" },
@@ -41,9 +40,9 @@ const OPTIONS: {
 
 const OURS: Line[] = [
   { ok: true, text: "A real verdict, not a hedge" },
-  { ok: true, text: "Timestamped, verifiable record" },
-  { ok: true, text: "Full report in minutes" },
-  { ok: true, text: "Refunded if it ever fails to generate" },
+  { ok: true, text: "Date-stamped against every idea on the registry" },
+  { ok: true, text: "Private, shared only if you ask us to" },
+  { ok: true, text: "Full report in minutes, refund-backed" },
 ];
 
 /** One open comparison column — label, headline cost, and a pro/con list. */
@@ -51,7 +50,7 @@ function OptionColumn({ name, cost, lines }: (typeof OPTIONS)[number]) {
   return (
     <div className="flex flex-col p-7 sm:p-8">
       <p className="text-sm font-medium text-ink-2">{name}</p>
-      <p className="mt-4 font-display text-3xl tracking-tight text-ink">{cost}</p>
+      <p className="mt-4 font-display text-3xl font-semibold tracking-tight text-ink">{cost}</p>
       <ul className="mt-6 space-y-3">
         {lines.map((l) => (
           <li key={l.text} className="flex items-start gap-2.5 text-sm">
@@ -77,16 +76,15 @@ export function Comparison() {
               divided by the same column hairline that runs down the grid (ref3). */}
           <div className="grid border-b border-line lg:grid-cols-4">
             <div className="p-8 sm:p-10 lg:col-span-3">
-              <Eyebrow>The options</Eyebrow>
-              <h2 className="mt-5 font-display text-4xl font-medium leading-[1.05] tracking-tight text-ink sm:text-5xl">
-                Four ways to answer{" "}
-                <span className="italic text-ink-2">one question.</span>
+              <h2 className="font-display text-4xl font-semibold leading-[1.05] tracking-tight text-ink sm:text-5xl">
+                Four ways to answer one question.
               </h2>
             </div>
             <div className="flex items-end border-t border-line p-8 sm:p-10 lg:border-l lg:border-t-0">
               <p className="text-sm leading-relaxed text-muted">
-                Every inventor faces the same fork before filing. Three of the four cost
-                more and tell you less.
+                Every inventor faces the same fork before filing. Only one gives you a
+                verdict <span className="text-ink-2">and</span> a dated record of who had
+                the idea first.
               </p>
             </div>
           </div>
@@ -111,7 +109,7 @@ export function Comparison() {
                   </span>
                 </div>
                 <p className="relative mt-4 flex items-baseline gap-1.5">
-                  <span className="font-display text-3xl tracking-tight text-foil">$49</span>
+                  <span className="font-display text-3xl font-semibold tracking-tight text-gold-bright">$49</span>
                   <span className="text-sm text-cream/55">flat</span>
                 </p>
                 <ul className="relative mt-6 space-y-3">

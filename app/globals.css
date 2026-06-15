@@ -16,7 +16,9 @@
   --color-navy-800: #12203a;
 
   --font-sans: var(--font-geist-sans);
-  --font-display: var(--font-display);
+  /* Display now matches the body grotesk (deepip-style full-sans). Weight and
+     tracking carry hierarchy; the old institutional serif is retired. */
+  --font-display: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 

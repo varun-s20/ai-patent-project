@@ -35,7 +35,7 @@ export function SiteFooter() {
                 className="block h-3 w-3 rounded-[3px] bg-gold ring-1 ring-gold-bright/60"
                 style={{ transform: "rotate(45deg)" }}
               />
-              <span className="font-display text-lg tracking-tight text-ink">
+              <span className="font-display text-lg font-semibold tracking-tight text-ink">
                 AI Invention Registry
               </span>
             </div>
@@ -45,7 +45,7 @@ export function SiteFooter() {
               of registration.
             </p>
             <div className="mt-6">
-              <CtaLink href="/submit">Evaluate My Idea for $49</CtaLink>
+              <CtaLink href="/submit">Evaluate for $49</CtaLink>
             </div>
           </div>
 

@@ -1,27 +1,29 @@
+import { CtaBand } from "@/components/home/cta-band";
 import { Hero } from "@/components/home/hero";
 import { TrustStrip } from "@/components/home/trust-strip";
-import { Comparison } from "@/components/home/comparison";
 import { HowItWorks } from "@/components/home/how-it-works";
 import { Dimensions } from "@/components/home/dimensions";
-import { Verdicts } from "@/components/home/verdicts";
 import { Deliverables } from "@/components/home/deliverables";
+import { Verdicts } from "@/components/home/verdicts";
+import { Comparison } from "@/components/home/comparison";
+import { Assurance } from "@/components/home/assurance";
 import { Pricing } from "@/components/home/pricing";
 import { Faq } from "@/components/home/faq";
-import { FinalCta } from "@/components/home/final-cta";
 
 export default function Home() {
   return (
     <main>
+      <CtaBand />
       <Hero />
       <TrustStrip />
-      <Comparison />
       <HowItWorks />
       <Dimensions />
-      <Verdicts />
       <Deliverables />
+      <Verdicts />
+      <Comparison />
+      <Assurance />
       <Pricing />
       <Faq />
-      <FinalCta />
     </main>
   );
 }

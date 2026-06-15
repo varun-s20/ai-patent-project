@@ -14,12 +14,17 @@ const ASSURANCES = [
   "A timestamped, verifiable certificate",
 ];
 
+const NOTICES: Record<string, string> = {
+  confirmed: "Your email is confirmed — please sign in.",
+};
+
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; notice?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, notice } = await searchParams;
+  const noticeMessage = notice ? NOTICES[notice] : undefined;
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 items-center px-6 py-16">
       <div className="grid w-full overflow-hidden rounded-[1.9rem] bg-card ring-1 ring-ink/[0.06] shadow-[inset_0_1px_1px_rgba(255,255,255,0.75),0_0_0_6px_var(--color-paper),0_0_0_7px_rgba(22,29,43,0.05),0_30px_70px_-40px_rgba(20,25,40,0.4)] lg:grid-cols-2">
@@ -79,6 +84,11 @@ export default async function LoginPage({
           {error && (
             <p className="mt-6 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
               {error}
+            </p>
+          )}
+          {noticeMessage && (
+            <p className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+              {noticeMessage}
             </p>
           )}
 

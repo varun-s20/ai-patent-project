@@ -35,11 +35,11 @@ export function Dimensions() {
     <section className="mx-auto max-w-[1500px] px-6 py-24 sm:px-10 lg:px-16">
       <InView className="max-w-2xl">
         <Eyebrow>The scoring</Eyebrow>
-        <h2 className="mt-5 font-display text-4xl font-medium leading-[1.1] tracking-tight text-ink sm:text-5xl">
+        <h2 className="mt-5 font-display text-4xl font-semibold leading-[1.1] tracking-tight text-ink sm:text-5xl">
           Five dimensions, each scored and explained.
         </h2>
         <p className="mt-4 text-lg leading-relaxed text-muted">
-          No single number to argue with. Each dimension carries its own 0&ndash;100 score and a
+          No single number to argue with. Each dimension carries its own 0-100 score and a
           written rationale, so you know exactly where the idea is strong and where it isn&rsquo;t.
         </p>
       </InView>
@@ -59,7 +59,7 @@ export function Dimensions() {
                 </span>
               </div>
               <div className="flex flex-1 flex-col p-5">
-                <h3 className="font-display text-lg tracking-tight text-ink">{d.name}</h3>
+                <h3 className="font-display text-lg font-semibold tracking-tight text-ink">{d.name}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted">{d.measures}</p>
               </div>
             </div>
@@ -80,7 +80,7 @@ function Gauge({ value }: { value: number }) {
       }}
     >
       <div className="flex h-[56px] w-[56px] items-center justify-center rounded-full bg-card">
-        <span className="font-display text-lg tracking-tight text-ink">
+        <span className="font-display text-lg font-semibold tracking-tight text-ink">
           <CountUp to={value} />
         </span>
       </div>

@@ -41,7 +41,7 @@ export function TrustStrip() {
               i % 2 === 1 ? "border-l border-line" : ""
             }`}
           >
-            <p className="font-display text-5xl font-medium leading-none tracking-tight text-ink sm:text-6xl">
+            <p className="font-display text-5xl font-semibold leading-none tracking-tight text-ink sm:text-6xl">
               <CountUp to={s.value} prefix={s.prefix ?? ""} />
             </p>
             <p className="mt-4 text-sm font-medium text-ink">{s.label}</p>
