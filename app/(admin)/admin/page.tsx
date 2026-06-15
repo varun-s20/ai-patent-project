@@ -105,7 +105,7 @@ export default async function AdminPage({
   return (
     <main className="mx-auto w-full max-w-6xl px-6 py-12">
       {/* Masthead */}
-      <Eyebrow>Console</Eyebrow>
+      
       <h1 className="mt-5 font-display text-4xl tracking-tight text-ink sm:text-5xl">
         Admin <span className="italic text-foil">console.</span>
       </h1>

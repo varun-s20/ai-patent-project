@@ -31,17 +31,17 @@ const FAQS = [
 export function Faq() {
   return (
     <section className="border-t border-line bg-cream/50">
-      <div className="mx-auto grid max-w-[1400px] gap-12 px-6 py-24 sm:px-10 lg:grid-cols-[0.7fr_1.3fr] lg:px-16">
-        <InView>
-          <h2 className="font-display text-4xl font-semibold leading-[1.1] tracking-tight text-ink sm:text-5xl">
+      <div className="mx-auto max-w-[1400px] px-6 py-24 sm:px-10 lg:px-16">
+        <InView className="max-w-none">
+          <h2 className="font-display text-[2.5rem] font-semibold leading-[1.05] tracking-tight text-ink sm:text-5xl lg:text-6xl">
             Questions, answered plainly.
           </h2>
-          <p className="mt-4 text-lg leading-relaxed text-muted">
+          <p className="mt-4 max-w-2xl text-xl leading-relaxed text-muted">
             The honest version, including what this is not.
           </p>
         </InView>
 
-        <InView delay={0.05}>
+        <InView delay={0.05} className="mt-14">
           <FaqList items={FAQS} />
         </InView>
       </div>

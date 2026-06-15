@@ -4,6 +4,7 @@ import { InView } from "@/components/motion/in-view";
 import { CountUp } from "@/components/motion/count-up";
 import { AnimatedBar } from "@/components/motion/animated-bar";
 import { ScoreRing } from "@/components/motion/score-ring";
+import { Pop } from "@/components/motion/pop";
 
 // Scored on the live evaluation card (right tile).
 const DIMENSIONS = [
@@ -31,15 +32,15 @@ export function Hero() {
       <div className="mx-auto w-full max-w-[1500px] px-6 pt-12 pb-24 sm:px-10 lg:px-16 lg:pt-16 lg:pb-32">
         {/* Masthead — left-aligned value prop, generous breathing room, the
             primary action visible before any scroll. */}
-        <div className="max-w-5xl">
+        <div className="max-w-7xl">
           <InView>
-            <h1 className="font-display text-4xl font-semibold leading-[1.05] tracking-tight text-ink sm:text-5xl lg:text-6xl">
+            <h1 className="font-display text-[2.75rem] font-semibold leading-[1.04] tracking-tight text-ink sm:text-6xl lg:text-7xl">
               Got a great idea worth protecting? Save thousands before you file.
             </h1>
           </InView>
 
           <InView delay={0.1}>
-            <p className="mt-6 max-w-[56ch] text-base leading-relaxed text-ink-2 sm:text-lg">
+            <p className="mt-6 max-w-[80%] text-lg leading-relaxed text-ink-2 sm:text-xl">
               A patent attorney charges up to <span className="text-ink">$10,000</span> to
               evaluate an idea and certify it. We do the same five-dimension read, report,
               and timestamped record for <span className="text-ink">$49</span>.
@@ -68,12 +69,12 @@ export function Hero() {
                 className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(70%_100%_at_30%_0%,rgba(228,196,90,0.14),transparent)]"
               />
               <div className="relative flex items-center justify-between">
-                <p className="text-[10px] uppercase tracking-[0.22em] text-cream/50">
+                <p className="text-[11px] uppercase tracking-[0.22em] text-cream/50">
                   What we evaluate
                 </p>
                 <Seal className="h-4 w-4 text-gold-bright" />
               </div>
-              <ul className="relative mt-5 flex-1 text-sm text-cream/85">
+              <ul className="relative mt-5 flex-1 text-[15px] text-cream/85">
                 {EVAL_AREAS.map((a) => (
                   <li
                     key={a}
@@ -97,17 +98,20 @@ export function Hero() {
                 <div>
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-[10px] uppercase tracking-[0.2em] text-muted">
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-muted">
                         Sample evaluation
                       </p>
                       <p className="mt-1 font-display text-xl font-semibold tracking-tight text-ink">
                         Self-cooling water bottle
                       </p>
                     </div>
-                    <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                    <Pop
+                      delay={1.05}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700"
+                    >
                       <Seal className="h-3.5 w-3.5" />
                       Proceed now
-                    </span>
+                    </Pop>
                   </div>
 
                   <div className="mt-8 flex items-center gap-6">

@@ -16,8 +16,6 @@
   --color-navy-800: #12203a;
 
   --font-sans: var(--font-geist-sans);
-  /* Display now matches the body grotesk (deepip-style full-sans). Weight and
-     tracking carry hierarchy; the old institutional serif is retired. */
   --font-display: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -109,11 +107,29 @@ body {
   }
 }
 
+/* Hover-lift — a card rises a touch on hover. Gated to true hover/pointer
+   devices so it never sticks on touch taps, and disabled under reduced motion.
+   Owns both the transform and the shadow transition; pair with a `hover:shadow-*`
+   utility for the elevated shadow value. */
+.hover-lift {
+  transition:
+    transform 0.28s var(--ease-out),
+    box-shadow 0.28s var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .hover-lift:hover {
+    transform: translateY(-4px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .reveal {
     transition: opacity 0.4s ease;
     transform: none;
     filter: none;
+  }
+  .hover-lift:hover {
+    transform: none;
   }
   * {
     animation-duration: 0.001ms !important;

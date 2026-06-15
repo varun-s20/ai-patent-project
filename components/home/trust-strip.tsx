@@ -44,8 +44,8 @@ export function TrustStrip() {
             <p className="font-display text-5xl font-semibold leading-none tracking-tight text-ink sm:text-6xl">
               <CountUp to={s.value} prefix={s.prefix ?? ""} />
             </p>
-            <p className="mt-4 text-sm font-medium text-ink">{s.label}</p>
-            <p className="mt-1 max-w-[24ch] text-sm leading-snug text-muted">{s.sub}</p>
+            <p className="mt-4 text-base font-medium text-ink">{s.label}</p>
+            <p className="mt-1 max-w-[26ch] text-[15px] leading-snug text-muted">{s.sub}</p>
           </StaggerItem>
         ))}
       </Stagger>

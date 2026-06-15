@@ -6,8 +6,8 @@ type Variant = "primary" | "gold" | "ghost";
 
 const base =
   "inline-flex select-none items-center justify-center rounded-lg text-sm font-medium tracking-tight " +
-  "transition-[background-color,color,box-shadow] duration-200 ease-[var(--ease-out)] " +
-  "disabled:pointer-events-none disabled:opacity-50";
+  "transition-[background-color,color,box-shadow,transform] duration-200 ease-[var(--ease-out)] " +
+  "active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50";
 
 const VARIANTS: Record<Variant, string> = {
   primary: "bg-ink text-cream hover:bg-ink-2 shadow-[0_1px_2px_rgba(20,25,40,0.18)]",

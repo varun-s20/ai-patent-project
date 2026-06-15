@@ -18,11 +18,11 @@ export function CtaBand() {
             className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(55%_100%_at_50%_0%,rgba(228,196,90,0.16),transparent)]"
           />
           <div className="relative mx-auto grid max-w-[1500px] items-center gap-10 px-8 py-16 sm:px-12 lg:grid-cols-[1.45fr_0.55fr] lg:px-20 lg:py-20">
-            <div className="max-w-3xl">
-              <h2 className="font-display text-4xl font-semibold leading-[1.04] tracking-tight text-cream sm:text-5xl">
-                Your next BIG idea deserves a second opinion and protection today.
+            <div className="max-w-5xl">
+              <h2 className="font-display text-[2.5rem] font-semibold leading-[1.04] tracking-tight text-cream sm:text-5xl lg:text-6xl">
+                Your next <span className="text-gold text-6xl font-extrabold lg:text-7xl">BIG</span> idea deserves a second opinion and protection today.
               </h2>
-              <p className="mt-5 max-w-xl text-lg leading-relaxed text-cream/70">
+              <p className="mt-5 max-w-xl text-xl leading-relaxed text-cream/70">
                 Five minutes to know whether to file, refine, or walk away.
               </p>
               <div className="mt-8">
@@ -34,7 +34,7 @@ export function CtaBand() {
 
             <div className="hidden lg:flex lg:flex-col lg:items-center lg:text-center">
               <RegistryStamp className="h-40 w-40 xl:h-48 xl:w-48" />
-              <p className="mt-4 max-w-[22ch] text-[11px] leading-snug text-cream/45">
+              <p className="mt-4 max-w-[22ch] text-[12px] leading-snug text-cream/60">
                 Issued with every evaluation. Your idea, on record.
               </p>
             </div>

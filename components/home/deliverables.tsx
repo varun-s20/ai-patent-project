@@ -25,11 +25,11 @@ const ITEMS = [
 export function Deliverables() {
   return (
     <section className="mx-auto max-w-[1500px] px-6 py-24 sm:px-10 lg:px-16">
-      <InView className="max-w-2xl">
-        <h2 className="font-display text-4xl font-semibold leading-[1.1] tracking-tight text-ink sm:text-5xl">
+      <InView className="max-w-none">
+        <h2 className="font-display text-[2.5rem] font-semibold leading-[1.05] tracking-tight text-ink sm:text-5xl lg:text-6xl">
           Everything you walk away with.
         </h2>
-        <p className="mt-4 text-lg leading-relaxed text-muted">
+        <p className="mt-4 max-w-7xl text-xl leading-relaxed text-muted">
           Two documents, generated the moment your evaluation completes. Yours to download,
           print, and share.
         </p>
@@ -49,7 +49,7 @@ export function Deliverables() {
                     </span>
                     <div>
                       <h3 className="font-display text-xl font-semibold tracking-tight text-ink">{it.title}</h3>
-                      <p className="mt-1.5 max-w-sm text-[15px] leading-relaxed text-muted">
+                      <p className="mt-1.5 max-w-sm text-base leading-relaxed text-muted">
                         {it.body}
                       </p>
                     </div>
@@ -58,7 +58,7 @@ export function Deliverables() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] uppercase tracking-[0.22em] text-muted">
+                <span className="text-[11px] uppercase tracking-[0.22em] text-muted">
                   The bottom line
                 </span>
                 {VERDICTS.map((v) => (
@@ -85,7 +85,7 @@ export function Deliverables() {
                 className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(60%_100%_at_60%_0%,rgba(228,196,90,0.18),transparent)]"
               />
               {/* Report — the primary shot. */}
-              <div className="absolute left-8 top-10 w-[56%] overflow-hidden rounded-xl bg-white p-2 shadow-[0_40px_80px_-30px_rgba(0,0,0,0.65)] ring-1 ring-white/10 sm:left-12">
+              <div className="hover-lift absolute left-8 top-10 w-[56%] overflow-hidden rounded-xl bg-white p-2 shadow-[0_40px_80px_-30px_rgba(0,0,0,0.65)] ring-1 ring-white/10 hover:shadow-[0_52px_96px_-28px_rgba(0,0,0,0.72)] sm:left-12">
                 <div className="relative aspect-[3/4]">
                   <Image
                     src="/sample-report-scorecard.png"
@@ -97,7 +97,7 @@ export function Deliverables() {
                 </div>
               </div>
               {/* Certificate — overlapping inset. */}
-              <div className="absolute bottom-10 right-8 w-[48%] overflow-hidden rounded-xl bg-white p-2 shadow-[0_40px_80px_-30px_rgba(0,0,0,0.7)] ring-1 ring-white/10 sm:right-12">
+              <div className="hover-lift absolute bottom-10 right-8 w-[48%] overflow-hidden rounded-xl bg-white p-2 shadow-[0_40px_80px_-30px_rgba(0,0,0,0.7)] ring-1 ring-white/10 hover:shadow-[0_52px_96px_-28px_rgba(0,0,0,0.78)] sm:right-12">
                 <div className="relative aspect-[4/3]">
                   <Image
                     src="/sample-certificate.png"

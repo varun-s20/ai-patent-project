@@ -1,4 +1,5 @@
 import { InView, Stagger, StaggerItem } from "@/components/motion/in-view";
+import { DrawLine } from "@/components/motion/draw-line";
 
 const VERDICTS = [
   {
@@ -25,19 +26,19 @@ export function Verdicts() {
   return (
     <section className="border-y border-line bg-cream/50">
       <div className="mx-auto max-w-[1500px] px-6 py-24 sm:px-10 lg:px-16">
-        <InView className="max-w-2xl">
-          <h2 className="font-display text-4xl font-semibold leading-[1.1] tracking-tight text-ink sm:text-5xl">
+        <InView className="max-w-none">
+          <h2 className="font-display text-[2.5rem] font-semibold leading-[1.05] tracking-tight text-ink sm:text-5xl lg:text-6xl">
             A verdict, not a hedge.
           </h2>
-          <p className="mt-4 text-lg leading-relaxed text-muted">
+          <p className="mt-4 max-w-7xl text-xl leading-relaxed text-muted">
             Free AI gives you &ldquo;maybe.&rdquo; We commit to one of three answers, and tell
             you exactly what to do next.
           </p>
         </InView>
 
         <div className="relative mt-14">
-          <div
-            aria-hidden
+          <DrawLine
+            duration={0.9}
             className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-red-300 via-amber-300 to-emerald-400"
           />
           <Stagger className="grid gap-px md:grid-cols-3" gap={0.12}>
@@ -46,8 +47,8 @@ export function Verdicts() {
                 <p className={`font-mono text-sm font-semibold tracking-[0.08em] ${v.tone}`}>
                   {v.label}
                 </p>
-                <p className="mt-4 text-sm font-medium text-ink">{v.trigger}</p>
-                <p className="mt-2 text-[15px] leading-relaxed text-muted">{v.action}</p>
+                <p className="mt-4 text-base font-medium text-ink">{v.trigger}</p>
+                <p className="mt-2 text-base leading-relaxed text-muted">{v.action}</p>
               </StaggerItem>
             ))}
           </Stagger>

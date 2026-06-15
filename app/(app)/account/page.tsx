@@ -33,7 +33,7 @@ export default async function AccountPage({
 
   return (
     <main className="mx-auto w-full max-w-md px-6 py-12">
-      <Eyebrow>Your account</Eyebrow>
+      
       <h1 className="mt-5 font-display text-4xl tracking-tight text-ink">Settings</h1>
       <p className="mt-2 text-sm text-muted">Manage your name, email, and password.</p>
 

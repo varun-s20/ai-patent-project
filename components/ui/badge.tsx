@@ -27,7 +27,7 @@ export function Eyebrow({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-2 rounded-md border border-ink/10 bg-cream/60 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.22em] text-muted ${className}`}
+      className={`inline-flex items-center gap-2 rounded-md border border-ink/10 bg-cream/60 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-muted ${className}`}
     >
       <span className="h-1.5 w-1.5 rounded-full bg-gold" aria-hidden />
       {children}
