@@ -4,13 +4,13 @@ import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { VerdictBadge } from "@/components/ui/verdict-badge";
-import { Eyebrow } from "@/components/ui/badge";
 import { CtaLink, buttonClasses } from "@/components/ui/button";
 import { Seal } from "@/components/ui/icons";
 import { InView } from "@/components/motion/in-view";
 import { CountUp } from "@/components/motion/count-up";
 import { formatDate } from "@/lib/ui/format";
 import { one } from "@/lib/db/one";
+import { DashboardList } from "@/components/dashboard/dashboard-list";
 
 export const dynamic = "force-dynamic";
 
@@ -107,10 +107,12 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Link href="/account" className={buttonClasses("ghost")}>
+          <Link href="/account" className={`${buttonClasses("ghost")} h-11`}>
             Account
           </Link>
-          <CtaLink href="/submit">New evaluation</CtaLink>
+          <CtaLink href="/submit" className="h-11">
+            New evaluation
+          </CtaLink>
         </div>
       </InView>
 
@@ -168,51 +170,29 @@ export default async function DashboardPage() {
           )}
 
           {listRows.length > 0 && (
-            <>
-              <InView delay={0.05} className="mt-12 flex items-baseline justify-between">
-                <h2 className="font-display text-xl tracking-tight text-ink">
-                  {featured ? "Everything else on record" : "On record"}
-                </h2>
-                <span className="text-[11px] uppercase tracking-[0.18em] text-muted">
-                  {listRows.length} {listRows.length === 1 ? "entry" : "entries"}
-                </span>
-              </InView>
-
-              <div className="mt-5 space-y-3.5">
-                {listRows.map((r, i) => {
+            // A plain wrapper, NOT <InView>: the list can be far taller than the
+            // viewport, and InView's "reveal once 25% is visible" threshold can
+            // never be met by a tall element, leaving every entry stuck at
+            // opacity:0. The list is primary content — it must always render.
+            <div className="mt-12">
+              <DashboardList
+                heading={featured ? "Everything else on record" : "On record"}
+                rows={listRows.map((r) => {
                   const evaluation = one(r.evaluations);
                   const cert = one(r.certificates);
-                  return (
-                    <InView key={r.id} delay={Math.min(i * 0.04, 0.24)}>
-                      <Card className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
-                        {/* Score token — foil number for evaluated rows, gold diamond for pending. */}
-                        <ScoreToken score={evaluation?.avg_score ?? null} />
-
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="truncate font-display text-lg tracking-tight text-ink">
-                              {r.title}
-                            </h3>
-                            <StatusBadge status={r.status} />
-                            {evaluation && <VerdictBadge verdict={evaluation.verdict} />}
-                          </div>
-                          <p className="mt-1.5 font-mono text-[11px] uppercase tracking-wide text-muted">
-                            {formatDate(r.created_at)}
-                            {evaluation ? ` · Overall ${evaluation.avg_score}/100` : ""}
-                          </p>
-                        </div>
-
-                        <RowActions
-                          id={r.id}
-                          reportUrl={signedFor(signed, cert?.report_pdf_path)}
-                          certUrl={signedFor(signed, cert?.certificate_pdf_path)}
-                        />
-                      </Card>
-                    </InView>
-                  );
+                  return {
+                    id: r.id,
+                    title: r.title,
+                    status: r.status,
+                    createdAt: r.created_at,
+                    score: evaluation?.avg_score ?? null,
+                    verdict: evaluation?.verdict ?? null,
+                    reportUrl: signedFor(signed, cert?.report_pdf_path),
+                    certUrl: signedFor(signed, cert?.certificate_pdf_path),
+                  };
                 })}
-              </div>
-            </>
+              />
+            </div>
           )}
         </>
       )}
@@ -253,31 +233,6 @@ function ScoreRing({ value }: { value: number }) {
         <span className="text-[9px] uppercase tracking-[0.15em] text-muted">Overall</span>
       </div>
     </div>
-  );
-}
-
-/** Small navy tile carrying the row's overall score, or the brand diamond if pending. */
-function ScoreToken({ score }: { score: number | null }) {
-  if (score === null) {
-    return (
-      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-paper ring-1 ring-ink/[0.06]">
-        <span
-          aria-hidden
-          className="block h-2.5 w-2.5 rounded-[2px] bg-gold ring-1 ring-gold-bright/50"
-          style={{ transform: "rotate(45deg)" }}
-        />
-      </span>
-    );
-  }
-  return (
-    <span className="relative flex h-12 w-12 shrink-0 flex-col items-center justify-center overflow-hidden rounded-lg bg-gradient-to-b from-navy-800 to-navy-900 ring-1 ring-ink/20">
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-6 bg-[radial-gradient(80%_100%_at_50%_0%,rgba(228,196,90,0.2),transparent)]"
-      />
-      <span className="relative font-display text-base leading-none text-foil">{score}</span>
-      <span className="relative mt-0.5 text-[7px] uppercase tracking-[0.12em] text-cream/45">/100</span>
-    </span>
   );
 }
 

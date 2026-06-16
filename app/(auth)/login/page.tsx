@@ -1,8 +1,7 @@
 import { signIn } from "@/app/auth/actions";
-import { Button } from "@/components/ui/button";
-import { Eyebrow } from "@/components/ui/badge";
 import { Patent } from "@/components/ui/icons";
 import { PasswordField } from "@/components/ui/password-field";
+import { SubmitButton } from "@/components/ui/submit-button";
 
 const inputClass =
   "w-full rounded-xl border border-line bg-paper/40 px-4 py-3 text-ink outline-none transition-colors duration-200 placeholder:text-muted/60 focus:border-gold focus:bg-card";
@@ -16,6 +15,7 @@ const ASSURANCES = [
 
 const NOTICES: Record<string, string> = {
   confirmed: "Your email is confirmed — please sign in.",
+  reset: "Password updated — please sign in with your new password.",
 };
 
 export default async function LoginPage({
@@ -94,8 +94,20 @@ export default async function LoginPage({
 
           <form action={signIn} className="mt-6 space-y-4">
             <input name="email" type="email" placeholder="Email" required className={inputClass} />
-            <PasswordField autoComplete="current-password" className={inputClass} />
-            <Button className="w-full">Log in</Button>
+            <div>
+              <PasswordField autoComplete="current-password" className={inputClass} />
+              <div className="mt-2 text-right">
+                <a
+                  href="/forgot-password"
+                  className="text-xs font-medium text-muted underline-offset-2 hover:text-ink hover:underline"
+                >
+                  Forgot password?
+                </a>
+              </div>
+            </div>
+            <SubmitButton variant="primary" className="w-full" pendingLabel="Signing in…">
+              Log in
+            </SubmitButton>
           </form>
 
           <p className="mt-6 text-sm text-muted">
