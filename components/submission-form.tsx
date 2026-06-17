@@ -33,10 +33,13 @@ export function SubmissionForm() {
     }
   }, []);
 
-  // On success, wipe the draft so the next idea starts blank, then go to payment.
+  // On success, wipe the draft AND the in-memory field state so the form never
+  // carries one idea's content into the next, then go to payment.
   useEffect(() => {
     if (state.id) {
       clearDraft();
+      setFields({});
+      setDescription("");
       router.push(`/pay/${state.id}`);
     }
   }, [state.id, router]);

@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteAtmosphere } from "@/components/site-atmosphere";
 import { RecoveryGate } from "@/components/auth/recovery-gate";
+import { ChromeGate } from "@/components/chrome-gate";
+import { RouteProgress } from "@/components/ui/route-progress";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,10 +41,16 @@ export default function RootLayout({
           <style>{`.reveal{opacity:1!important;transform:none!important;filter:none!important}`}</style>
         </noscript>
         <RecoveryGate />
-        <SiteAtmosphere />
-        <SiteHeader />
-        <div className="flex flex-1 flex-col pt-24">{children}</div>
-        <SiteFooter />
+        <Suspense fallback={null}>
+          <RouteProgress />
+        </Suspense>
+        <ChromeGate
+          atmosphere={<SiteAtmosphere />}
+          header={<SiteHeader />}
+          footer={<SiteFooter />}
+        >
+          {children}
+        </ChromeGate>
       </body>
     </html>
   );
