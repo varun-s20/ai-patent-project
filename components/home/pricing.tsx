@@ -75,8 +75,8 @@ export function Pricing() {
               <ul className="mt-2 divide-y divide-line">
                 {INCLUDED.map((f, i) => (
                   <li key={f.lead} className="flex items-start gap-4 py-4">
-                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-gold/12 ring-1 ring-gold/20">
-                      <AnimatedCheck delay={0.15 + i * 0.12} className="h-3.5 w-3.5 text-gold" />
+                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-gold/80 ring-1 ring-gold">
+                      <AnimatedCheck delay={0.15 + i * 0.12} className="h-5 w-5 text-ink" />
                     </span>
                     <span>
                       <span className="font-medium text-ink">{f.lead}</span>
