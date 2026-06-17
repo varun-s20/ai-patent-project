@@ -4,6 +4,7 @@ import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteAtmosphere } from "@/components/site-atmosphere";
+import { RecoveryGate } from "@/components/auth/recovery-gate";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,6 +37,7 @@ export default function RootLayout({
         <noscript>
           <style>{`.reveal{opacity:1!important;transform:none!important;filter:none!important}`}</style>
         </noscript>
+        <RecoveryGate />
         <SiteAtmosphere />
         <SiteHeader />
         <div className="flex flex-1 flex-col pt-24">{children}</div>

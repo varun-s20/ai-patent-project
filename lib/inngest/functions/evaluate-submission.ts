@@ -154,37 +154,41 @@ export const evaluateSubmission = inngest.createFunction(
 
     const { reportPath, certId, issuedAt } = report;
 
-    // Step 4b — render the landscape certificate, upload it, record its path.
-    const certPath = await step.run("render-and-upload-certificate", async () => {
-      const verifyUrl = certificateVerifyUrl(certId);
-      const qrDataUrl = await generateQrDataUrl(verifyUrl);
-      const data: CertificateData = {
-        certId,
-        title: submission.title,
-        inventorName: submission.inventor_name,
-        industry: submission.industry,
-        issuedAt,
-        verifyUrl,
-        qrDataUrl,
-      };
+    // Step 4b — certificate is issued ONLY for patentable ideas (PROCEED_NOW).
+    // REFINE_FIRST / DO_NOT_PATENT get the report but no certificate.
+    const certPath =
+      result.verdict === "PROCEED_NOW"
+        ? await step.run("render-and-upload-certificate", async () => {
+            const verifyUrl = certificateVerifyUrl(certId);
+            const qrDataUrl = await generateQrDataUrl(verifyUrl);
+            const data: CertificateData = {
+              certId,
+              title: submission.title,
+              inventorName: submission.inventor_name,
+              industry: submission.industry,
+              issuedAt,
+              verifyUrl,
+              qrDataUrl,
+            };
 
-      const pdf = await renderCertificatePdf(data);
-      const path = documentPath(submission.user_id, submissionId, "certificate");
+            const pdf = await renderCertificatePdf(data);
+            const path = documentPath(submission.user_id, submissionId, "certificate");
 
-      const admin = createAdminClient();
-      const { error: upErr } = await admin.storage
-        .from("documents")
-        .upload(path, pdf, { contentType: "application/pdf", upsert: true });
-      if (upErr) throw new Error(`Certificate upload failed: ${upErr.message}`);
+            const admin = createAdminClient();
+            const { error: upErr } = await admin.storage
+              .from("documents")
+              .upload(path, pdf, { contentType: "application/pdf", upsert: true });
+            if (upErr) throw new Error(`Certificate upload failed: ${upErr.message}`);
 
-      const { error: updErr } = await admin
-        .from("certificates")
-        .update({ certificate_pdf_path: path })
-        .eq("submission_id", submissionId);
-      if (updErr) throw new Error(`Certificate path update failed: ${updErr.message}`);
+            const { error: updErr } = await admin
+              .from("certificates")
+              .update({ certificate_pdf_path: path })
+              .eq("submission_id", submissionId);
+            if (updErr) throw new Error(`Certificate path update failed: ${updErr.message}`);
 
-      return path;
-    });
+            return path;
+          })
+        : null;
 
     // Step 5 — persist evaluation + mark complete (only now that the PDF exists).
     await step.run("persist-and-complete", async () => {
@@ -200,31 +204,35 @@ export const evaluateSubmission = inngest.createFunction(
         .eq("id", submissionId);
     });
 
-    // Step 6 — best-effort email with both PDFs attached. Must NOT throw: a flaky email
-    // must not reverse a paid, fully-generated evaluation via onFailure.
+    // Step 6 — best-effort email; attach the certificate only if one was issued.
     await step.run("send-report-email", async () => {
       try {
         const admin = createAdminClient();
-        const [reportFile, certFile] = await Promise.all([
-          admin.storage.from("documents").download(reportPath),
-          admin.storage.from("documents").download(certPath),
-        ]);
+        const reportFile = await admin.storage.from("documents").download(reportPath);
         if (reportFile.error || !reportFile.data) {
           throw new Error(reportFile.error?.message ?? "report download returned no file");
         }
-        if (certFile.error || !certFile.data) {
-          throw new Error(certFile.error?.message ?? "certificate download returned no file");
-        }
         const reportBuf = Buffer.from(await reportFile.data.arrayBuffer());
-        const certBuf = Buffer.from(await certFile.data.arrayBuffer());
+
+        const attachments = [
+          { filename: "pre-patent-intelligence-report.pdf", content: reportBuf },
+        ];
+
+        if (certPath) {
+          const certFile = await admin.storage.from("documents").download(certPath);
+          if (certFile.error || !certFile.data) {
+            throw new Error(certFile.error?.message ?? "certificate download returned no file");
+          }
+          attachments.push({
+            filename: "certificate-of-idea-registration.pdf",
+            content: Buffer.from(await certFile.data.arrayBuffer()),
+          });
+        }
 
         await sendEmail(
           submission.email,
           reportReadyEmail({ title: submission.title, submissionId }),
-          [
-            { filename: "pre-patent-intelligence-report.pdf", content: reportBuf },
-            { filename: "certificate-of-idea-registration.pdf", content: certBuf },
-          ],
+          attachments,
         );
       } catch (err) {
         console.error(`[evaluate-submission] report email failed for ${submissionId}:`, err);

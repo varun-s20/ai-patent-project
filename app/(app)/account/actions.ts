@@ -2,11 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { validatePassword, PASSWORD_ERROR } from "@/lib/validation/password";
 
-/** Update display name and (optionally) email. Email changes trigger a Supabase confirmation. */
+/** Update display name only. Email is intentionally immutable. */
 export async function updateProfile(formData: FormData) {
   const fullName = String(formData.get("fullName") ?? "").trim();
-  const email = String(formData.get("email") ?? "").trim();
 
   const supabase = await createClient();
   const {
@@ -14,21 +14,23 @@ export async function updateProfile(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const attrs: { data: { full_name: string }; email?: string } = {
-    data: { full_name: fullName },
-  };
-  const emailChanged = email.length > 0 && email !== user.email;
-  if (emailChanged) attrs.email = email;
-
-  const { error } = await supabase.auth.updateUser(attrs);
+  const { error } = await supabase.auth.updateUser({ data: { full_name: fullName } });
   if (error) redirect(`/account?error=${encodeURIComponent(error.message)}`);
 
-  redirect(`/account?saved=${emailChanged ? "email" : "profile"}`);
+  redirect("/account?saved=profile");
 }
 
-/** Change the account password. */
+/** Change the account password (enforces strength + confirm match). */
 export async function updatePassword(formData: FormData) {
   const password = String(formData.get("password") ?? "");
+  const confirm = String(formData.get("confirmPassword") ?? "");
+
+  if (password !== confirm) {
+    redirect(`/account?error=${encodeURIComponent("Passwords don’t match.")}`);
+  }
+  if (!validatePassword(password).valid) {
+    redirect(`/account?error=${encodeURIComponent(PASSWORD_ERROR)}`);
+  }
 
   const supabase = await createClient();
   const {

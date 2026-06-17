@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Eyebrow } from "@/components/ui/badge";
-import { updateProfile, updatePassword } from "./actions";
+import { SubmitButton } from "@/components/ui/submit-button";
+import { PasswordChangeForm } from "@/components/account/password-change-form";
+import { updateProfile } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -65,34 +65,23 @@ export default async function AccountPage({
           <div>
             <label className="text-xs uppercase tracking-[0.14em] text-muted">Email</label>
             <input
-              name="email"
               type="email"
               defaultValue={user.email ?? ""}
-              placeholder="Email address"
-              required
-              className={`mt-1.5 ${inputClass}`}
+              readOnly
+              disabled
+              className={`mt-1.5 ${inputClass} cursor-not-allowed bg-ink/[0.03] text-muted`}
             />
+            <p className="mt-1.5 text-xs text-muted">Your email can’t be changed.</p>
           </div>
-          <Button className="w-full">Save profile</Button>
+          <SubmitButton variant="primary" className="w-full" pendingLabel="Saving…">
+            Save profile
+          </SubmitButton>
         </form>
       </Card>
 
       <Card className="mt-4">
         <h2 className="font-display text-xl tracking-tight text-ink">Password</h2>
-        <form action={updatePassword} className="mt-5 space-y-4">
-          <div>
-            <label className="text-xs uppercase tracking-[0.14em] text-muted">New password</label>
-            <input
-              name="password"
-              type="password"
-              placeholder="New password"
-              required
-              minLength={8}
-              className={`mt-1.5 ${inputClass}`}
-            />
-          </div>
-          <Button className="w-full">Change password</Button>
-        </form>
+        <PasswordChangeForm />
       </Card>
     </main>
   );

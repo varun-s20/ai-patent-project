@@ -4,7 +4,12 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { submissionSchema } from "@/lib/validation/submission";
 
-export async function createSubmission(formData: FormData) {
+export type SubmitState = { error?: string; id?: string };
+
+export async function createSubmission(
+  _prev: SubmitState,
+  formData: FormData,
+): Promise<SubmitState> {
   const parsed = submissionSchema.safeParse({
     title: formData.get("title"),
     description: formData.get("description"),
@@ -15,8 +20,7 @@ export async function createSubmission(formData: FormData) {
   });
 
   if (!parsed.success) {
-    const msg = parsed.error.issues[0]?.message ?? "Invalid submission";
-    redirect(`/submit?error=${encodeURIComponent(msg)}`);
+    return { error: parsed.error.issues[0]?.message ?? "Invalid submission" };
   }
 
   const supabase = await createClient();
@@ -41,8 +45,8 @@ export async function createSubmission(formData: FormData) {
     .select("id")
     .single();
 
-  if (error) redirect(`/submit?error=${encodeURIComponent(error.message)}`);
+  if (error) return { error: error.message };
 
-  // Drafts go straight to payment; evaluation begins only after Stripe confirms.
-  redirect(`/pay/${data.id}`);
+  // Success — the client clears its draft and navigates to payment.
+  return { id: data.id };
 }

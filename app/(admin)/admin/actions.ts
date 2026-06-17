@@ -26,7 +26,7 @@ export async function refundSubmission(formData: FormData) {
   }
 
   await admin.from("submissions").update({ status: "refunded" }).eq("id", id);
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
 }
 
 /** Mark a stuck submission as failed (no refund). */
@@ -35,7 +35,7 @@ export async function markFailed(formData: FormData) {
   const id = String(formData.get("submissionId"));
   const admin = createAdminClient();
   await admin.from("submissions").update({ status: "failed" }).eq("id", id);
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
 }
 
 async function setProfileFlag(
@@ -46,7 +46,7 @@ async function setProfileFlag(
   await requireAdmin();
   const admin = createAdminClient();
   await admin.from("profiles").update({ [column]: next }).eq("id", userId);
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
 }
 
 export async function toggleUserDisabled(formData: FormData) {
