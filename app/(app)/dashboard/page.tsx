@@ -11,6 +11,7 @@ import { CountUp } from "@/components/motion/count-up";
 import { formatDate } from "@/lib/ui/format";
 import { one } from "@/lib/db/one";
 import { DashboardList } from "@/components/dashboard/dashboard-list";
+import { RowActions } from "@/components/dashboard/row-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -236,35 +237,6 @@ function ScoreRing({ value }: { value: number }) {
   );
 }
 
-/** Action buttons shared by the featured card and the list rows. */
-function RowActions({
-  id,
-  reportUrl,
-  certUrl,
-}: {
-  id: string;
-  reportUrl?: string;
-  certUrl?: string;
-}) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      <Link href={`/status/${id}`} className={buttonClasses("ghost")}>
-        View
-      </Link>
-      {reportUrl && (
-        <a href={reportUrl} className={buttonClasses("ghost")}>
-          Report
-        </a>
-      )}
-      {certUrl && (
-        <a href={certUrl} className={buttonClasses("gold")}>
-          Certificate
-        </a>
-      )}
-    </div>
-  );
-}
-
 /** The latest evaluated submission, rendered like the homepage's live score card. */
 function FeaturedCard({
   row,
@@ -301,7 +273,7 @@ function FeaturedCard({
         </div>
 
         <div className="sm:self-stretch sm:border-l sm:border-line sm:pl-6">
-          <RowActions id={row.id} reportUrl={reportUrl} certUrl={certUrl} />
+          <RowActions id={row.id} status={row.status} reportUrl={reportUrl} certUrl={certUrl} />
         </div>
       </Card>
     </InView>

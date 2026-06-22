@@ -2,7 +2,11 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createSubmission, type SubmitState } from "@/app/(app)/submit/actions";
+import {
+  createSubmission,
+  updateSubmission,
+  type SubmitState,
+} from "@/app/(app)/submit/actions";
 import { CharacterCounter } from "@/components/ui/character-counter";
 import { Spinner } from "@/components/ui/spinner";
 import { saveDraft, loadDraft, clearDraft } from "@/lib/draft/draft-storage";
@@ -16,25 +20,39 @@ const inputClass =
   "w-full rounded-xl border border-line bg-paper/40 px-4 py-3 text-base text-ink outline-none transition-colors duration-200 placeholder:text-muted/60 focus:border-gold focus:bg-card";
 const labelClass = "block text-xs font-medium uppercase tracking-[0.14em] text-muted";
 
-export function SubmissionForm() {
+export function SubmissionForm({
+  editId,
+  initialValues,
+}: {
+  editId?: string;
+  initialValues?: Record<string, string>;
+} = {}) {
+  const isEdit = Boolean(editId);
   const router = useRouter();
-  const [description, setDescription] = useState("");
-  const [fields, setFields] = useState<Record<string, string>>({});
+  // Edit mode binds the submission id so the action keeps the (prev, formData)
+  // shape useActionState needs; it redirects to the dashboard on success.
+  const action = isEdit ? updateSubmission.bind(null, editId!) : createSubmission;
+  const [description, setDescription] = useState(initialValues?.description ?? "");
+  const [fields, setFields] = useState<Record<string, string>>(initialValues ?? {});
   const [state, formAction, isPending] = useActionState<SubmitState, FormData>(
-    createSubmission,
+    action,
     {},
   );
 
   useEffect(() => {
+    // Edit mode is seeded from the saved draft's own values; the localStorage
+    // draft belongs to the new-submission flow, so don't pull it in here.
+    if (isEdit) return;
     const draft = loadDraft();
     if (draft) {
       setFields(draft);
       if (draft.description) setDescription(draft.description);
     }
-  }, []);
+  }, [isEdit]);
 
-  // On success, wipe the draft AND the in-memory field state so the form never
-  // carries one idea's content into the next, then go to payment.
+  // On a successful create, wipe the draft AND the in-memory field state so the
+  // form never carries one idea's content into the next, then go to payment.
+  // (Edit mode redirects server-side, so there's no state.id to react to.)
   useEffect(() => {
     if (state.id) {
       clearDraft();
@@ -46,7 +64,7 @@ export function SubmissionForm() {
 
   function persist(next: Record<string, string>) {
     setFields(next);
-    saveDraft(next);
+    if (!isEdit) saveDraft(next);
   }
 
   const busy = isPending || Boolean(state.id);
@@ -170,7 +188,7 @@ export function SubmissionForm() {
         className="inline-flex w-full select-none items-center justify-center rounded-full bg-ink py-4 text-base font-medium text-cream transition-transform duration-300 ease-[var(--ease-out)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
       >
         {busy && <Spinner className="mr-2 h-5 w-5" />}
-        {busy ? "Submitting…" : "Get My Report"}
+        {busy ? "Saving…" : isEdit ? "Save changes" : "Get My Report"}
       </button>
     </form>
   );
