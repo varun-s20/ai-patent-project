@@ -15,7 +15,8 @@ export default async function SubmitPage({
         Describe your invention
       </h1>
       <p className="mt-3 text-muted">
-        A short, guided form. Everything autosaves as you type.
+        A short, guided form — the more detail you add, the sharper your evaluation.
+        Everything autosaves as you type and stays private and confidential.
       </p>
       {error && (
         <p className="mt-6 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">

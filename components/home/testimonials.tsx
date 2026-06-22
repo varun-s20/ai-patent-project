@@ -36,14 +36,11 @@ const QUOTES = [
 export function Testimonials() {
   return (
     <section className="mx-auto max-w-[1500px] px-6 py-24 sm:px-10 lg:px-16">
-      <InView className="max-w-3xl">
-        <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-gold">
-          Early users
-        </p>
-        <h2 className="mt-4 font-display text-[2.5rem] font-semibold leading-[1.05] tracking-tight text-ink sm:text-5xl lg:text-6xl">
+      <InView className="max-w-none">
+        <h2 className="font-display text-[2.5rem] font-semibold leading-[1.05] tracking-tight text-ink sm:text-5xl lg:text-6xl">
           A decision you can stand behind.
         </h2>
-        <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
+        <p className="mt-4 max-w-7xl text-xl leading-relaxed text-muted">
           The point isn&rsquo;t a higher score — it&rsquo;s a clear, defensible call on whether
           your idea is worth the spend. Here&rsquo;s how that lands.
         </p>
