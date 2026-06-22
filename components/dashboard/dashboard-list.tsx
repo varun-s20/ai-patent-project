@@ -135,27 +135,40 @@ export function DashboardList({ rows, heading }: { rows: DashRow[]; heading: str
         </div>
       </div>
 
-      <div className="mt-5 space-y-4 sm:space-y-5">
+      <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((r) => (
-          <Card key={r.id} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
-            <ScoreToken score={r.score} />
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="truncate font-display text-lg tracking-tight text-ink">{r.title}</h3>
-                <StatusBadge status={r.status} />
-                {r.verdict && <VerdictBadge verdict={r.verdict} />}
-              </div>
+          // Vertical card: meta up top, title + verdict in the body, actions pinned
+          // to a bottom row via mt-auto so every card's buttons line up.
+          <Card key={r.id} className="flex flex-col gap-4">
+            <div className="flex items-start justify-between gap-3">
+              <ScoreToken score={r.score} />
+              <StatusBadge status={r.status} />
+            </div>
+
+            <div className="min-w-0">
+              {/* Long titles ellipsize to a single line so cards stay uniform. */}
+              <h3 className="truncate font-display text-lg tracking-tight text-ink" title={r.title}>
+                {r.title}
+              </h3>
               <p className="mt-1.5 font-mono text-[11px] uppercase tracking-wide text-muted">
                 {formatDate(r.createdAt)}
-                {r.score !== null ? ` · Overall ${r.score}/100` : ""}
+                {r.score !== null ? ` · ${r.score}/100` : ""}
               </p>
+              {r.verdict && (
+                <div className="mt-3">
+                  <VerdictBadge verdict={r.verdict} />
+                </div>
+              )}
             </div>
-            <RowActions id={r.id} status={r.status} reportUrl={r.reportUrl} certUrl={r.certUrl} />
+
+            <div className="mt-auto border-t border-line pt-4">
+              <RowActions id={r.id} status={r.status} reportUrl={r.reportUrl} certUrl={r.certUrl} />
+            </div>
           </Card>
         ))}
 
         {filtered.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-line bg-paper/40 px-6 py-12 text-center">
+          <div className="rounded-2xl border border-dashed border-line bg-paper/40 px-6 py-12 text-center sm:col-span-2 lg:col-span-3">
             <p className="text-sm text-muted">No ideas match these filters.</p>
             {hasFilters && (
               <button

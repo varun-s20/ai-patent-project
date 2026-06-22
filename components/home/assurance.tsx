@@ -1,5 +1,12 @@
-import { ShieldCheck, Clock } from "@/components/ui/icons";
+import { ShieldCheck, Clock, Check } from "@/components/ui/icons";
 import { InView } from "@/components/motion/in-view";
+
+// The privacy promises we can stand behind honestly — no fabricated guarantees.
+const GUARANTEES = [
+  "Never shared with third parties",
+  "You keep 100% ownership",
+  "Encrypted & access-controlled",
+];
 
 /**
  * Two paired assurances the client asked us to make explicit: (1) the idea stays
@@ -17,14 +24,29 @@ export function Assurance() {
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gold/[0.12] ring-1 ring-gold/25">
               <ShieldCheck className="h-5 w-5 text-gold" />
             </div>
-            <h3 className="mt-6 font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-              Your idea never leaves your hands.
+            <p className="mt-6 text-[11px] font-medium uppercase tracking-[0.22em] text-gold">
+              Private &amp; confidential
+            </p>
+            <h3 className="mt-3 font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+              Your idea is yours. We won&apos;t take it.
             </h3>
             <p className="mt-4 max-w-xl text-base leading-relaxed text-ink-2">
-              We don&apos;t share your submission with anyone. If you decide to file,
-              we&apos;ll forward your report to the attorney of your choice, and only
-              then, only with your say-so.
+              Your submission is totally private and confidential. We never share it
+              with anyone — if you decide to file, we forward your report only to an
+              attorney <span className="text-ink">you</span> choose, and only with your
+              say-so.
             </p>
+            <ul className="mt-7 flex flex-wrap gap-2">
+              {GUARANTEES.map((g) => (
+                <li
+                  key={g}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-line bg-paper/60 px-3 py-1.5 text-[12px] font-medium text-ink-2"
+                >
+                  <Check className="h-3.5 w-3.5 shrink-0 text-gold" />
+                  {g}
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* The cost of waiting. */}

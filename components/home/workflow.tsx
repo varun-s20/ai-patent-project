@@ -109,12 +109,12 @@ export function Workflow() {
   return (
     <section id="platform" className="section-navy border-y border-white/10 text-cream">
       <div className="mx-auto max-w-[1500px] px-6 pt-24 pb-8 sm:px-10 lg:px-16">
-        {/* Header — label + single-line heading only */}
+        {/* Header — single-line heading, matching every other section's intro. */}
         <div className="mb-20">
           <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-gold-bright">
             The platform
           </p>
-          <h2 className="mt-4 font-display text-[2.5rem] font-semibold leading-[1.04] tracking-tight text-cream sm:text-5xl lg:text-6xl">
+          <h2 className="mt-4 font-display text-[2.5rem] font-semibold leading-[1.05] tracking-tight text-cream sm:text-5xl lg:text-6xl">
             One flow. Idea to record.
           </h2>
         </div>
