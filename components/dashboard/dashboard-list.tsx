@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ChangeEventHandler, type ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { VerdictBadge } from "@/components/ui/verdict-badge";
-import { Search, X } from "@/components/ui/icons";
+import { Search, X, ChevronDown } from "@/components/ui/icons";
 import { RowActions } from "@/components/dashboard/row-actions";
 import { formatDate } from "@/lib/ui/format";
 import { statusLabel } from "@/lib/ui/status";
@@ -88,11 +88,10 @@ export function DashboardList({ rows, heading }: { rows: DashRow[]; heading: str
           </div>
 
           {statuses.length > 1 && (
-            <select
+            <FilterSelect
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              aria-label="Filter by status"
-              className={`${control} min-w-0 flex-1 capitalize sm:flex-none`}
+              label="Filter by status"
             >
               <option value="all">All statuses</option>
               {statuses.map((s) => (
@@ -100,15 +99,14 @@ export function DashboardList({ rows, heading }: { rows: DashRow[]; heading: str
                   {statusLabel(s)}
                 </option>
               ))}
-            </select>
+            </FilterSelect>
           )}
 
           {verdicts.length > 1 && (
-            <select
+            <FilterSelect
               value={verdict}
               onChange={(e) => setVerdict(e.target.value)}
-              aria-label="Filter by verdict"
-              className={`${control} min-w-0 flex-1 capitalize sm:flex-none`}
+              label="Filter by verdict"
             >
               <option value="all">Any verdict</option>
               {verdicts.map((v) => (
@@ -116,7 +114,7 @@ export function DashboardList({ rows, heading }: { rows: DashRow[]; heading: str
                   {verdictLabel(v)}
                 </option>
               ))}
-            </select>
+            </FilterSelect>
           )}
 
           {hasFilters && (
@@ -186,6 +184,38 @@ export function DashboardList({ rows, heading }: { rows: DashRow[]; heading: str
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * A filter dropdown with the native arrow suppressed and a custom chevron, so
+ * the indicator keeps a comfortable gap from the right edge (the native arrow
+ * sat flush against the border). `pr-9` reserves room so options never run
+ * under the chevron.
+ */
+function FilterSelect({
+  value,
+  onChange,
+  label,
+  children,
+}: {
+  value: string;
+  onChange: ChangeEventHandler<HTMLSelectElement>;
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="relative min-w-0 flex-1 sm:flex-none">
+      <select
+        value={value}
+        onChange={onChange}
+        aria-label={label}
+        className={`${control} w-full appearance-none pr-9 capitalize`}
+      >
+        {children}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
     </div>
   );
 }

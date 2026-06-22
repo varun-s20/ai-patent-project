@@ -10,7 +10,7 @@ import {
 import { CharacterCounter } from "@/components/ui/character-counter";
 import { Spinner } from "@/components/ui/spinner";
 import { ChevronDown, ShieldCheck } from "@/components/ui/icons";
-import { saveDraft, loadDraft, clearDraft } from "@/lib/draft/draft-storage";
+import { clearDraft } from "@/lib/draft/draft-storage";
 import { DESCRIPTION_MIN, DESCRIPTION_MAX } from "@/lib/validation/submission";
 import { INDUSTRIES } from "@/lib/types";
 import { EXAMPLE_SUBMISSION } from "@/lib/content/example-submission";
@@ -22,9 +22,11 @@ const labelClass = "block text-xs font-medium uppercase tracking-[0.14em] text-m
 export function SubmissionForm({
   editId,
   initialValues,
+  userEmail,
 }: {
   editId?: string;
   initialValues?: Record<string, string>;
+  userEmail?: string;
 } = {}) {
   const isEdit = Boolean(editId);
   const [showExample, setShowExample] = useState(false);
@@ -33,38 +35,37 @@ export function SubmissionForm({
   // shape useActionState needs; it redirects to the dashboard on success.
   const action = isEdit ? updateSubmission.bind(null, editId!) : createSubmission;
   const [description, setDescription] = useState(initialValues?.description ?? "");
-  const [fields, setFields] = useState<Record<string, string>>(initialValues ?? {});
+  // A fresh form prefills only the report email with the logged-in address;
+  // every other field stays blank until typed (or restored from a draft).
+  const [fields, setFields] = useState<Record<string, string>>(
+    initialValues ?? (userEmail ? { email: userEmail } : {}),
+  );
   const [state, formAction, isPending] = useActionState<SubmitState, FormData>(
     action,
     {},
   );
 
   useEffect(() => {
-    // Edit mode is seeded from the saved draft's own values; the localStorage
-    // draft belongs to the new-submission flow, so don't pull it in here.
-    if (isEdit) return;
-    const draft = loadDraft();
-    if (draft) {
-      setFields(draft);
-      if (draft.description) setDescription(draft.description);
-    }
+    // A new evaluation always starts blank except the prefilled email — we no
+    // longer restore a draft. Purge any legacy draft so a previous session's
+    // answers (inventor name, industry, …) can never resurface here.
+    if (!isEdit) clearDraft();
   }, [isEdit]);
 
-  // On a successful create, wipe the draft AND the in-memory field state so the
-  // form never carries one idea's content into the next, then go to payment.
-  // (Edit mode redirects server-side, so there's no state.id to react to.)
+  // On a successful create, clear the in-memory field state so the form never
+  // carries one idea's content into the next, then go to payment. (Edit mode
+  // redirects server-side, so there's no state.id to react to.)
   useEffect(() => {
     if (state.id) {
-      clearDraft();
       setFields({});
       setDescription("");
       router.push(`/pay/${state.id}`);
     }
   }, [state.id, router]);
 
+  // Field state is in-memory only — nothing is persisted between visits.
   function persist(next: Record<string, string>) {
     setFields(next);
-    if (!isEdit) saveDraft(next);
   }
 
   const busy = isPending || Boolean(state.id);

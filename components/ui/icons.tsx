@@ -75,6 +75,17 @@ export function Seal(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Certificate — an award rosette medallion with two ribbon tails. */
+export function Certificate(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="12" cy="9" r="5.5" />
+      <circle cx="12" cy="9" r="2.1" />
+      <path d="M9.1 13.8 7.5 21l4.5-2.6 4.5 2.6-1.6-7.2" />
+    </svg>
+  );
+}
+
 /** Patent/registration mark — an award medallion with a ribbon and an inner check. */
 export function Patent(props: SVGProps<SVGSVGElement>) {
   return (
@@ -252,6 +263,16 @@ export function Plus(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...base} {...props}>
       <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
+
+/** Edit — a fine-line pencil for amending a draft. */
+export function Pencil(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4 20.5h4l10.3-10.3a1.8 1.8 0 0 0 0-2.5l-1.5-1.5a1.8 1.8 0 0 0-2.5 0L4 16.5v4Z" />
+      <path d="M13.5 6.5 17.5 10.5" />
     </svg>
   );
 }

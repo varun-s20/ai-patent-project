@@ -272,8 +272,14 @@ function FeaturedCard({
           </p>
         </div>
 
-        <div className="sm:self-stretch sm:border-l sm:border-line sm:pl-6">
-          <RowActions id={row.id} status={row.status} reportUrl={reportUrl} certUrl={certUrl} />
+        <div className="sm:w-48 sm:self-stretch sm:border-l sm:border-line sm:pl-6">
+          <RowActions
+            id={row.id}
+            status={row.status}
+            reportUrl={reportUrl}
+            certUrl={certUrl}
+            orientation="stack"
+          />
         </div>
       </Card>
     </InView>
