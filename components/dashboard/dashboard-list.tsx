@@ -1,12 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { VerdictBadge } from "@/components/ui/verdict-badge";
-import { buttonClasses } from "@/components/ui/button";
 import { Search, X } from "@/components/ui/icons";
+import { RowActions } from "@/components/dashboard/row-actions";
 import { formatDate } from "@/lib/ui/format";
 import { statusLabel } from "@/lib/ui/status";
 import { verdictLabel } from "@/lib/ui/verdict";
@@ -151,7 +150,7 @@ export function DashboardList({ rows, heading }: { rows: DashRow[]; heading: str
                 {r.score !== null ? ` · Overall ${r.score}/100` : ""}
               </p>
             </div>
-            <RowActions id={r.id} reportUrl={r.reportUrl} certUrl={r.certUrl} />
+            <RowActions id={r.id} status={r.status} reportUrl={r.reportUrl} certUrl={r.certUrl} />
           </Card>
         ))}
 
@@ -200,34 +199,5 @@ function ScoreToken({ score }: { score: number | null }) {
       <span className="relative font-display text-base leading-none text-foil">{score}</span>
       <span className="relative mt-0.5 text-[7px] uppercase tracking-[0.12em] text-cream/45">/100</span>
     </span>
-  );
-}
-
-/** Action buttons for a row. */
-function RowActions({
-  id,
-  reportUrl,
-  certUrl,
-}: {
-  id: string;
-  reportUrl?: string;
-  certUrl?: string;
-}) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      <Link href={`/status/${id}`} className={buttonClasses("ghost")}>
-        View
-      </Link>
-      {reportUrl && (
-        <a href={reportUrl} className={buttonClasses("ghost")}>
-          Report
-        </a>
-      )}
-      {certUrl && (
-        <a href={certUrl} className={buttonClasses("gold")}>
-          Certificate
-        </a>
-      )}
-    </div>
   );
 }

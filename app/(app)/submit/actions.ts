@@ -6,11 +6,9 @@ import { submissionSchema } from "@/lib/validation/submission";
 
 export type SubmitState = { error?: string; id?: string };
 
-export async function createSubmission(
-  _prev: SubmitState,
-  formData: FormData,
-): Promise<SubmitState> {
-  const parsed = submissionSchema.safeParse({
+/** Pull the submission fields out of the posted form and validate them. */
+function parseForm(formData: FormData) {
+  return submissionSchema.safeParse({
     title: formData.get("title"),
     description: formData.get("description"),
     problem: formData.get("problem") || undefined,
@@ -18,6 +16,13 @@ export async function createSubmission(
     inventorName: formData.get("inventorName"),
     email: formData.get("email"),
   });
+}
+
+export async function createSubmission(
+  _prev: SubmitState,
+  formData: FormData,
+): Promise<SubmitState> {
+  const parsed = parseForm(formData);
 
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid submission" };
@@ -49,4 +54,51 @@ export async function createSubmission(
 
   // Success — the client clears its draft and navigates to payment.
   return { id: data.id };
+}
+
+/**
+ * Edit an existing draft's idea fields. Bound to its submission id on the
+ * client so the form action keeps the `(prevState, formData)` shape that
+ * useActionState expects. Only drafts are editable — once a submission is paid
+ * and evaluated, its report is locked.
+ */
+export async function updateSubmission(
+  editId: string,
+  _prev: SubmitState,
+  formData: FormData,
+): Promise<SubmitState> {
+  const parsed = parseForm(formData);
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid submission" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const d = parsed.data;
+  const { data, error } = await supabase
+    .from("submissions")
+    .update({
+      title: d.title,
+      description: d.description,
+      problem: d.problem ?? null,
+      industry: d.industry,
+      inventor_name: d.inventorName,
+      email: d.email,
+    })
+    .eq("id", editId)
+    // Only a draft may be edited. RLS already scopes this to the owner's rows,
+    // and the status guard blocks edits to anything already paid/evaluated.
+    .eq("status", "draft")
+    .select("id")
+    .maybeSingle();
+
+  if (error) return { error: error.message };
+  if (!data) return { error: "This idea can no longer be edited." };
+
+  redirect("/dashboard");
 }

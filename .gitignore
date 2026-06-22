@@ -61,6 +61,9 @@ docs/
 # design reference scratch (mockups / screenshots used while building — not shipped)
 ref/
 
+# research reference materials (patent examples, FTO toolkits, sample PDFs — local only)
+/research/
+
 # local test logs
 inngest.log
 stripe.log
