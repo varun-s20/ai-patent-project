@@ -146,7 +146,7 @@ export function Workflow() {
                 fading in at the first stage and out past the last. */}
             <span
               aria-hidden
-              className="pointer-events-none absolute left-[18px] top-[16vh] bottom-[16vh] hidden w-px bg-gradient-to-b from-transparent via-white/15 to-transparent sm:block"
+              className="pointer-events-none absolute left-[18px] top-[12vh] bottom-[12vh] w-px bg-gradient-to-b from-transparent via-white/15 to-transparent sm:top-[16vh] sm:bottom-[16vh]"
             />
             {STAGES.map((s, i) => (
               <div
@@ -154,17 +154,25 @@ export function Workflow() {
                 ref={(el) => {
                   panelRefs.current[i] = el;
                 }}
-                className="relative flex min-h-[56vh] items-center py-10"
+                className="relative flex min-h-0 items-center py-10 lg:min-h-[56vh] lg:py-10"
               >
                 {/* Node anchored to the spine, centered on the panel content */}
-                <span className="absolute left-0 top-1/2 hidden -translate-y-1/2 sm:block">
+                <span className="absolute left-0 top-1/2 -translate-y-1/2">
                   <StageNode index={i} active={active === i} passed={active > i} />
                 </span>
-                <div className="w-full sm:pl-14">
+                <div className="w-full pl-12 sm:pl-14">
                   <StagePanel stage={s} />
                 </div>
               </div>
             ))}
+
+            {/* Phone-only closing CTA — one action for the whole flow, so the
+                per-stage buttons (tablet/desktop) don't pile up on small screens. */}
+            <div className="flex pl-12 pb-4 sm:hidden">
+              <CtaLink href="/submit" variant="gold">
+                Evaluate for $49
+              </CtaLink>
+            </div>
           </div>
         </div>
       </div>
@@ -222,15 +230,19 @@ function StagePanel({ stage }: { stage: Stage }) {
         <p className="mt-4 max-w-[30ch] text-base leading-relaxed text-cream/60">
           {stage.tagline}
         </p>
-        <div className="mt-8">
+        {/* Per-stage CTA on tablet/desktop only — on phone the buttons would
+            stack into a repetitive column, so the section carries one closing
+            CTA instead (below). */}
+        <div className="mt-8 hidden sm:block">
           <CtaLink href="/submit" variant="gold">
             Evaluate for $49
           </CtaLink>
         </div>
       </div>
 
-      {/* Mockup + floating popups */}
-      <div className="hidden lg:block">
+      {/* Mockup + floating popups — the product shot for each stage, shown on
+          every screen so phones get the same visual story as desktop. */}
+      <div className="block">
         <StageVisual stageKey={stage.key} />
       </div>
     </motion.div>
@@ -252,7 +264,7 @@ function Popup({
 }) {
   return (
     <div
-      className={`absolute z-10 w-[11.5rem] rounded-2xl bg-white p-3.5 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.45)] ring-1 ring-black/[0.06] ${className}`}
+      className={`absolute z-10 w-[9.5rem] rounded-2xl bg-white p-3 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.45)] ring-1 ring-black/[0.06] sm:w-[11.5rem] sm:p-3.5 ${className}`}
     >
       <div className="flex items-center gap-2">
         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-gold/15 text-gold">

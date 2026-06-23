@@ -17,7 +17,7 @@ export function CtaBand() {
             aria-hidden
             className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(55%_100%_at_50%_0%,rgba(228,196,90,0.16),transparent)]"
           />
-          <div className="relative mx-auto grid max-w-[1500px] items-center gap-10 px-8 py-16 sm:px-12 lg:grid-cols-[1.45fr_0.55fr] lg:px-20 lg:py-20">
+          <div className="relative mx-auto grid max-w-[1500px] items-center gap-10 px-6 py-14 sm:px-12 sm:py-16 lg:grid-cols-[1.45fr_0.55fr] lg:px-20 lg:py-20">
             <div className="max-w-5xl">
               <h2 className="font-display text-[2.5rem] font-semibold leading-[1.04] tracking-tight text-cream sm:text-5xl lg:text-6xl">
                 Your next <span className="text-gold text-6xl font-extrabold lg:text-7xl">BIG</span> idea deserves a second opinion and protection today.

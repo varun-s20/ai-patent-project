@@ -50,7 +50,7 @@ export function Pricing() {
               <p className="mt-4 text-base text-muted line-through decoration-line">
                 Patent lawyers charge $2,000 to $10,000
               </p>
-              <p className="mt-1 font-display text-7xl font-semibold leading-none tracking-tight text-ink">
+              <p className="mt-1 font-display text-6xl font-semibold leading-none tracking-tight text-ink sm:text-7xl">
                 <CountUp to={49} prefix="$" />
               </p>
               <p className="mt-4 text-base leading-relaxed text-muted">

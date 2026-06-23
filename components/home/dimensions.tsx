@@ -43,7 +43,7 @@ export function Dimensions() {
       </InView>
 
       <Stagger
-        className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-5"
+        className="mt-14 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
         gap={0.07}
       >
         {DIMENSIONS.map((d) => (
