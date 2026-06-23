@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { InView } from "@/components/motion/in-view";
 
-const VIDEO_SRC = "/ai-invention.mp4";
+const VIDEO_DESKTOP = "/ai-invention.mp4";
+const VIDEO_MOBILE = "/ai-patent-mobile.mp4";
 
 function VolumeOff(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -44,6 +45,20 @@ function VolumeOn(props: React.SVGProps<SVGSVGElement>) {
 export function VideoShowcase() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
+  // null until mounted so we never render (and download) the wrong video on the
+  // server, then resolve to the portrait clip on phones / landscape elsewhere.
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  const videoSrc =
+    isMobile === null ? undefined : isMobile ? VIDEO_MOBILE : VIDEO_DESKTOP;
 
   const toggleMute = () => {
     if (videoRef.current) videoRef.current.muted = !muted;
@@ -54,13 +69,14 @@ export function VideoShowcase() {
     <section id="how" className="scroll-mt-24 section-tint border-y border-line">
       <div className="mx-auto max-w-[1400px] px-6 py-24 sm:px-10 lg:px-16">
         <InView>
-          <div className="relative overflow-hidden rounded-[20px] bg-gradient-to-br from-navy-800 to-navy-900 p-1.5 ring-1 ring-ink/20 shadow-[0_50px_110px_-45px_rgba(13,22,38,0.85)]">
-            <div className="relative aspect-video w-full overflow-hidden rounded-[14px] bg-navy-900">
-              {VIDEO_SRC && (
+          <div className="relative mx-auto max-w-[420px] overflow-hidden rounded-[20px] bg-gradient-to-br from-navy-800 to-navy-900 p-1.5 ring-1 ring-ink/20 shadow-[0_50px_110px_-45px_rgba(13,22,38,0.85)] sm:max-w-none">
+            <div className="relative aspect-[9/16] w-full overflow-hidden rounded-[14px] bg-navy-900 sm:aspect-video">
+              {videoSrc && (
                 <video
+                  key={videoSrc}
                   ref={videoRef}
                   className="h-full w-full object-cover"
-                  src={VIDEO_SRC}
+                  src={videoSrc}
                   autoPlay
                   loop
                   muted={muted}
