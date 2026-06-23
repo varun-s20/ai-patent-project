@@ -139,23 +139,62 @@ export function Workflow() {
             </nav>
           </div>
 
-          {/* Stage panels — each tall enough for scroll-spy to work cleanly */}
-          <div>
+          {/* Stage panels — threaded by one continuous flow-line so the
+              stages read as a single journey, not six separate slides. */}
+          <div className="relative">
+            {/* The spine: a faint vertical thread connecting every node,
+                fading in at the first stage and out past the last. */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute left-[18px] top-[16vh] bottom-[16vh] hidden w-px bg-gradient-to-b from-transparent via-white/15 to-transparent sm:block"
+            />
             {STAGES.map((s, i) => (
               <div
                 key={s.key}
                 ref={(el) => {
                   panelRefs.current[i] = el;
                 }}
-                className="flex min-h-[82vh] items-center py-14"
+                className="relative flex min-h-[56vh] items-center py-10"
               >
-                <StagePanel stage={s} />
+                {/* Node anchored to the spine, centered on the panel content */}
+                <span className="absolute left-0 top-1/2 hidden -translate-y-1/2 sm:block">
+                  <StageNode index={i} active={active === i} passed={active > i} />
+                </span>
+                <div className="w-full sm:pl-14">
+                  <StagePanel stage={s} />
+                </div>
               </div>
             ))}
           </div>
         </div>
       </div>
     </section>
+  );
+}
+
+/* ---- Flow-line node ---- */
+
+function StageNode({
+  index,
+  active,
+  passed,
+}: {
+  index: number;
+  active: boolean;
+  passed: boolean;
+}) {
+  return (
+    <span
+      className={`relative flex h-9 w-9 items-center justify-center rounded-full border text-[11px] font-semibold tabular-nums transition-all duration-500 ${
+        active
+          ? "scale-110 border-gold-bright bg-gold-bright text-ink shadow-[0_0_0_5px_rgba(228,196,90,0.14)]"
+          : passed
+            ? "border-gold-bright/45 bg-navy-900 text-gold-bright"
+            : "border-white/15 bg-navy-900 text-cream/40"
+      }`}
+    >
+      {String(index + 1).padStart(2, "0")}
+    </span>
   );
 }
 
