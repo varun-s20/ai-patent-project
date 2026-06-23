@@ -63,13 +63,13 @@ export function AdminFilters() {
 
   return (
     <div className="mt-4 flex flex-wrap items-center gap-2">
-      <div className="relative">
+      <div className="relative w-full sm:w-auto">
         <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search title or email…"
-          className={`${control} w-64 pl-9 ${q ? "pr-9" : ""}`}
+          className={`${control} w-full pl-9 sm:w-64 ${q ? "pr-9" : ""}`}
           aria-label="Search submissions"
         />
         {q && (

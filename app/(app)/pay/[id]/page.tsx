@@ -35,7 +35,7 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
         <p className="mt-5 text-sm text-muted line-through decoration-red-500 important">
           Patent lawyers charge $2,000–$10,000
         </p>
-        <p className="mt-1 font-display text-6xl tracking-tight text-ink">
+        <p className="mt-1 font-display text-5xl tracking-tight text-ink sm:text-6xl">
           $49<span className="ml-2 align-middle text-sm font-sans text-muted">one-time</span>
         </p>
 
