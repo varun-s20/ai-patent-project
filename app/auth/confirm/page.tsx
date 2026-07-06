@@ -42,6 +42,17 @@ export default function ConfirmPage() {
       const accessToken = hash.get("access_token");
       const refreshToken = hash.get("refresh_token");
 
+      // A recovery link must always land on the password-reset flow, never
+      // silently complete a full login here — this is an explicit guard, not
+      // just a side effect of <RecoveryGate>'s mount order in the root layout.
+      // Checked in both the query string (custom token_hash template) and the
+      // hash fragment (implicit flow, same place access_token/refresh_token
+      // are read from below) — a recovery link can arrive either way.
+      if (type === "recovery" || hash.get("type") === "recovery") {
+        window.location.replace(`/reset-password${window.location.search}${window.location.hash}`);
+        return;
+      }
+
       // 1. Custom email template: `…/auth/confirm?token_hash=…&type=…`.
       if (tokenHash && type) {
         const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });

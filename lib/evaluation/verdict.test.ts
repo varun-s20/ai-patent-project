@@ -9,7 +9,7 @@ function scores(values: number[]): EvaluationScores {
 }
 
 describe("deriveVerdict", () => {
-  it("PROCEED_NOW when avg>=70 and novelty>=60", () => {
+  it("PROCEED_NOW when avg>=65 and novelty>=50", () => {
     expect(deriveVerdict(scores([80, 80, 80, 80, 80]))).toBe("PROCEED_NOW");
   });
 
@@ -17,8 +17,20 @@ describe("deriveVerdict", () => {
     expect(deriveVerdict(scores([25, 95, 95, 95, 95]))).toBe("DO_NOT_PATENT");
   });
 
-  it("DO_NOT_PATENT when avg is below the refine floor", () => {
-    expect(deriveVerdict(scores([40, 40, 40, 40, 40]))).toBe("DO_NOT_PATENT");
+  it("DO_NOT_PATENT when defensibility is below the floor, even with high avg", () => {
+    // avg = 69, but a trivially-copyable/unenforceable idea can't proceed.
+    expect(deriveVerdict(scores([80, 90, 15, 80, 80]))).toBe("DO_NOT_PATENT");
+  });
+
+  it("treats the floor thresholds as exclusive — right at the floor still passes the gate", () => {
+    // novelty=30 and defensibility=20 exactly must NOT trip DO_NOT_PATENT;
+    // only strictly below does. avg = 60, so this lands in REFINE_FIRST.
+    expect(deriveVerdict(scores([30, 90, 20, 90, 70]))).toBe("REFINE_FIRST");
+  });
+
+  it("DO_NOT_PATENT one point below each floor", () => {
+    expect(deriveVerdict(scores([29, 90, 90, 90, 90]))).toBe("DO_NOT_PATENT");
+    expect(deriveVerdict(scores([90, 90, 19, 90, 90]))).toBe("DO_NOT_PATENT");
   });
 
   it("REFINE_FIRST in the middle band", () => {
@@ -26,12 +38,12 @@ describe("deriveVerdict", () => {
   });
 
   it("REFINE_FIRST when avg is high but novelty is below the proceed threshold", () => {
-    // avg = 83, novelty = 55
-    expect(deriveVerdict(scores([55, 90, 90, 90, 90]))).toBe("REFINE_FIRST");
+    // avg = 81, novelty = 45
+    expect(deriveVerdict(scores([45, 90, 90, 90, 90]))).toBe("REFINE_FIRST");
   });
 
   it("treats the proceed thresholds as inclusive", () => {
-    // avg = 70 exactly, novelty = 60 exactly
-    expect(deriveVerdict(scores([60, 70, 70, 70, 80]))).toBe("PROCEED_NOW");
+    // avg = 65 exactly, novelty = 50 exactly
+    expect(deriveVerdict(scores([50, 70, 70, 70, 65]))).toBe("PROCEED_NOW");
   });
 });

@@ -21,7 +21,7 @@ const ICON_BG: Record<Variant, string> = {
   ghost: "bg-ink/[0.06] text-ink",
 };
 
-/** Plain pill classes for simple link/button elements (no nested icon). */
+/** Plain button classes for simple link/button elements (no nested icon). */
 export function buttonClasses(variant: Variant = "primary"): string {
   return `${base} px-5 py-2.5 ${VARIANTS[variant]}`;
 }
@@ -35,9 +35,9 @@ export function Button({
 }
 
 /**
- * Primary CTA: a fully-rounded pill with the trailing arrow nested in its own
- * circular wrapper, flush with the right padding. The icon has internal kinetic
- * tension on hover (translate + scale); the whole pill presses on :active.
+ * Primary CTA: sharp-radius button with the trailing arrow nested in its own
+ * rounded wrapper, flush with the right padding. The icon has internal kinetic
+ * tension on hover (translate + scale); the whole button presses on :active.
  */
 export function CtaLink({
   href,

@@ -12,7 +12,6 @@ const inputClass =
 
 const SAVED_MESSAGE: Record<string, string> = {
   profile: "Profile updated.",
-  email: "Profile updated — check your inbox to confirm the new email address.",
   password: "Password changed.",
 };
 
@@ -38,12 +37,18 @@ export default async function AccountPage({
       <p className="mt-2 text-sm text-muted">Manage your name, email, and password.</p>
 
       {error && (
-        <p className="mt-6 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <p
+          role="alert"
+          className="mt-6 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+        >
           {error}
         </p>
       )}
       {saved && SAVED_MESSAGE[saved] && (
-        <p className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+        <p
+          role="status"
+          className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700"
+        >
           {SAVED_MESSAGE[saved]}
         </p>
       )}
@@ -52,22 +57,28 @@ export default async function AccountPage({
         <h2 className="font-display text-xl tracking-tight text-ink">Profile</h2>
         <form action={updateProfile} className="mt-5 space-y-4">
           <div>
-            <label className="text-xs uppercase tracking-[0.14em] text-muted">Full name</label>
+            <label htmlFor="acc-fullname" className="text-xs uppercase tracking-[0.14em] text-muted">
+              Full name
+            </label>
             <input
+              id="acc-fullname"
               name="fullName"
               type="text"
               defaultValue={fullName}
               placeholder="Full name"
               required
+              maxLength={120}
               className={`mt-1.5 ${inputClass}`}
             />
           </div>
           <div>
-            <label className="text-xs uppercase tracking-[0.14em] text-muted">Email</label>
+            <label htmlFor="acc-email" className="text-xs uppercase tracking-[0.14em] text-muted">
+              Email
+            </label>
             <input
+              id="acc-email"
               type="email"
               defaultValue={user.email ?? ""}
-              readOnly
               disabled
               className={`mt-1.5 ${inputClass} cursor-not-allowed bg-ink/[0.03] text-muted`}
             />

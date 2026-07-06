@@ -6,12 +6,12 @@ import { createClient } from "@/lib/supabase/server";
 export default async function SubmitPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; created?: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
-  const { error, created } = await searchParams;
+  const { error } = await searchParams;
 
   // Prefill only the report email with the address the user logged in with;
-  // every other field starts blank (or from an autosaved draft).
+  // every other field starts blank.
   const supabase = await createClient();
   const {
     data: { user },
@@ -29,11 +29,6 @@ export default async function SubmitPage({
       {error && (
         <p className="mt-6 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           {error}
-        </p>
-      )}
-      {created && (
-        <p className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
-          Draft saved (id {created}).
         </p>
       )}
       <Card className="mt-7">

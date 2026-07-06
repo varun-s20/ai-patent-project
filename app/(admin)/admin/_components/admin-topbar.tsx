@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, Bell, Gear } from "@/components/ui/icons";
+import { Search } from "@/components/ui/icons";
 import { AdminBrand, NAV_LINKS, isLinkActive } from "./admin-sidebar";
 
 /**
@@ -49,8 +49,6 @@ export function AdminTopbar({ name, email }: { name: string; email: string }) {
         </form>
 
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-          
-
           <span aria-hidden className="mx-1 hidden h-6 w-px bg-line sm:block" />
 
           <div className="flex items-center gap-2.5 rounded-xl py-1 pl-1 pr-1 sm:pl-2.5">

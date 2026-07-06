@@ -40,7 +40,7 @@ export function Hero() {
           </InView>
 
           <InView delay={0.1}>
-            <p className="mt-6 max-w-[80%] text-lg leading-relaxed text-ink-2 sm:text-xl">
+            <p className="mt-6 max-w-[52ch] text-lg leading-relaxed text-ink-2 sm:text-xl">
               A patent attorney charges up to <span className="text-ink">$10,000</span> to
               evaluate an idea and certify it. We do the same five-dimension read, report,
               and timestamped record for <span className="text-ink">$49</span>.

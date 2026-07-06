@@ -8,10 +8,16 @@ import {
   type SubmitState,
 } from "@/app/(app)/submit/actions";
 import { CharacterCounter } from "@/components/ui/character-counter";
-import { Spinner } from "@/components/ui/spinner";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { ChevronDown, ShieldCheck } from "@/components/ui/icons";
 import { clearDraft } from "@/lib/draft/draft-storage";
-import { DESCRIPTION_MIN, DESCRIPTION_MAX } from "@/lib/validation/submission";
+import {
+  DESCRIPTION_MIN,
+  DESCRIPTION_MAX,
+  PROBLEM_MAX,
+  TITLE_MAX,
+  INVENTOR_NAME_MAX,
+} from "@/lib/validation/submission";
 import { INDUSTRIES } from "@/lib/types";
 import { EXAMPLE_SUBMISSION } from "@/lib/content/example-submission";
 
@@ -40,10 +46,7 @@ export function SubmissionForm({
   const [fields, setFields] = useState<Record<string, string>>(
     initialValues ?? (userEmail ? { email: userEmail } : {}),
   );
-  const [state, formAction, isPending] = useActionState<SubmitState, FormData>(
-    action,
-    {},
-  );
+  const [state, formAction] = useActionState<SubmitState, FormData>(action, {});
 
   useEffect(() => {
     // A new evaluation always starts blank except the prefilled email — we no
@@ -67,8 +70,6 @@ export function SubmissionForm({
   function persist(next: Record<string, string>) {
     setFields(next);
   }
-
-  const busy = isPending || Boolean(state.id);
 
   return (
     <form action={formAction} className="space-y-5">
@@ -130,6 +131,7 @@ export function SubmissionForm({
           name="title"
           placeholder="Invention title"
           required
+          maxLength={TITLE_MAX}
           value={fields.title ?? ""}
           onChange={(e) => persist({ ...fields, title: e.target.value })}
           className={`mt-1.5 ${inputClass}`}
@@ -146,6 +148,7 @@ export function SubmissionForm({
           placeholder={EXAMPLE_SUBMISSION.description}
           required
           rows={6}
+          maxLength={DESCRIPTION_MAX}
           value={description}
           onChange={(e) => {
             setDescription(e.target.value);
@@ -169,10 +172,12 @@ export function SubmissionForm({
           name="problem"
           placeholder="What problem does it solve? (optional)"
           rows={3}
+          maxLength={PROBLEM_MAX}
           value={fields.problem ?? ""}
           onChange={(e) => persist({ ...fields, problem: e.target.value })}
           className={`mt-1.5 ${inputClass}`}
         />
+        <CharacterCounter count={(fields.problem ?? "").length} max={PROBLEM_MAX} />
       </div>
 
       <div>
@@ -207,6 +212,7 @@ export function SubmissionForm({
           name="inventorName"
           placeholder="Inventor full name"
           required
+          maxLength={INVENTOR_NAME_MAX}
           value={fields.inventorName ?? ""}
           onChange={(e) => persist({ ...fields, inventorName: e.target.value })}
           className={`mt-1.5 ${inputClass}`}
@@ -229,15 +235,14 @@ export function SubmissionForm({
         />
       </div>
 
-      <button
-        type="submit"
-        disabled={busy}
-        aria-busy={busy}
-        className="inline-flex w-full select-none items-center justify-center rounded-full bg-ink py-4 text-base font-medium text-cream transition-transform duration-300 ease-[var(--ease-out)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
+      <SubmitButton
+        variant="primary"
+        className="w-full py-4 text-base"
+        disabled={Boolean(state.id)}
+        pendingLabel="Saving…"
       >
-        {busy && <Spinner className="mr-2 h-5 w-5" />}
-        {busy ? "Saving…" : isEdit ? "Save changes" : "Get My Report"}
-      </button>
+        {isEdit ? "Save changes" : "Get My Report"}
+      </SubmitButton>
     </form>
   );
 }

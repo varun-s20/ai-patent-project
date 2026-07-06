@@ -77,6 +77,9 @@ function BackPage({ data }: { data: CertificateData }) {
               {/* eslint-disable-next-line jsx-a11y/alt-text */}
               <Image src={data.qrDataUrl} style={s.qrImage} />
               <Text style={s.qrCaption}>Scan to Verify</Text>
+              {/* Fallback for a camera-less reader or a degraded photocopy —
+                  the certId alone is enough to look this up at /verify. */}
+              <Text style={s.qrCaption}>{data.certId}</Text>
             </View>
           </View>
 

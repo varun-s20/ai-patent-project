@@ -7,6 +7,8 @@ import { formatDate } from "@/lib/ui/format";
 import { one } from "@/lib/db/one";
 import { computeRevenue, PAID_STATUSES, UNIT_PRICE } from "@/lib/admin/revenue";
 import { FeatureStat, Stat, SectionHead } from "../_components/stats";
+import { Pagination } from "../_components/pagination";
+import { PAGE_SIZE, pageRange, parsePage } from "@/lib/admin/pagination";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +25,13 @@ type PaymentRow = {
   profiles: ProfileEmbed | ProfileEmbed[] | null;
 };
 
-export default async function AdminPaymentsPage() {
+export default async function AdminPaymentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page: pageParam } = await searchParams;
+  const page = parsePage(pageParam);
   const admin = createAdminClient();
 
   const [paid, refunded] = await Promise.all([
@@ -35,19 +43,27 @@ export default async function AdminPaymentsPage() {
     refundedCount: refunded.count ?? 0,
   });
 
-  const { data: rowsData } = await admin
+  const { from, to } = pageRange(page);
+  const { data: rowsData, error: rowsError } = await admin
     .from("submissions")
     .select("id, title, status, email, created_at, profiles(full_name)")
     .in("status", [...PAID_STATUSES])
     .order("created_at", { ascending: false })
-    .limit(200);
-  const rows = (rowsData ?? []) as PaymentRow[];
+    .range(from, to);
+  const hasNext = (rowsData?.length ?? 0) > PAGE_SIZE;
+  const rows = ((rowsData ?? []) as PaymentRow[]).slice(0, PAGE_SIZE);
+  const queryError = paid.error ?? refunded.error ?? rowsError;
 
   return (
     <main>
       <h1 className="font-display text-3xl tracking-tight text-ink sm:text-4xl">
         Payments <span className="italic text-foil">&amp; revenue.</span>
       </h1>
+      {queryError && (
+        <p className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          Some figures failed to load ({queryError.message}). Numbers below may be incomplete.
+        </p>
+      )}
 
       <div className="mt-7 grid gap-4 sm:grid-cols-3">
         <FeatureStat
@@ -68,7 +84,7 @@ export default async function AdminPaymentsPage() {
       </div>
 
       <section className="mt-12">
-        <SectionHead title="Payment history" count={rows.length} />
+        <SectionHead title="Payment history" count={paid.count ?? rows.length} />
         <Card padded={false} className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[720px] text-sm">
             <thead className="border-b border-line bg-paper/40">
@@ -115,6 +131,7 @@ export default async function AdminPaymentsPage() {
             </tbody>
           </table>
         </Card>
+        <Pagination page={page} hasNext={hasNext} basePath="/admin/payments" searchParams={{}} />
       </section>
     </main>
   );

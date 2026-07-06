@@ -8,7 +8,7 @@ import { getGroq, groqModel } from "@/lib/groq/client";
 
 export type AiProvider = "ollama" | "groq";
 
-function resolveProvider(): AiProvider {
+export function resolveProvider(): AiProvider {
   // `||` (not `??`) so an empty AI_PROVIDER="" also falls back to the default.
   const provider = (process.env.AI_PROVIDER || "groq").toLowerCase();
   if (provider !== "ollama" && provider !== "groq") {

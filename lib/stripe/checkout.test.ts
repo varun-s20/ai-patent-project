@@ -29,4 +29,8 @@ describe("buildCheckoutParams", () => {
     expect(params.mode).toBe("payment");
     expect(params.customer_email).toBe("buyer@example.com");
   });
+
+  it("restricts to card payments (no delayed-notification methods)", () => {
+    expect(params.payment_method_types).toEqual(["card"]);
+  });
 });

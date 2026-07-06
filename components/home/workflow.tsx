@@ -130,7 +130,7 @@ export function Workflow() {
                   className={`w-full rounded-xl px-4 py-3.5 text-left text-[15px] font-medium tracking-tight transition-all duration-300 ${
                     active === i
                       ? "bg-cream text-ink shadow-[0_8px_24px_-10px_rgba(0,0,0,0.5)]"
-                      : "text-cream/40 hover:text-cream/75"
+                      : "text-cream/60 hover:text-cream/85"
                   }`}
                 >
                   {s.tab}
@@ -198,7 +198,7 @@ function StageNode({
           ? "scale-110 border-gold-bright bg-gold-bright text-ink shadow-[0_0_0_5px_rgba(228,196,90,0.14)]"
           : passed
             ? "border-gold-bright/45 bg-navy-900 text-gold-bright"
-            : "border-white/15 bg-navy-900 text-cream/40"
+            : "border-white/15 bg-navy-900 text-cream/60"
       }`}
     >
       {String(index + 1).padStart(2, "0")}
@@ -216,7 +216,7 @@ function StagePanel({ stage }: { stage: Stage }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-10% 0px" }}
       transition={{ duration: 0.5, ease: EASE }}
-      className="grid w-full gap-12 lg:grid-cols-[5fr_6fr] lg:items-center"
+      className="js-reveal grid w-full gap-12 lg:grid-cols-[5fr_6fr] lg:items-center"
     >
       {/* Text */}
       <div>

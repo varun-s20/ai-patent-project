@@ -15,6 +15,11 @@ export function buildCheckoutParams(args: {
   return {
     mode: "payment",
     customer_email: args.email,
+    // Cards only — Apple Pay/Google Pay ride along on "card" automatically.
+    // Rules out delayed-notification methods (ACH, SEPA, etc.), which would
+    // otherwise fire `checkout.session.completed` before money has actually
+    // settled, with no async success/failure handling on the webhook side.
+    payment_method_types: ["card"],
     line_items: [
       {
         quantity: 1,

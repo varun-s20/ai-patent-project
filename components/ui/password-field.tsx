@@ -11,6 +11,7 @@ import { PasswordRequirements } from "@/components/ui/password-requirements";
  * rule checklist renders below and the field tracks its own value to drive it.
  */
 export function PasswordField({
+  id,
   name = "password",
   placeholder = "Password",
   required = true,
@@ -20,6 +21,7 @@ export function PasswordField({
   showRequirements = false,
   onValueChange,
 }: {
+  id?: string;
   name?: string;
   placeholder?: string;
   required?: boolean;
@@ -31,13 +33,14 @@ export function PasswordField({
 }) {
   const [shown, setShown] = useState(false);
   const [value, setValue] = useState("");
-  const id = useId();
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
 
   return (
     <div>
       <div className="relative">
         <input
-          id={id}
+          id={inputId}
           name={name}
           type={shown ? "text" : "password"}
           placeholder={placeholder}
@@ -56,8 +59,7 @@ export function PasswordField({
           onClick={() => setShown((v) => !v)}
           aria-label={shown ? "Hide password" : "Show password"}
           aria-pressed={shown}
-          className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-muted/70 transition-colors duration-200 hover:text-ink focus-visible:text-ink focus-visible:outline-none"
-          tabIndex={-1}
+          className="absolute inset-y-0 right-0 flex w-12 items-center justify-center rounded-r-xl text-muted/70 transition-colors duration-200 hover:text-ink focus-visible:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-inset"
         >
           {shown ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
         </button>

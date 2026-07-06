@@ -23,6 +23,7 @@ export default async function EditPage({
     .from("submissions")
     .select("id, title, description, problem, industry, inventor_name, email, status")
     .eq("id", id)
+    .eq("user_id", user.id)
     .single();
 
   if (!submission) notFound();

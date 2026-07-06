@@ -19,15 +19,8 @@ type EvaluationRow = {
   verdict: string;
 };
 
-export default async function StatusPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ paid?: string }>;
-}) {
+export default async function StatusPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { paid } = await searchParams;
 
   const supabase = await createClient();
   const {
@@ -37,37 +30,55 @@ export default async function StatusPage({
 
   const { data: submission } = await supabase
     .from("submissions")
-    .select("id, title, status")
+    .select("id, title, status, stripe_session_id")
     .eq("id", id)
+    .eq("user_id", user.id)
     .single();
 
   if (!submission) notFound();
 
-  if (submission.status === "draft" && !paid) redirect(`/pay/${id}`);
+  // A submission that never even started checkout (no Stripe session at all)
+  // must not sit on an infinite spinner — send it to checkout. But one that
+  // DID start checkout and is still "draft" here is very likely just waiting
+  // on the async webhook (Stripe already redirected the browser here) —
+  // bouncing it to /pay would show "Pay & Evaluate" again to someone who
+  // already paid. Treat that case as "confirming payment" instead.
+  if (submission.status === "draft" && !submission.stripe_session_id) {
+    redirect(`/pay/${id}`);
+  }
+  const confirmingPayment = submission.status === "draft" && Boolean(submission.stripe_session_id);
 
-  const processing =
-    submission.status === "draft" ||
-    submission.status === "paid" ||
-    submission.status === "processing";
-  const refunded = submission.status === "refunded" || submission.status === "failed";
+  const processing = confirmingPayment || submission.status === "paid" || submission.status === "processing";
+  const refunded = submission.status === "refunded";
+  const failed = submission.status === "failed";
 
   let evaluation: EvaluationRow | null = null;
   let reportUrl: string | null = null;
   let certificateUrl: string | null = null;
+  // Distinguishes "still processing" from "marked complete but the joined
+  // rows are missing" (partial pipeline failure, replication lag) — without
+  // this the results section just silently doesn't render either way.
+  let broken = false;
 
   if (submission.status === "complete") {
-    const { data } = await supabase
+    const { data, error: evalErr } = await supabase
       .from("evaluations")
       .select("novelty, commercial, defensibility, licensing, timing, avg_score, verdict")
       .eq("submission_id", id)
       .single();
     evaluation = data as EvaluationRow | null;
+    if (evalErr || !evaluation) broken = true;
 
-    const { data: cert } = await supabase
+    const { data: cert, error: certErr } = await supabase
       .from("certificates")
       .select("report_pdf_path, certificate_pdf_path")
       .eq("submission_id", id)
       .single();
+    // A `certificates` row is created for every complete submission (whether
+    // or not a certificate_pdf_path ends up populated, which correctly
+    // depends on verdict) — a missing row or query error here means the row
+    // itself never landed, same broken-pipeline signal as a missing evaluation.
+    if (certErr || !cert) broken = true;
 
     if (cert?.report_pdf_path) {
       const { data: signed } = await supabase.storage
@@ -97,9 +108,13 @@ export default async function StatusPage({
           <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
             <span className="mt-0.5 h-2 w-2 shrink-0 animate-pulse rounded-full bg-amber-500" />
             <div>
-              <p className="font-semibold">Your invention is being evaluated…</p>
+              <p className="font-semibold">
+                {confirmingPayment ? "Confirming your payment…" : "Your invention is being evaluated…"}
+              </p>
               <p className="mt-1">
-                This usually takes 2–5 minutes. The page refreshes automatically.
+                {confirmingPayment
+                  ? "This usually takes a few seconds. The page refreshes automatically."
+                  : "This usually takes 2–5 minutes. The page refreshes automatically."}
               </p>
             </div>
           </div>
@@ -108,6 +123,26 @@ export default async function StatusPage({
         {refunded && (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             The evaluation failed and your $49 was automatically refunded.
+          </div>
+        )}
+
+        {failed && (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <p className="font-semibold">The evaluation failed.</p>
+            <p className="mt-1">
+              We hit a problem and couldn&apos;t automatically confirm your refund. Please contact
+              support and reference submission {id} — we&apos;ll sort out the charge.
+            </p>
+          </div>
+        )}
+
+        {broken && (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <p className="font-semibold">Something went wrong loading your results.</p>
+            <p className="mt-1">
+              Your evaluation completed but we couldn&apos;t load it. Please contact support and
+              reference submission {id}.
+            </p>
           </div>
         )}
 

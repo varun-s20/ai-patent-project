@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { validatePassword, PASSWORD_ERROR } from "@/lib/validation/password";
 import { isValidEmail, EMAIL_ERROR } from "@/lib/validation/email";
+import { FULL_NAME_MAX } from "@/lib/validation/profile";
 
 const EMAIL_TAKEN =
   "An account with this email already exists. Log in to continue.";
@@ -19,6 +20,11 @@ export async function signUp(formData: FormData) {
   }
   if (!validatePassword(password).valid) {
     return redirect(`/register?error=${encodeURIComponent(PASSWORD_ERROR)}`);
+  }
+  if (fullName.length > FULL_NAME_MAX) {
+    return redirect(
+      `/register?error=${encodeURIComponent(`Full name must be at most ${FULL_NAME_MAX} characters.`)}`,
+    );
   }
 
   const supabase = await createClient();
@@ -47,12 +53,33 @@ export async function signUp(formData: FormData) {
 }
 
 export async function signIn(formData: FormData) {
-  const email = String(formData.get("email"));
-  const password = String(formData.get("password"));
+  const email = String(formData.get("email") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
   const supabase = await createClient();
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) redirect(`/login?error=${encodeURIComponent(error.message)}`);
+
+  // Checked here too (not just in middleware on the next navigation) so a
+  // disabled user gets one clear rejection at sign-in instead of successfully
+  // authenticating and only getting bounced on their first protected request.
+  // A failed query must deny, not silently fall through as "not disabled" —
+  // matches the same fail-closed rule lib/supabase/middleware.ts enforces.
+  const { data: profile, error: profileErr } = await supabase
+    .from("profiles")
+    .select("is_disabled")
+    .eq("id", data.user.id)
+    .single();
+  if (profileErr) {
+    console.error("[auth] signIn: profile lookup failed, denying access:", profileErr);
+    await supabase.auth.signOut();
+    redirect(`/login?error=${encodeURIComponent("Something went wrong. Please try again.")}`);
+  }
+  if (profile?.is_disabled) {
+    await supabase.auth.signOut();
+    redirect(`/login?error=${encodeURIComponent("Your account has been disabled.")}`);
+  }
+
   redirect("/dashboard");
 }
 

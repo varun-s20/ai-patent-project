@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useFormStatus } from "react-dom";
 import { Eye, FileText, Certificate, Pencil } from "@/components/ui/icons";
 import { createCheckoutSession } from "@/app/(app)/pay/actions";
+import { Spinner } from "@/components/ui/spinner";
 
 /**
  * Actions for a submission, shared by the dashboard grid and the featured card.
@@ -35,6 +37,23 @@ const TILE =
   "transition-[background-color,color,box-shadow] duration-200 ease-[var(--ease-out)] " +
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-card";
 
+/** Pay button that disables itself while the form is submitting — a double
+ * click (or a slow first click) must never fire a second live checkout session. */
+function PayButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      aria-busy={pending}
+      className={`${PRIMARY} ${GOLD} w-full disabled:pointer-events-none disabled:opacity-70`}
+    >
+      {pending && <Spinner className="h-4 w-4" />}
+      {pending ? "Starting checkout…" : "Pay $49"}
+    </button>
+  );
+}
+
 export function RowActions({
   id,
   status,
@@ -58,9 +77,7 @@ export function RowActions({
       <div className={wrap}>
         <form action={createCheckoutSession} className={grow}>
           <input type="hidden" name="submissionId" value={id} />
-          <button type="submit" className={`${PRIMARY} ${GOLD} w-full`}>
-            Pay $49
-          </button>
+          <PayButton />
         </form>
         {stack ? (
           <Link href={`/edit/${id}`} className={`${PRIMARY} ${GHOST} w-full`}>

@@ -109,6 +109,10 @@ export function ReportDocument({ data }: { data: ReportData }) {
         {content.novelty.comparablePatents.length > 0 && (
           <>
             <Text style={styles.h2}>Comparable patents</Text>
+            <Text style={styles.body}>
+              Illustrative leads only, drawn from general knowledge — not a verified prior-art
+              search. Confirm with a professional prior-art search before relying on these.
+            </Text>
             {content.novelty.comparablePatents.map((p, i) => (
               <View key={i} style={styles.card}>
                 <Text style={styles.cardTitle}>{p.name}</Text>
@@ -155,6 +159,7 @@ export function ReportDocument({ data }: { data: ReportData }) {
 
       {/* Page 7 — Final Decision */}
       <ReportPage data={data} pageNo={7} title="Final Decision">
+        <DimensionHeader data={data} dimension="timing" />
         <View style={[styles.verdictBanner, { backgroundColor: verdictColor(verdict) }]}>
           <Text style={styles.verdictText}>{verdictLabel(verdict)}</Text>
         </View>
@@ -172,8 +177,9 @@ export function ReportDocument({ data }: { data: ReportData }) {
         )}
       </ReportPage>
 
-      {/* Page 8 — Top Buyers */}
+      {/* Page 8 — Top Buyers & Licensing */}
       <ReportPage data={data} pageNo={8} title="Top Buyers & Licensing Targets">
+        <DimensionHeader data={data} dimension="licensing" />
         {content.topBuyers.length > 0 ? (
           content.topBuyers.map((b, i) => (
             <View key={i} style={styles.card}>

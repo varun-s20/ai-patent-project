@@ -42,4 +42,17 @@ describe("parseEvaluationResponse", () => {
     delete raw.licensing;
     expect(() => parseEvaluationResponse(JSON.stringify(raw))).toThrow();
   });
+
+  it("coerces a stringified score instead of throwing", () => {
+    const raw = JSON.parse(valid);
+    raw.novelty.score = "85";
+    const r = parseEvaluationResponse(JSON.stringify(raw));
+    expect(r.novelty.score).toBe(85);
+  });
+
+  it("throws on a non-finite score", () => {
+    const raw = JSON.parse(valid);
+    raw.novelty.score = "not-a-number";
+    expect(() => parseEvaluationResponse(JSON.stringify(raw))).toThrow();
+  });
 });

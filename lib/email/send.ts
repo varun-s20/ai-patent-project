@@ -45,6 +45,7 @@ export async function sendEmail(
     to,
     subject: content.subject,
     html: content.html,
+    text: content.text,
     ...(attachments && attachments.length > 0
       ? { attachments: attachments.map((a) => ({ filename: a.filename, content: a.content })) }
       : {}),

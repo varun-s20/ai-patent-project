@@ -6,6 +6,7 @@ import { PasswordField } from "@/components/ui/password-field";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { isValidEmail } from "@/lib/validation/email";
 import { validatePassword } from "@/lib/validation/password";
+import { FULL_NAME_MAX } from "@/lib/validation/profile";
 
 const inputClass =
   "w-full rounded-xl border border-line bg-paper/40 px-4 py-3 text-ink outline-none transition-colors duration-200 placeholder:text-muted/60 focus:border-gold focus:bg-card";
@@ -35,6 +36,7 @@ export function RegisterForm() {
         name="fullName"
         placeholder="Full name"
         required
+        maxLength={FULL_NAME_MAX}
         autoComplete="name"
         value={fullName}
         onChange={(e) => setFullName(e.target.value)}

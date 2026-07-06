@@ -14,7 +14,8 @@ export function ConsoleHead({ eyebrow, title }: { eyebrow: string; title: string
   );
 }
 
-/** Section heading with a gold-dotted count chip. */
+/** Section heading with a gold-dotted count chip. `count` must be the real
+ * total matching the active filters, not the current page's row count. */
 export function SectionHead({ title, count }: { title: string; count: number }) {
   return (
     <div className="flex items-baseline gap-3">
@@ -22,7 +23,6 @@ export function SectionHead({ title, count }: { title: string; count: number }) 
       <span className="inline-flex items-center gap-1.5 rounded-md border border-ink/10 bg-cream/60 px-2.5 py-0.5 text-[11px] font-medium text-muted">
         <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-gold" />
         {count}
-        {count === 200 ? "+" : ""}
       </span>
     </div>
   );

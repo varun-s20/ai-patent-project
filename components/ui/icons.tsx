@@ -113,14 +113,6 @@ export function X(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function Minus(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg {...base} {...props}>
-      <path d="M5 12h14" />
-    </svg>
-  );
-}
-
 export function Clock(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...base} {...props}>

@@ -1,33 +1,10 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { saveDraft, loadDraft, clearDraft, DRAFT_KEY } from "./draft-storage";
-
-const draft = { title: "Idea", description: "desc", industry: "Other" };
+import { describe, it, expect } from "vitest";
+import { clearDraft, DRAFT_KEY } from "./draft-storage";
 
 describe("draft-storage", () => {
-  beforeEach(() => localStorage.clear());
-
-  it("returns null when no draft is stored", () => {
-    expect(loadDraft()).toBeNull();
-  });
-
-  it("round-trips a saved draft", () => {
-    saveDraft(draft);
-    expect(loadDraft()).toEqual(draft);
-  });
-
-  it("writes under the documented key", () => {
-    saveDraft(draft);
-    expect(localStorage.getItem(DRAFT_KEY)).not.toBeNull();
-  });
-
-  it("clears a draft", () => {
-    saveDraft(draft);
+  it("clears a legacy draft key", () => {
+    localStorage.setItem(DRAFT_KEY, "{}");
     clearDraft();
-    expect(loadDraft()).toBeNull();
-  });
-
-  it("returns null on corrupted JSON instead of throwing", () => {
-    localStorage.setItem(DRAFT_KEY, "{not json");
-    expect(loadDraft()).toBeNull();
+    expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
   });
 });

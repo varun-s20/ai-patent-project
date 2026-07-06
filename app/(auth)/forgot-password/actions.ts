@@ -17,9 +17,13 @@ export async function requestPasswordReset(formData: FormData) {
     const origin =
       (await headers()).get("origin") ?? process.env.NEXT_PUBLIC_BASE_URL ?? "";
     const supabase = await createClient();
-    await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${origin}/reset-password`,
     });
+    // Anti-enumeration means the user always sees "on its way" regardless —
+    // but a genuine send failure (SMTP outage, rate limit) should still be
+    // visible somewhere, not just invisible.
+    if (error) console.error("[forgot-password] resetPasswordForEmail failed:", error);
   }
   redirect("/forgot-password?sent=1");
 }

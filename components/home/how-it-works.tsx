@@ -84,7 +84,10 @@ export function HowItWorks() {
           onPointerMove={onPointerMove}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
-          className="mt-12 flex cursor-grab items-stretch gap-0 overflow-x-auto overflow-y-hidden px-6 pt-4 pb-6 select-none active:cursor-grabbing sm:px-10 lg:px-16 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          tabIndex={0}
+          role="region"
+          aria-label="How it works — six steps, scroll or use arrow keys"
+          className="mt-12 flex cursor-grab items-stretch gap-0 overflow-x-auto overflow-y-hidden px-6 pt-4 pb-6 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold active:cursor-grabbing sm:px-10 lg:px-16 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {STEPS.map((step, i) => (
             <Fragment key={step.key}>
@@ -108,7 +111,7 @@ function StepCard({ step, delay }: { step: Step; delay: number }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.3 }}
       transition={{ duration: 0.55, delay, ease: EASE }}
-      className="hover-lift flex h-[26rem] w-80 shrink-0 flex-col rounded-2xl border border-line bg-paper p-6 shadow-[0_1px_2px_rgba(26,43,74,0.04)] sm:w-96 sm:p-7"
+      className="js-reveal hover-lift flex h-[26rem] w-80 shrink-0 flex-col rounded-2xl border border-line bg-paper p-6 shadow-[0_1px_2px_rgba(26,43,74,0.04)] sm:w-96 sm:p-7"
     >
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
         Step {step.ordinal}
@@ -139,7 +142,7 @@ function Connector({ delay }: { delay: number }) {
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true, amount: 0.6 }}
       transition={{ duration: 0.35, delay, ease: EASE }}
-      className="relative z-20 -mx-4 flex h-14 w-14 shrink-0 self-center items-center justify-center rounded-full bg-ink/[0.06]"
+      className="js-reveal relative z-20 -mx-4 flex h-14 w-14 shrink-0 self-center items-center justify-center rounded-full bg-ink/[0.06]"
     >
       <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ink/[0.04] text-ink-2 ring-1 ring-ink/10">
         <ArrowRight className="h-4 w-4" />
@@ -283,7 +286,7 @@ function StepVisual({ stepKey, delay }: { stepKey: string; delay: number }) {
         whileInView={{ opacity: 1, y: 0, rotate: -6 }}
         viewport={{ once: true, amount: 0.5 }}
         transition={{ duration: 0.5, delay, ease: EASE }}
-        className="absolute left-4 top-2 w-[58%] overflow-hidden rounded-lg bg-white p-1.5 shadow-[0_20px_40px_-20px_rgba(26,43,74,0.45)] ring-1 ring-black/[0.05]"
+        className="js-reveal absolute left-4 top-2 w-[58%] overflow-hidden rounded-lg bg-white p-1.5 shadow-[0_20px_40px_-20px_rgba(26,43,74,0.45)] ring-1 ring-black/[0.05]"
       >
         <div className="relative aspect-[3/4] p-4">
           <Image
@@ -303,7 +306,7 @@ function StepVisual({ stepKey, delay }: { stepKey: string; delay: number }) {
         whileInView={{ opacity: 1, y: 0, rotate: 5 }}
         viewport={{ once: true, amount: 0.5 }}
         transition={{ duration: 0.5, delay: delay + 0.1, ease: EASE }}
-        className="absolute bottom-2 right-1 w-[58%] overflow-hidden rounded-lg bg-white p-1.5 shadow-[0_20px_40px_-20px_rgba(26,43,74,0.5)] ring-1 ring-black/[0.05]"
+        className="js-reveal absolute bottom-2 right-1 w-[58%] overflow-hidden rounded-lg bg-white p-1.5 shadow-[0_20px_40px_-20px_rgba(26,43,74,0.5)] ring-1 ring-black/[0.05]"
       >
         <div className="relative aspect-[4/3] p-4">
           <Image

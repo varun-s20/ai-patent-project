@@ -40,6 +40,10 @@ export function AdminFilters() {
       if (isDefault(key, value)) sp.delete(key);
       else sp.set(key, value);
     }
+    // Any filter change must land back on page 1 — otherwise a narrower
+    // result set can strand the view on a now-nonexistent page, rendering
+    // "no results" even though page 1 of the new filter has plenty.
+    sp.delete("page");
     const qs = sp.toString();
     startTransition(() => router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false }));
   };
