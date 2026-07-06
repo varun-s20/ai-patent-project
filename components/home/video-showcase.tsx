@@ -66,7 +66,7 @@ export function VideoShowcase() {
   };
 
   return (
-    <section id="how" className="scroll-mt-24 section-tint border-y border-line">
+    <section id="demo" className="scroll-mt-24 section-tint border-y border-line">
       <div className="mx-auto max-w-[1400px] px-6 py-24 sm:px-10 lg:px-16">
         <InView>
           <div className="relative mx-auto max-w-[420px] overflow-hidden rounded-[20px] bg-gradient-to-br from-navy-800 to-navy-900 p-1.5 ring-1 ring-ink/20 shadow-[0_50px_110px_-45px_rgba(13,22,38,0.85)] sm:max-w-none">

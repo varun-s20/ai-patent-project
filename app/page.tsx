@@ -1,4 +1,5 @@
 import { CtaBand } from "@/components/home/cta-band";
+import { HowItWorks } from "@/components/home/how-it-works";
 import { Hero } from "@/components/home/hero";
 import { Assurance } from "@/components/home/assurance";
 import { TrustStrip } from "@/components/home/trust-strip";
@@ -17,13 +18,15 @@ export default function Home() {
   return (
     <main>
       <CtaBand />
+      {/* "How it works" nav anchors here — six-step order-of-operations, right where visitors land. */}
+      <HowItWorks />
       <Hero />
       {/* Confidentiality is the second thing visitors read — we won't take your idea. */}
       <Assurance />
       <TrustStrip />
-      {/* "How it works" nav anchors here — a watch-it-work overview… */}
+      {/* A watch-it-work video overview… */}
       <VideoShowcase />
-      {/* …then the stage-by-stage platform tour… */}
+      {/* …then the stage-by-stage platform tour, in full depth… */}
       <Workflow />
       {/* …and how much detail to give for the sharpest read. */}
       <DetailExample />

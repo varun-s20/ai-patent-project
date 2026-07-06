@@ -96,6 +96,20 @@ body {
   filter: none;
 }
 
+/* Slow "start here" ring pulse — marks the first node of the how-it-works
+   rail. Ring only (no fill), so it reads as a beacon, not a loading state. */
+@keyframes startPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  70%,
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
 /* Slow, premium gradient drift for the gold foil seal. */
 @keyframes foil-drift {
   0%,
