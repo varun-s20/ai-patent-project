@@ -258,6 +258,25 @@ export function SignOut(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Log in — mirror of SignOut: arrow entering a door frame. */
+export function LogIn(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M10 4.5h8a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5h-8" />
+      <path d="M7 8.5 3.5 12 7 15.5M3.5 12h11" />
+    </svg>
+  );
+}
+
+/** Cursor — a mouse-pointer arrow, filled, for "click here" moments. */
+export function Cursor(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" {...props}>
+      <path d="M5.5 3.5v16.2l3.7-3.6 2.3 5 2.5-1.1-2.3-5 5.1-.6z" />
+    </svg>
+  );
+}
+
 /** Plus. */
 export function Plus(props: SVGProps<SVGSVGElement>) {
   return (
