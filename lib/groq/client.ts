@@ -30,7 +30,8 @@ async function groqChat(params: ChatCreateParams): Promise<ChatMessage> {
     throw new Error("GROQ_API_KEY is not set (required when AI_PROVIDER=groq)");
   }
 
-  const baseUrl = process.env.GROQ_BASE_URL ?? DEFAULT_BASE_URL;
+  // `||` so an empty GROQ_BASE_URL="" also falls back to the default.
+  const baseUrl = process.env.GROQ_BASE_URL || DEFAULT_BASE_URL;
 
   // The model is a per-provider concept: consumers thread through an Ollama
   // model name (e.g. "llama3.1"), which is meaningless to Groq. So Groq sources
@@ -47,6 +48,9 @@ async function groqChat(params: ChatCreateParams): Promise<ChatMessage> {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
     },
+    // Comfortably under the platform's 300s step budget so a hung request
+    // fails fast (and retries) instead of the whole step timing out externally.
+    signal: AbortSignal.timeout(240_000),
     body: JSON.stringify({
       model,
       messages,

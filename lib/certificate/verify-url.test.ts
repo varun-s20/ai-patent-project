@@ -20,4 +20,9 @@ describe("certificateVerifyUrl", () => {
       "https://registry.example.com/verify/GC-AI-2026-8F14E4",
     );
   });
+
+  it("throws instead of silently building a broken relative URL", () => {
+    delete process.env.NEXT_PUBLIC_BASE_URL;
+    expect(() => certificateVerifyUrl("GC-AI-2026-8F14E4")).toThrow();
+  });
 });

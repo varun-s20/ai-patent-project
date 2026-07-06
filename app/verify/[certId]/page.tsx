@@ -1,37 +1,62 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { certificateVerifyUrl } from "@/lib/certificate/verify-url";
-import { verdictLabel } from "@/lib/ui/verdict";
 import { formatDate } from "@/lib/ui/format";
 import { ShareButtons } from "@/components/share-buttons";
 import { Seal } from "@/components/ui/icons";
 
 export const dynamic = "force-dynamic";
 
-async function loadCertificate(certId: string) {
+const CERT_ID_PATTERN = /^GC-AI-\d{4}-[0-9A-F]{6}$/;
+
+/** certificateVerifyUrl() throws if NEXT_PUBLIC_BASE_URL is unset — correct
+ * for certificate *generation* (fail loud, can't fix a printed QR code
+ * retroactively) but wrong here: this page must keep working for every
+ * already-issued certificate even if that env var is ever misconfigured
+ * later, so a missing var degrades to a relative link instead of a 500. */
+function safeVerifyUrl(certId: string): string {
+  try {
+    return certificateVerifyUrl(certId);
+  } catch (err) {
+    console.error(`[verify] could not build absolute verify URL for ${certId}:`, err);
+    return `/verify/${certId}`;
+  }
+}
+
+// generateMetadata and the page component each need this — cache() dedupes
+// the DB round-trips within a single request instead of doing them twice.
+const loadCertificate = cache(async (certId: string) => {
+  if (!CERT_ID_PATTERN.test(certId)) return null;
+
   const admin = createAdminClient();
   const { data: cert } = await admin
     .from("certificates")
-    .select("cert_id, issued_at, submission_id")
+    // A certificate row exists for every submission (created at report time),
+    // but only PROCEED_NOW ideas ever get certificate_pdf_path populated —
+    // that's the one column that means "this idea was actually certified."
+    // Without gating on it, a REFINE_FIRST/DO_NOT_PATENT idea would resolve
+    // to a public page claiming "Certificate Verified".
+    .select("cert_id, issued_at, submission_id, certificate_pdf_path")
     .eq("cert_id", certId)
     .single();
-  if (!cert) return null;
+  if (!cert || !cert.certificate_pdf_path) return null;
 
   const { data: submission } = await admin
     .from("submissions")
-    .select("title, inventor_name, industry")
+    .select("title, inventor_name, industry, status")
     .eq("id", cert.submission_id)
     .single();
 
-  const { data: evaluation } = await admin
-    .from("evaluations")
-    .select("avg_score, verdict")
-    .eq("submission_id", cert.submission_id)
-    .single();
+  // A certificate can be fully issued (certificate_pdf_path set) and the
+  // submission it belongs to later end up refunded/failed — e.g. a later
+  // pipeline step fails after the certificate step already succeeded. A
+  // refunded/failed submission's certificate must stop reading as "Verified".
+  if (submission && submission.status !== "complete") return null;
 
-  return { cert, submission, evaluation };
-}
+  return { cert, submission };
+});
 
 export async function generateMetadata({
   params,
@@ -46,7 +71,7 @@ export async function generateMetadata({
   return {
     title,
     description,
-    openGraph: { title, description, url: certificateVerifyUrl(certId), type: "website" },
+    openGraph: { title, description, url: safeVerifyUrl(certId), type: "website" },
     twitter: { card: "summary", title, description },
   };
 }
@@ -69,8 +94,8 @@ export default async function VerifyPage({
   const loaded = await loadCertificate(certId);
   if (!loaded) notFound();
 
-  const { cert, submission, evaluation } = loaded;
-  const verifyUrl = certificateVerifyUrl(cert.cert_id);
+  const { cert, submission } = loaded;
+  const verifyUrl = safeVerifyUrl(cert.cert_id);
 
   return (
     <main className="mx-auto w-full max-w-lg px-6 py-10">
@@ -99,9 +124,9 @@ export default async function VerifyPage({
             <Row label="Inventor" value={submission?.inventor_name ?? "—"} />
             <Row label="Industry" value={submission?.industry ?? "—"} />
             <Row label="Date of issue" value={formatDate(cert.issued_at)} />
-            {evaluation && <Row label="Overall score" value={`${evaluation.avg_score} / 100`} />}
-            {evaluation && <Row label="Verdict" value={verdictLabel(evaluation.verdict)} />}
           </dl>
+          {/* Score/verdict are deliberately private — see CertificateData's
+              doc comment — and never rendered on this public page. */}
 
           <div className="mt-7 flex flex-wrap gap-2">
             {["VERIFIED", "TIMESTAMPED", "AI CERTIFIED"].map((badge) => (

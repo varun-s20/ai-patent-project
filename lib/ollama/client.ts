@@ -15,8 +15,13 @@ interface OllamaChatResponse {
   error?: string;
 }
 
+// Comfortably under the platform's 300s step budget so a hung request fails
+// fast (and retries) instead of the whole step timing out from the outside.
+const REQUEST_TIMEOUT_MS = 240_000;
+
 async function ollamaChat(params: ChatCreateParams): Promise<ChatMessage> {
-  const baseUrl = process.env.OLLAMA_BASE_URL ?? DEFAULT_BASE_URL;
+  // `||` so an empty OLLAMA_BASE_URL="" also falls back to the default.
+  const baseUrl = process.env.OLLAMA_BASE_URL || DEFAULT_BASE_URL;
 
   // Ollama takes the system instruction as a system-role message, not a top-level field.
   const messages = [{ role: "system", content: params.system }, ...params.messages];
@@ -43,6 +48,7 @@ async function ollamaChat(params: ChatCreateParams): Promise<ChatMessage> {
   const res = await fetch(`${baseUrl}/api/chat`, {
     method: "POST",
     headers,
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     body: JSON.stringify({
       model: params.model,
       messages,

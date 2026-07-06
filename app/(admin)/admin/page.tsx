@@ -53,12 +53,18 @@ export default async function AdminOverviewPage() {
   const completedCount = completed.count ?? 0;
   const inFlightCount = inFlight.count ?? 0;
 
-  const { data: recentData } = await admin
+  const { data: recentData, error: recentError } = await admin
     .from("submissions")
     .select("id, title, status, email, created_at, evaluations(avg_score, verdict)")
     .order("created_at", { ascending: false })
     .limit(8);
   const recent = (recentData ?? []) as RecentRow[];
+
+  // Any of these failing would otherwise render as "0" / "no submissions" —
+  // indistinguishable from a genuinely empty, healthy registry.
+  const queryError = [total, paid, refunded, completed, failed, inFlight, users].find(
+    (r) => r.error,
+  )?.error;
 
   return (
     <main className="flex flex-col gap-8">
@@ -66,6 +72,12 @@ export default async function AdminOverviewPage() {
         eyebrow="Registry overview"
         title="Real-time intellectual-property analysis and evaluation monitoring."
       />
+      {(queryError || recentError) && (
+        <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          Some metrics failed to load ({(queryError ?? recentError)?.message}). Numbers below may
+          be incomplete — this is not the same as &quot;zero.&quot;
+        </p>
+      )}
 
       {/* Headline metrics — three focal cards, all real counts. */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

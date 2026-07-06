@@ -1,12 +1,16 @@
 import { NonRetriableError } from "inngest";
 import { inngest, submissionPaid } from "@/lib/inngest/client";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getChatClient, activeModel } from "@/lib/ai/provider";
+import { getChatClient, activeModel, resolveProvider } from "@/lib/ai/provider";
 import { getStripe } from "@/lib/stripe/client";
 import { evaluateInvention } from "@/lib/evaluation/evaluate";
 import { toEvaluationRow } from "@/lib/evaluation/row";
 import { sendEmail } from "@/lib/email/send";
-import { evaluationFailedEmail, reportReadyEmail } from "@/lib/email/templates";
+import {
+  evaluationFailedEmail,
+  evaluationFailedNoRefundEmail,
+  reportReadyEmail,
+} from "@/lib/email/templates";
 import { type SubmissionInput } from "@/lib/types";
 import { generateReportContent } from "@/lib/report/generate-content";
 import { renderReportPdf } from "@/lib/pdf/render";
@@ -22,33 +26,108 @@ export const evaluateSubmission = inngest.createFunction(
   {
     id: "evaluate-submission",
     retries: 2,
+    // Defends against duplicate event delivery re-running the whole pipeline
+    // (and, worse, re-entering onFailure) for a submission already in flight.
+    idempotency: "event.data.submissionId",
+    // The local Ollama path is CPU-bound and effectively single-threaded —
+    // two concurrent generations contend for the same process and can each
+    // blow their step's time budget. Groq (hosted) has no such limit. Uses
+    // the same normalized resolveProvider() the rest of the app reads from
+    // (case-insensitive, "" falls back to groq) — a raw `=== "ollama"`
+    // string compare here would silently miss AI_PROVIDER=Ollama/OLLAMA.
+    ...(resolveProvider() === "ollama" ? { concurrency: { limit: 1 } } : {}),
     triggers: [{ event: submissionPaid }],
-    // Runs once all retries are exhausted: refund + mark + notify.
+    // Runs once all retries are exhausted: refund + mark + notify. Every step
+    // is wrapped so a failure here never disappears silently — this is the
+    // one path standing between a paying customer and a stuck submission.
     onFailure: async ({ event }) => {
       const submissionId = (event.data.event.data as { submissionId: string }).submissionId;
       const admin = createAdminClient();
 
-      const { data: sub } = await admin
-        .from("submissions")
-        .select("title, email, stripe_payment_intent_id")
-        .eq("id", submissionId)
-        .single();
-
-      let refunded = false;
       try {
-        if (sub?.stripe_payment_intent_id) {
-          await getStripe().refunds.create({ payment_intent: sub.stripe_payment_intent_id });
+        // A transient read failure here (vs. a genuinely missing row) must
+        // not cost a customer their refund — retry a couple times with a
+        // short backoff before giving up.
+        let sub: {
+          title: string;
+          email: string;
+          status: string;
+          stripe_payment_intent_id: string | null;
+        } | null = null;
+        let selectErr: { message: string } | null = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const res = await admin
+            .from("submissions")
+            .select("title, email, status, stripe_payment_intent_id")
+            .eq("id", submissionId)
+            .single();
+          sub = res.data;
+          selectErr = res.error;
+          if (sub || attempt === 2) break;
+          await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
         }
-        await admin.from("submissions").update({ status: "refunded" }).eq("id", submissionId);
-        refunded = true;
-      } catch {
-        // Refund itself failed — leave a `failed` marker for manual follow-up.
-        await admin.from("submissions").update({ status: "failed" }).eq("id", submissionId);
-      }
 
-      // Only tell the user they were refunded when the refund actually went through.
-      if (refunded && sub?.email) {
-        await sendEmail(sub.email, evaluationFailedEmail({ title: sub.title }));
+        if (!sub) {
+          console.error(
+            `[evaluate-submission] onFailure: could not load submission ${submissionId} after retries:`,
+            selectErr,
+          );
+          await admin.from("submissions").update({ status: "failed" }).eq("id", submissionId);
+          return;
+        }
+
+        // A manual rerun / redelivered event for a submission already in a
+        // terminal state (succeeded, already refunded, or already given up
+        // on) must not re-attempt a refund or overwrite that final status.
+        if (["complete", "refunded", "failed"].includes(sub.status)) {
+          console.error(
+            `[evaluate-submission] onFailure fired for already-${sub.status} submission ${submissionId} — likely a rerun; skipping.`,
+          );
+          return;
+        }
+
+        let refunded = false;
+        if (sub.stripe_payment_intent_id) {
+          try {
+            await getStripe().refunds.create({ payment_intent: sub.stripe_payment_intent_id });
+            refunded = true;
+          } catch (err) {
+            console.error(
+              `[evaluate-submission] onFailure: Stripe refund failed for ${submissionId}:`,
+              err,
+            );
+          }
+        } else {
+          console.error(
+            `[evaluate-submission] onFailure: no stripe_payment_intent_id on ${submissionId}, nothing to refund`,
+          );
+        }
+
+        // Only ever record "refunded" when a refund actually went through —
+        // never mark money returned that never moved.
+        await admin
+          .from("submissions")
+          .update({ status: refunded ? "refunded" : "failed" })
+          .eq("id", submissionId);
+
+        // Notify the customer either way — silence when a refund fails is
+        // worse than silence when it succeeds; they were charged and need
+        // to know regardless of which email they get.
+        if (sub.email) {
+          try {
+            const content = refunded
+              ? evaluationFailedEmail({ title: sub.title })
+              : evaluationFailedNoRefundEmail({ title: sub.title });
+            await sendEmail(sub.email, content);
+          } catch (err) {
+            console.error(
+              `[evaluate-submission] onFailure: failure-notice email failed for ${submissionId}:`,
+              err,
+            );
+          }
+        }
+      } catch (err) {
+        console.error(`[evaluate-submission] onFailure: unhandled error for ${submissionId}:`, err);
       }
     },
   },
@@ -89,7 +168,10 @@ export const evaluateSubmission = inngest.createFunction(
       return evaluateInvention(input, getChatClient(), activeModel());
     });
 
-    // Step 3 — generate the report narrative via a second LLM call.
+    // Step 3 — generate the report narrative via a second LLM call. Pass
+    // activeModel() here too, for the same reason as step 2: Groq ignores an
+    // implicit model name, so omitting it silently threads an Ollama-flavored
+    // default into whichever provider is actually active.
     const content = await step.run("generate-report-content", async () => {
       return generateReportContent(
         {
@@ -99,54 +181,85 @@ export const evaluateSubmission = inngest.createFunction(
           verdict: result.verdict,
         },
         getChatClient(),
+        activeModel(),
       );
     });
 
     // Step 4 — render the PDF, upload to private storage, record the certificate.
+    // certId is derived from the submission UUID and only has ~16.7M possible
+    // values per year, so a same-year collision with a different submission's
+    // certId (a real DB unique-constraint violation, not hypothetical) is
+    // retried with a rotated id rather than failing the whole evaluation —
+    // that failure would otherwise exhaust retries and refund an evaluation
+    // that already succeeded.
     const report = await step.run("render-and-upload-report", async () => {
       const now = new Date();
-      const certId = certIdFor(submissionId, now.getFullYear());
+      const year = now.getFullYear();
       const issuedAt = now.toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
         day: "numeric",
       });
-      const data: ReportData = {
-        submission: {
-          title: submission.title,
-          inventorName: submission.inventor_name,
-          industry: submission.industry,
-          problem: submission.problem ?? undefined,
-          description: submission.description,
-        },
-        scores: result.scores,
-        avgScore: result.avgScore,
-        verdict: result.verdict,
-        content,
-        certId,
-        issuedAt,
-      };
-
-      const pdf = await renderReportPdf(data);
       const path = documentPath(submission.user_id, submissionId, "report");
-
       const admin = createAdminClient();
-      const { error: upErr } = await admin.storage
-        .from("documents")
-        .upload(path, pdf, { contentType: "application/pdf", upsert: true });
-      if (upErr) throw new Error(`Report upload failed: ${upErr.message}`);
 
-      const { error: certErr } = await admin
-        .from("certificates")
-        .upsert(
-          {
-            submission_id: submissionId,
-            cert_id: certId,
-            report_pdf_path: path,
-            issued_at: now.toISOString(),
+      const MAX_CERT_ID_ATTEMPTS = 5;
+      // certIdFor is a pure function of (submissionId, year, attempt) — if
+      // every in-loop attempt collides and Inngest retries this whole step,
+      // starting from attempt 0 again would regenerate the exact same 5
+      // candidates with zero new entropy, wasting the retry budget on a
+      // collision it can never resolve. Randomizing the starting offset per
+      // step-invocation gives a real second chance on a step-level retry.
+      const startOffset = Math.floor(Math.random() * MAX_CERT_ID_ATTEMPTS);
+      let certId = "";
+      let certErr: { code?: string; message: string } | null = null;
+
+      for (let i = 0; i < MAX_CERT_ID_ATTEMPTS; i++) {
+        const attempt = (startOffset + i) % MAX_CERT_ID_ATTEMPTS;
+        certId = certIdFor(submissionId, year, attempt);
+        const data: ReportData = {
+          submission: {
+            title: submission.title,
+            inventorName: submission.inventor_name,
+            industry: submission.industry,
+            problem: submission.problem ?? undefined,
+            description: submission.description,
           },
-          { onConflict: "submission_id" },
+          scores: result.scores,
+          avgScore: result.avgScore,
+          verdict: result.verdict,
+          content,
+          certId,
+          issuedAt,
+        };
+
+        const pdf = await renderReportPdf(data);
+        const { error: upErr } = await admin.storage
+          .from("documents")
+          .upload(path, pdf, { contentType: "application/pdf", upsert: true });
+        if (upErr) throw new Error(`Report upload failed: ${upErr.message}`);
+
+        const { error } = await admin
+          .from("certificates")
+          .upsert(
+            {
+              submission_id: submissionId,
+              cert_id: certId,
+              report_pdf_path: path,
+              issued_at: now.toISOString(),
+            },
+            { onConflict: "submission_id" },
+          );
+        certErr = error;
+
+        // 23505 = unique_violation. Only cert_id's own uniqueness constraint
+        // can raise this here — a legitimate re-run for the same submission
+        // is handled by onConflict above and never reaches this branch.
+        if (!error || error.code !== "23505") break;
+        console.error(
+          `[evaluate-submission] certId ${certId} collided for ${submissionId}, retrying (attempt ${attempt + 1})`,
         );
+      }
       if (certErr) throw new Error(`Certificate upsert failed: ${certErr.message}`);
 
       return { reportPath: path, certId, issuedAt };
@@ -180,11 +293,21 @@ export const evaluateSubmission = inngest.createFunction(
               .upload(path, pdf, { contentType: "application/pdf", upsert: true });
             if (upErr) throw new Error(`Certificate upload failed: ${upErr.message}`);
 
-            const { error: updErr } = await admin
+            // Supabase/PostgREST doesn't error on a 0-row update — check that
+            // a row actually came back, or a missing/renamed row at this
+            // instant would let the PDF upload "succeed" while
+            // certificate_pdf_path silently stays null forever (the public
+            // verify page gates on that column, so this would permanently
+            // read as "certificate not found" for a customer who paid and
+            // was emailed the PDF).
+            const { data: updated, error: updErr } = await admin
               .from("certificates")
               .update({ certificate_pdf_path: path })
-              .eq("submission_id", submissionId);
+              .eq("submission_id", submissionId)
+              .select("submission_id")
+              .maybeSingle();
             if (updErr) throw new Error(`Certificate path update failed: ${updErr.message}`);
+            if (!updated) throw new Error(`Certificate row for ${submissionId} not found on update`);
 
             return path;
           })

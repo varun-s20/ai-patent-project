@@ -91,8 +91,10 @@ export async function updateSubmission(
       email: d.email,
     })
     .eq("id", editId)
-    // Only a draft may be edited. RLS already scopes this to the owner's rows,
-    // and the status guard blocks edits to anything already paid/evaluated.
+    // RLS already scopes this to the owner's rows; the explicit filter is
+    // defense in depth. Only a draft may be edited — the status guard blocks
+    // edits to anything already paid/evaluated.
+    .eq("user_id", user.id)
     .eq("status", "draft")
     .select("id")
     .maybeSingle();

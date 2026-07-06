@@ -79,23 +79,6 @@ body {
   background-image: linear-gradient(to right, var(--color-gold), transparent);
 }
 
-/* Scroll-entry reveal — heavy fade-up with blur, GPU-only properties. */
-.reveal {
-  opacity: 0;
-  transform: translateY(26px);
-  filter: blur(8px);
-  transition:
-    opacity 0.85s var(--ease-out),
-    transform 0.85s var(--ease-out),
-    filter 0.85s var(--ease-out);
-  will-change: transform, opacity;
-}
-.reveal.is-visible {
-  opacity: 1;
-  transform: none;
-  filter: none;
-}
-
 /* Slow "start here" ring pulse — marks the first node of the how-it-works
    rail. Ring only (no fill), so it reads as a beacon, not a loading state. */
 @keyframes startPulse {
@@ -137,11 +120,6 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .reveal {
-    transition: opacity 0.4s ease;
-    transform: none;
-    filter: none;
-  }
   .hover-lift:hover {
     transform: none;
   }

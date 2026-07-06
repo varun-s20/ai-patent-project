@@ -36,9 +36,13 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col overflow-x-clip bg-paper text-ink">
-        {/* Without JS, scroll-reveal elements must still be visible (crawlers/no-JS). */}
+        {/* Without JS, Framer Motion's `initial={{opacity:0}}` never flips to
+            visible (it only resolves via a mount effect) — every scroll-reveal
+            component (InView/Stagger/StaggerItem, tagged `.js-reveal`) would
+            otherwise render permanently invisible for no-JS visitors and most
+            crawlers. `!important` beats the inline style React sets. */}
         <noscript>
-          <style>{`.reveal{opacity:1!important;transform:none!important;filter:none!important}`}</style>
+          <style>{`.js-reveal{opacity:1!important;transform:none!important;filter:none!important}`}</style>
         </noscript>
         <RecoveryGate />
         <Suspense fallback={null}>

@@ -5,6 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/ui/format";
 import { toggleUserDisabled, toggleUserFlagged, toggleUserAdmin } from "../actions";
 import { SectionHead } from "../_components/stats";
+import { ConfirmForm } from "../_components/confirm-form";
+import { Pagination } from "../_components/pagination";
+import { PAGE_SIZE, pageRange, parsePage } from "@/lib/admin/pagination";
 
 export const dynamic = "force-dynamic";
 
@@ -21,18 +24,35 @@ type ProfileRow = {
   created_at: string;
 };
 
-export default async function AdminUsersPage() {
+export default async function AdminUsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page: pageParam } = await searchParams;
+  const page = parsePage(pageParam);
   const admin = createAdminClient();
-  const { data: profilesData } = await admin
-    .from("profiles")
-    .select("id, full_name, is_admin, is_disabled, is_flagged, created_at")
-    .order("created_at", { ascending: false })
-    .limit(200);
-  const profiles = (profilesData ?? []) as ProfileRow[];
+  const { from, to } = pageRange(page);
+  const [{ data: profilesData, error: profilesError }, { count: totalCount }] = await Promise.all([
+    admin
+      .from("profiles")
+      .select("id, full_name, is_admin, is_disabled, is_flagged, created_at")
+      .order("created_at", { ascending: false })
+      .range(from, to),
+    admin.from("profiles").select("id", { count: "exact", head: true }),
+  ]);
+  const hasNext = (profilesData?.length ?? 0) > PAGE_SIZE;
+  const profiles = ((profilesData ?? []) as ProfileRow[]).slice(0, PAGE_SIZE);
 
   return (
     <main>
-      <SectionHead title="Users" count={profiles.length} />
+      <SectionHead title="Users" count={totalCount ?? profiles.length} />
+      {profilesError && (
+        <p className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          Couldn&apos;t load users ({profilesError.message}). This is not the same as &quot;no
+          users&quot; — try reloading.
+        </p>
+      )}
       <Card padded={false} className="mt-4 overflow-x-auto">
         <table className="w-full min-w-[720px] text-sm">
           <thead className="border-b border-line bg-paper/40">
@@ -67,27 +87,45 @@ export default async function AdminUsersPage() {
                 </td>
                 <td className={td}>
                   <div className="flex flex-wrap gap-2">
-                    <form action={toggleUserFlagged}>
+                    <ConfirmForm
+                      action={toggleUserFlagged}
+                      message={`${p.is_flagged ? "Unflag" : "Flag"} ${p.full_name ?? "this user"}?`}
+                    >
                       <input type="hidden" name="userId" value={p.id} />
                       <input type="hidden" name="next" value={String(!p.is_flagged)} />
-                      <button className={`${rowAction} border border-amber-200 text-amber-700 hover:bg-amber-50`}>
+                      <button
+                        aria-label={`${p.is_flagged ? "Unflag" : "Flag"} ${p.full_name ?? "user"}`}
+                        className={`${rowAction} border border-amber-200 text-amber-700 hover:bg-amber-50`}
+                      >
                         {p.is_flagged ? "Unflag" : "Flag"}
                       </button>
-                    </form>
-                    <form action={toggleUserDisabled}>
+                    </ConfirmForm>
+                    <ConfirmForm
+                      action={toggleUserDisabled}
+                      message={`${p.is_disabled ? "Enable" : "Disable"} ${p.full_name ?? "this user"}?`}
+                    >
                       <input type="hidden" name="userId" value={p.id} />
                       <input type="hidden" name="next" value={String(!p.is_disabled)} />
-                      <button className={`${rowAction} border border-red-200 text-red-700 hover:bg-red-50`}>
+                      <button
+                        aria-label={`${p.is_disabled ? "Enable" : "Disable"} ${p.full_name ?? "user"}`}
+                        className={`${rowAction} border border-red-200 text-red-700 hover:bg-red-50`}
+                      >
                         {p.is_disabled ? "Enable" : "Disable"}
                       </button>
-                    </form>
-                    <form action={toggleUserAdmin}>
+                    </ConfirmForm>
+                    <ConfirmForm
+                      action={toggleUserAdmin}
+                      message={`${p.is_admin ? "Revoke admin from" : "Make"} ${p.full_name ?? "this user"}${p.is_admin ? "" : " an admin"}?`}
+                    >
                       <input type="hidden" name="userId" value={p.id} />
                       <input type="hidden" name="next" value={String(!p.is_admin)} />
-                      <button className={`${rowAction} border border-line text-ink-2 hover:bg-ink/[0.04]`}>
+                      <button
+                        aria-label={`${p.is_admin ? "Revoke admin from" : "Make"} ${p.full_name ?? "user"}${p.is_admin ? "" : " an admin"}`}
+                        className={`${rowAction} border border-line text-ink-2 hover:bg-ink/[0.04]`}
+                      >
                         {p.is_admin ? "Revoke admin" : "Make admin"}
                       </button>
-                    </form>
+                    </ConfirmForm>
                   </div>
                 </td>
               </tr>
@@ -102,6 +140,7 @@ export default async function AdminUsersPage() {
           </tbody>
         </table>
       </Card>
+      <Pagination page={page} hasNext={hasNext} basePath="/admin/users" searchParams={{}} />
     </main>
   );
 }

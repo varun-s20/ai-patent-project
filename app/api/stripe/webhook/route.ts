@@ -31,11 +31,15 @@ export async function POST(req: NextRequest) {
     const session = event.data.object as Stripe.Checkout.Session;
     const submissionId = session.metadata?.submission_id;
 
-    if (submissionId) {
+    // Defense-in-depth: card payments (the only method_type we offer, see
+    // lib/stripe/checkout.ts) settle synchronously, so payment_status is
+    // always "paid" by the time this event fires — but don't rely solely on
+    // the event type if that assumption ever changes.
+    if (submissionId && session.payment_status === "paid") {
       const admin = createAdminClient();
       // Payment gate + idempotency: only a `draft` transitions to `paid`,
       // so a re-delivered webhook updates zero rows and does not re-trigger.
-      const { data: updated } = await admin
+      const { data: updated, error: updateErr } = await admin
         .from("submissions")
         .update({
           status: "paid",
@@ -49,6 +53,15 @@ export async function POST(req: NextRequest) {
         .eq("status", "draft")
         .select("title, email")
         .maybeSingle();
+
+      // A real DB failure looks identical to "already processed" unless the
+      // error is checked explicitly — and unlike the "already processed"
+      // case, a genuine failure must make Stripe retry, not get swallowed
+      // behind an unconditional 200.
+      if (updateErr) {
+        console.error(`[stripe-webhook] failed to mark ${submissionId} paid:`, updateErr);
+        return new Response("Database update failed", { status: 500 });
+      }
 
       if (updated) {
         // The payment is already recorded, so these side effects must never

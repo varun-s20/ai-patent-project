@@ -42,17 +42,26 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Disabled users are bounced from every protected surface.
+  // Disabled users are bounced from every protected surface. A failed query
+  // (not just "no row") must deny access, not silently fall through as
+  // "not disabled" — `profile` being undefined on a real DB error looks
+  // identical to a healthy non-disabled user otherwise.
   if (needsAuth && user) {
-    const { data: profile } = await supabase
+    const { data: profile, error: profileErr } = await supabase
       .from("profiles")
       .select("is_disabled")
       .eq("id", user.id)
       .single();
-    if (profile?.is_disabled) {
+    if (profileErr) {
+      console.error("[middleware] profile lookup failed, denying access:", profileErr);
+    }
+    if (profileErr || profile?.is_disabled) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
-      url.searchParams.set("error", "Your account has been disabled.");
+      url.searchParams.set(
+        "error",
+        profileErr ? "Something went wrong. Please try again." : "Your account has been disabled.",
+      );
       return NextResponse.redirect(url);
     }
   }
