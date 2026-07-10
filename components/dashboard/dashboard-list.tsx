@@ -137,7 +137,7 @@ export function DashboardList({ rows, heading }: { rows: DashRow[]; heading: str
         {filtered.map((r) => (
           // Vertical card: meta up top, title + verdict in the body, actions pinned
           // to a bottom row via mt-auto so every card's buttons line up.
-          <Card key={r.id} className="flex flex-col gap-4">
+          <Card key={r.id} className="flex min-w-0 flex-col gap-4">
             <div className="flex items-start justify-between gap-3">
               <ScoreToken score={r.score} />
               <StatusBadge status={r.status} />

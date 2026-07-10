@@ -9,6 +9,7 @@ import { one } from "@/lib/db/one";
 import { refundSubmission, markFailed } from "../actions";
 import { AdminFilters } from "../filters";
 import { SectionHead } from "../_components/stats";
+import { RecordCard, RecordHead, Field } from "../_components/record-list";
 import { ConfirmForm } from "../_components/confirm-form";
 import { Pagination } from "../_components/pagination";
 import { PAGE_SIZE, pageRange, parsePage } from "@/lib/admin/pagination";
@@ -19,6 +20,43 @@ export const dynamic = "force-dynamic";
 const th = "px-5 py-3 text-left text-[10px] font-medium uppercase tracking-[0.15em] text-muted";
 const td = "px-5 py-3";
 const rowAction = "rounded-full px-3 py-1 text-xs font-medium transition-colors duration-200";
+
+/** Refund / mark-failed controls for one submission — shared by the desktop
+ * table cell and the mobile stacked card. */
+function SubmissionActions({ s }: { s: SubRow }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {REFUNDABLE_STATUSES.includes(s.status) && (
+        <ConfirmForm
+          action={refundSubmission}
+          message={`Refund "${s.title}"? This charges Stripe's refund API.`}
+        >
+          <input type="hidden" name="submissionId" value={s.id} />
+          <button
+            aria-label={`Refund ${s.title}`}
+            className={`${rowAction} border border-red-200 text-red-700 hover:bg-red-50`}
+          >
+            Refund
+          </button>
+        </ConfirmForm>
+      )}
+      {FAILABLE_STATUSES.includes(s.status) && (
+        <ConfirmForm
+          action={markFailed}
+          message={`Mark "${s.title}" as failed? This does not issue a refund.`}
+        >
+          <input type="hidden" name="submissionId" value={s.id} />
+          <button
+            aria-label={`Mark ${s.title} failed`}
+            className={`${rowAction} border border-line text-ink-2 hover:bg-ink/[0.04]`}
+          >
+            Mark failed
+          </button>
+        </ConfirmForm>
+      )}
+    </div>
+  );
+}
 
 type EvalEmbed = { avg_score: number; verdict: string };
 type ProfileEmbed = { full_name: string | null };
@@ -93,88 +131,102 @@ export default async function AdminSubmissionsPage({
           submissions&quot; — try reloading.
         </p>
       )}
-      <Card padded={false} className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[820px] text-sm">
-          <thead className="border-b border-line bg-paper/40">
-            <tr>
-              <th className={th}>Title</th>
-              <th className={th}>User</th>
-              <th className={th}>Status</th>
-              <th className={th}>Verdict</th>
-              <th className={th}>Created</th>
-              <th className={th}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {subs.map((s) => {
-              const evaluation = one(s.evaluations);
-              const profile = one(s.profiles);
-              return (
-                <tr
-                  key={s.id}
-                  className="border-b border-line/60 transition-colors duration-150 last:border-0 hover:bg-paper/40"
-                >
-                  <td className={`${td} max-w-[220px] truncate font-medium text-ink`}>
-                    <Link href={`/status/${s.id}`} className="hover:text-gold">
-                      {s.title}
-                    </Link>
-                  </td>
-                  <td className={`${td} text-ink-2`}>
-                    {profile?.full_name ?? "—"}
-                    <span className="block text-xs text-muted">{s.email}</span>
-                  </td>
-                  <td className={td}>
-                    <StatusBadge status={s.status} />
-                  </td>
-                  <td className={td}>
-                    {evaluation ? <VerdictBadge verdict={evaluation.verdict} /> : "—"}
-                  </td>
-                  <td className={`${td} text-muted`}>{formatDate(s.created_at)}</td>
-                  <td className={td}>
-                    <div className="flex gap-2">
-                      {REFUNDABLE_STATUSES.includes(s.status) && (
-                        <ConfirmForm
-                          action={refundSubmission}
-                          message={`Refund "${s.title}"? This charges Stripe's refund API.`}
-                        >
-                          <input type="hidden" name="submissionId" value={s.id} />
-                          <button
-                            aria-label={`Refund ${s.title}`}
-                            className={`${rowAction} border border-red-200 text-red-700 hover:bg-red-50`}
-                          >
-                            Refund
-                          </button>
-                        </ConfirmForm>
-                      )}
-                      {FAILABLE_STATUSES.includes(s.status) && (
-                        <ConfirmForm
-                          action={markFailed}
-                          message={`Mark "${s.title}" as failed? This does not issue a refund.`}
-                        >
-                          <input type="hidden" name="submissionId" value={s.id} />
-                          <button
-                            aria-label={`Mark ${s.title} failed`}
-                            className={`${rowAction} border border-line text-ink-2 hover:bg-ink/[0.04]`}
-                          >
-                            Mark failed
-                          </button>
-                        </ConfirmForm>
-                      )}
-                    </div>
+      {/* Desktop: table. */}
+      <Card padded={false} className="mt-4 hidden md:block">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[820px] text-sm">
+            <thead className="border-b border-line bg-paper/40">
+              <tr>
+                <th className={th}>Title</th>
+                <th className={th}>User</th>
+                <th className={th}>Status</th>
+                <th className={th}>Verdict</th>
+                <th className={th}>Created</th>
+                <th className={th}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {subs.map((s) => {
+                const evaluation = one(s.evaluations);
+                const profile = one(s.profiles);
+                return (
+                  <tr
+                    key={s.id}
+                    className="border-b border-line/60 transition-colors duration-150 last:border-0 hover:bg-paper/40"
+                  >
+                    <td className={`${td} max-w-[220px] truncate font-medium text-ink`}>
+                      <Link href={`/status/${s.id}`} className="hover:text-gold">
+                        {s.title}
+                      </Link>
+                    </td>
+                    <td className={`${td} text-ink-2`}>
+                      {profile?.full_name ?? "—"}
+                      <span className="block text-xs text-muted">{s.email}</span>
+                    </td>
+                    <td className={td}>
+                      <StatusBadge status={s.status} />
+                    </td>
+                    <td className={td}>
+                      {evaluation ? <VerdictBadge verdict={evaluation.verdict} /> : "—"}
+                    </td>
+                    <td className={`${td} text-muted`}>{formatDate(s.created_at)}</td>
+                    <td className={td}>
+                      <SubmissionActions s={s} />
+                    </td>
+                  </tr>
+                );
+              })}
+              {subs.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-5 py-8 text-center text-muted">
+                    No submissions match.
                   </td>
                 </tr>
-              );
-            })}
-            {subs.length === 0 && (
-              <tr>
-                <td colSpan={6} className="px-5 py-8 text-center text-muted">
-                  No submissions match.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
       </Card>
+
+      {/* Phone: stacked cards. */}
+      <div className="mt-4 space-y-3 md:hidden">
+        {subs.map((s) => {
+          const evaluation = one(s.evaluations);
+          const profile = one(s.profiles);
+          const hasActions =
+            REFUNDABLE_STATUSES.includes(s.status) || FAILABLE_STATUSES.includes(s.status);
+          return (
+            <RecordCard key={s.id}>
+              <RecordHead>
+                <Link
+                  href={`/status/${s.id}`}
+                  className="min-w-0 truncate font-medium text-ink hover:text-gold"
+                >
+                  {s.title}
+                </Link>
+                <StatusBadge status={s.status} />
+              </RecordHead>
+              <div className="mt-3 space-y-1.5">
+                <Field label="User">{profile?.full_name ?? s.email}</Field>
+                <Field label="Verdict">
+                  {evaluation ? <VerdictBadge verdict={evaluation.verdict} /> : "—"}
+                </Field>
+                <Field label="Created">{formatDate(s.created_at)}</Field>
+              </div>
+              {hasActions && (
+                <div className="mt-3 border-t border-line pt-3">
+                  <SubmissionActions s={s} />
+                </div>
+              )}
+            </RecordCard>
+          );
+        })}
+        {subs.length === 0 && (
+          <p className="rounded-xl border border-dashed border-line bg-paper/40 px-4 py-8 text-center text-sm text-muted">
+            No submissions match.
+          </p>
+        )}
+      </div>
       <Pagination
         page={page}
         hasNext={hasNext}

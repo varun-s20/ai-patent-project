@@ -211,7 +211,7 @@ function Stat({ label, value, suffix = "" }: { label: string; value: number | nu
   return (
     <div className="flex flex-col gap-2 px-5 py-7 sm:px-7 sm:py-8">
       <dt className="text-[10px] uppercase tracking-[0.2em] text-cream/50">{label}</dt>
-      <dd className="font-display text-4xl leading-none tracking-tight text-foil">
+      <dd className="font-display text-3xl leading-none tracking-tight text-foil tabular-nums sm:text-4xl">
         {value === null ? <span className="text-cream/30">—</span> : <CountUp to={value} suffix={suffix} />}
       </dd>
     </div>
