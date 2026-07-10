@@ -80,7 +80,7 @@ export default async function AdminOverviewPage() {
       )}
 
       {/* Headline metrics — three focal cards, all real counts. */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Stat
           label="Total submissions"
           value={totalCount.toLocaleString()}
@@ -100,9 +100,11 @@ export default async function AdminOverviewPage() {
         />
       </div>
 
-      {/* Ledger + health rail. */}
-      <div className="grid gap-6 lg:grid-cols-[1.7fr_1fr]">
-        <section>
+      {/* Ledger + health rail. `min-w-0` on the grid and the ledger column lets
+          the scrollable table below actually contain itself — without it the
+          table's 640px min-width propagates up and widens the whole page. */}
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[1.7fr_1fr]">
+        <section className="min-w-0">
           <div className="flex items-center justify-between">
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-2">
               Recent registry submissions
@@ -114,58 +116,63 @@ export default async function AdminOverviewPage() {
               View full ledger →
             </Link>
           </div>
-          <Card padded={false} className="mt-3 overflow-x-auto">
-            <table className="w-full min-w-[640px] text-sm">
-              <thead className="border-b border-line bg-paper/40">
-                <tr>
-                  <th className={th}>Registry ID</th>
-                  <th className={th}>Invention title</th>
-                  <th className={th}>Submitter</th>
-                  <th className={th}>Status</th>
-                  <th className={th}>Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recent.map((s) => {
-                  const evaluation = one(s.evaluations);
-                  const regId = certIdFor(s.id, new Date(s.created_at).getUTCFullYear());
-                  return (
-                    <tr
-                      key={s.id}
-                      className="border-b border-line/60 transition-colors duration-150 last:border-0 hover:bg-paper/40"
-                    >
-                      <td className={`${td} font-mono text-[11px] uppercase tracking-wide text-muted`}>
-                        {regId}
-                      </td>
-                      <td className={`${td} max-w-[220px] truncate font-medium text-ink`}>
-                        <Link href={`/status/${s.id}`} className="hover:text-gold">
-                          {s.title}
-                        </Link>
-                        {evaluation && (
-                          <span className="ml-2 align-middle">
-                            <VerdictBadge verdict={evaluation.verdict} />
-                          </span>
-                        )}
-                      </td>
-                      <td className={`${td} max-w-[180px] truncate text-muted`}>{s.email}</td>
-                      <td className={td}>
-                        <StatusBadge status={s.status} />
-                      </td>
-                      <td className={`${td} whitespace-nowrap text-muted`}>
-                        {formatDate(s.created_at)}
+          {/* Dense table on every screen; the inner wrapper scrolls it
+              horizontally on phones so it stays inside the card and never
+              overflows the viewport. */}
+          <Card padded={false} className="mt-3">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px] text-sm">
+                <thead className="border-b border-line bg-paper/40">
+                  <tr>
+                    <th className={th}>Registry ID</th>
+                    <th className={th}>Invention title</th>
+                    <th className={th}>Submitter</th>
+                    <th className={th}>Status</th>
+                    <th className={th}>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recent.map((s) => {
+                    const evaluation = one(s.evaluations);
+                    const regId = certIdFor(s.id, new Date(s.created_at).getUTCFullYear());
+                    return (
+                      <tr
+                        key={s.id}
+                        className="border-b border-line/60 transition-colors duration-150 last:border-0 hover:bg-paper/40"
+                      >
+                        <td className={`${td} font-mono text-[11px] uppercase tracking-wide text-muted`}>
+                          {regId}
+                        </td>
+                        <td className={`${td} max-w-[220px] truncate font-medium text-ink`}>
+                          <Link href={`/status/${s.id}`} className="hover:text-gold">
+                            {s.title}
+                          </Link>
+                          {evaluation && (
+                            <span className="ml-2 align-middle">
+                              <VerdictBadge verdict={evaluation.verdict} />
+                            </span>
+                          )}
+                        </td>
+                        <td className={`${td} max-w-[180px] truncate text-muted`}>{s.email}</td>
+                        <td className={td}>
+                          <StatusBadge status={s.status} />
+                        </td>
+                        <td className={`${td} whitespace-nowrap text-muted`}>
+                          {formatDate(s.created_at)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {recent.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-5 py-10 text-center text-muted">
+                        No submissions yet.
                       </td>
                     </tr>
-                  );
-                })}
-                {recent.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="px-5 py-10 text-center text-muted">
-                      No submissions yet.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </Card>
         </section>
 

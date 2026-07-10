@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Search } from "@/components/ui/icons";
+import { signOut } from "@/app/auth/actions";
+import { Search, Gauge, SignOut, ChevronDown } from "@/components/ui/icons";
 import { AdminBrand, NAV_LINKS, isLinkActive } from "./admin-sidebar";
 
 /**
@@ -15,6 +16,23 @@ export function AdminTopbar({ name, email }: { name: string; email: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const [q, setQ] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close the profile popover on outside-click or Escape.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
 
   const initials = (name || email || "A")
     .split(/\s+/)
@@ -51,8 +69,10 @@ export function AdminTopbar({ name, email }: { name: string; email: string }) {
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
           <span aria-hidden className="mx-1 hidden h-6 w-px bg-line sm:block" />
 
-          <div className="flex items-center gap-2.5 rounded-xl py-1 pl-1 pr-1 sm:pl-2.5">
-            <div className="hidden text-right leading-tight sm:block">
+          {/* Desktop (lg+): static identity chip. The sidebar already carries
+              "back to site" + sign out, so no menu is needed here. */}
+          <div className="hidden items-center gap-2.5 rounded-xl py-1 pl-2.5 pr-1 lg:flex">
+            <div className="text-right leading-tight">
               <span className="block max-w-[160px] truncate text-[13px] font-medium text-ink">
                 {name || email}
               </span>
@@ -64,11 +84,64 @@ export function AdminTopbar({ name, email }: { name: string; email: string }) {
               {initials}
             </span>
           </div>
+
+          {/* Phone/tablet (< lg): the sidebar is hidden, so the avatar becomes a
+              popover — the only exit from the console (Dashboard / Log out). */}
+          <div className="relative lg:hidden" ref={menuRef}>
+            <button
+              type="button"
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              aria-label="Account menu"
+              className="flex items-center gap-1.5 rounded-xl py-1 pl-1 pr-1.5 transition-colors hover:bg-ink/[0.04]"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-navy-800 to-navy-900 text-xs font-semibold text-cream ring-1 ring-ink/15">
+                {initials}
+              </span>
+              <ChevronDown
+                className={`h-4 w-4 text-muted transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+
+            {menuOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 top-full z-40 mt-2 w-56 overflow-hidden rounded-xl border border-line bg-card p-1.5 shadow-[0_16px_50px_-12px_rgba(20,25,40,0.28)]"
+              >
+                <div className="border-b border-line px-3 py-2">
+                  <p className="truncate text-[13px] font-medium text-ink">{name || email}</p>
+                  <p className="text-[10px] uppercase tracking-[0.14em] text-muted">Administrator</p>
+                </div>
+                <Link
+                  href="/dashboard"
+                  role="menuitem"
+                  onClick={() => setMenuOpen(false)}
+                  className="mt-1 flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-ink-2 transition-colors hover:bg-ink/[0.05] hover:text-ink"
+                >
+                  <Gauge className="h-4 w-4 text-muted" />
+                  Dashboard
+                </Link>
+                <form action={signOut}>
+                  <button
+                    type="submit"
+                    role="menuitem"
+                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-ink-2 transition-colors hover:bg-ink/[0.05] hover:text-ink"
+                  >
+                    <SignOut className="h-4 w-4 text-muted" />
+                    Log out
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Mobile nav rail — replaces the hidden desktop sidebar. */}
-      <nav className="flex gap-1 overflow-x-auto border-t border-line px-3 py-2 lg:hidden">
+      {/* Mobile nav — replaces the hidden desktop sidebar. An equal 4-column
+          tab bar (icon over label) so all destinations sit on one tidy row
+          instead of wrapping. */}
+      <nav className="grid grid-cols-4 gap-1 border-t border-line px-2 py-1.5 lg:hidden">
         {NAV_LINKS.map((link) => {
           const active = isLinkActive(pathname, link);
           const Icon = link.icon;
@@ -77,12 +150,12 @@ export function AdminTopbar({ name, email }: { name: string; email: string }) {
               key={link.href}
               href={link.href}
               aria-current={active ? "page" : undefined}
-              className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+              className={`flex flex-col items-center gap-1 rounded-lg px-1 py-1.5 text-[11px] font-medium transition-colors ${
                 active ? "bg-ink text-cream" : "text-ink-2 hover:bg-ink/[0.05]"
               }`}
             >
-              <Icon className="h-4 w-4" />
-              {link.label}
+              <Icon className="h-[18px] w-[18px]" />
+              <span className="max-w-full truncate">{link.label}</span>
             </Link>
           );
         })}

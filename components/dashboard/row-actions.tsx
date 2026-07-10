@@ -48,8 +48,8 @@ function PayButton() {
       aria-busy={pending}
       className={`${PRIMARY} ${GOLD} w-full disabled:pointer-events-none disabled:opacity-70`}
     >
-      {pending && <Spinner className="h-4 w-4" />}
-      {pending ? "Starting checkout…" : "Pay $49"}
+      {pending && <Spinner className="h-4 w-4 shrink-0" />}
+      <span className="truncate">{pending ? "Starting checkout…" : "Pay $49"}</span>
     </button>
   );
 }
@@ -68,9 +68,12 @@ export function RowActions({
   orientation?: "row" | "stack";
 }) {
   const stack = orientation === "stack";
-  const wrap = stack ? "flex flex-col gap-2" : "flex items-center gap-2";
+  // `min-w-0` on the row lets the primary shrink below its content width so the
+  // fixed 40px tiles never push the button past the card (which overflowed the
+  // screen on narrow phones).
+  const wrap = stack ? "flex flex-col gap-2" : "flex min-w-0 items-center gap-2";
   // In a row the primary flexes to absorb the leftover width; stacked, it's full.
-  const grow = stack ? "w-full" : "flex-1";
+  const grow = stack ? "w-full" : "min-w-0 flex-1";
 
   if (status === "draft") {
     return (
@@ -101,8 +104,8 @@ export function RowActions({
   return (
     <div className={wrap}>
       <Link href={`/status/${id}`} className={`${PRIMARY} ${INK} ${grow}`}>
-        <Eye className="h-4 w-4" />
-        View record
+        <Eye className="h-4 w-4 shrink-0" />
+        <span className="truncate">View record</span>
       </Link>
 
       {stack ? (

@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/ui/format";
 import { one } from "@/lib/db/one";
 import { computeRevenue, PAID_STATUSES, UNIT_PRICE } from "@/lib/admin/revenue";
 import { FeatureStat, Stat, SectionHead } from "../_components/stats";
+import { RecordCard, RecordHead, Field } from "../_components/record-list";
 import { Pagination } from "../_components/pagination";
 import { PAGE_SIZE, pageRange, parsePage } from "@/lib/admin/pagination";
 
@@ -85,52 +86,90 @@ export default async function AdminPaymentsPage({
 
       <section className="mt-12">
         <SectionHead title="Payment history" count={paid.count ?? rows.length} />
-        <Card padded={false} className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[720px] text-sm">
-            <thead className="border-b border-line bg-paper/40">
-              <tr>
-                <th className={th}>Date</th>
-                <th className={th}>User</th>
-                <th className={th}>Idea</th>
-                <th className={th}>Amount</th>
-                <th className={th}>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => {
-                const profile = one(r.profiles);
-                const refundedRow = r.status === "refunded";
-                return (
-                  <tr key={r.id} className="border-b border-line/60 last:border-0 hover:bg-paper/40">
-                    <td className={`${td} text-muted`}>{formatDate(r.created_at)}</td>
-                    <td className={`${td} text-ink-2`}>
-                      {profile?.full_name ?? "—"}
-                      <span className="block text-xs text-muted">{r.email}</span>
-                    </td>
-                    <td className={`${td} max-w-[220px] truncate font-medium text-ink`}>
-                      <Link href={`/status/${r.id}`} className="hover:text-gold">
-                        {r.title}
-                      </Link>
-                    </td>
-                    <td className={`${td} tabular-nums ${refundedRow ? "text-muted line-through" : "text-ink"}`}>
-                      ${UNIT_PRICE}
-                    </td>
-                    <td className={td}>
-                      <StatusBadge status={r.status} />
+        {/* Desktop: table. */}
+        <Card padded={false} className="mt-4 hidden md:block">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[720px] text-sm">
+              <thead className="border-b border-line bg-paper/40">
+                <tr>
+                  <th className={th}>Date</th>
+                  <th className={th}>User</th>
+                  <th className={th}>Idea</th>
+                  <th className={th}>Amount</th>
+                  <th className={th}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => {
+                  const profile = one(r.profiles);
+                  const refundedRow = r.status === "refunded";
+                  return (
+                    <tr key={r.id} className="border-b border-line/60 last:border-0 hover:bg-paper/40">
+                      <td className={`${td} text-muted`}>{formatDate(r.created_at)}</td>
+                      <td className={`${td} text-ink-2`}>
+                        {profile?.full_name ?? "—"}
+                        <span className="block text-xs text-muted">{r.email}</span>
+                      </td>
+                      <td className={`${td} max-w-[220px] truncate font-medium text-ink`}>
+                        <Link href={`/status/${r.id}`} className="hover:text-gold">
+                          {r.title}
+                        </Link>
+                      </td>
+                      <td className={`${td} tabular-nums ${refundedRow ? "text-muted line-through" : "text-ink"}`}>
+                        ${UNIT_PRICE}
+                      </td>
+                      <td className={td}>
+                        <StatusBadge status={r.status} />
+                      </td>
+                    </tr>
+                  );
+                })}
+                {rows.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-5 py-8 text-center text-muted">
+                      No payments yet.
                     </td>
                   </tr>
-                );
-              })}
-              {rows.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-5 py-8 text-center text-muted">
-                    No payments yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+          </div>
         </Card>
+
+        {/* Phone: stacked cards. */}
+        <div className="mt-4 space-y-3 md:hidden">
+          {rows.map((r) => {
+            const profile = one(r.profiles);
+            const refundedRow = r.status === "refunded";
+            return (
+              <RecordCard key={r.id}>
+                <RecordHead>
+                  <Link
+                    href={`/status/${r.id}`}
+                    className="min-w-0 truncate font-medium text-ink hover:text-gold"
+                  >
+                    {r.title}
+                  </Link>
+                  <StatusBadge status={r.status} />
+                </RecordHead>
+                <div className="mt-3 space-y-1.5">
+                  <Field label="User">{profile?.full_name ?? r.email}</Field>
+                  <Field label="Amount">
+                    <span className={`tabular-nums ${refundedRow ? "text-muted line-through" : "text-ink"}`}>
+                      ${UNIT_PRICE}
+                    </span>
+                  </Field>
+                  <Field label="Date">{formatDate(r.created_at)}</Field>
+                </div>
+              </RecordCard>
+            );
+          })}
+          {rows.length === 0 && (
+            <p className="rounded-xl border border-dashed border-line bg-paper/40 px-4 py-8 text-center text-sm text-muted">
+              No payments yet.
+            </p>
+          )}
+        </div>
         <Pagination page={page} hasNext={hasNext} basePath="/admin/payments" searchParams={{}} />
       </section>
     </main>
