@@ -90,4 +90,15 @@ describe("parseReportContent", () => {
   it("still throws on input that is not valid JSON at all", () => {
     expect(() => parseReportContent("this is not json")).toThrow();
   });
+
+  it("strips em/en dashes from prose and string-list fields", () => {
+    const dashed = {
+      ...VALID,
+      ideaSummary: "A bottle — cooled by phase change.",
+      nextSteps: ["Search — prior art", "Prototype – the sleeve"],
+    };
+    const out = parseReportContent(JSON.stringify(dashed));
+    expect(out.ideaSummary).toBe("A bottle, cooled by phase change.");
+    expect(out.nextSteps).toEqual(["Search, prior art", "Prototype, the sleeve"]);
+  });
 });

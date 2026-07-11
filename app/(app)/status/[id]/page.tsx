@@ -6,6 +6,10 @@ import { VerdictBadge } from "@/components/ui/verdict-badge";
 import { Eyebrow } from "@/components/ui/badge";
 import { buttonClasses } from "@/components/ui/button";
 import { AutoDownload } from "./auto-download";
+import { recommendationFor } from "@/lib/report/recommendation";
+import { requestAttorneyReferral } from "./actions";
+import { SubmitButton } from "@/components/ui/submit-button";
+import type { Verdict } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -19,8 +23,15 @@ type EvaluationRow = {
   verdict: string;
 };
 
-export default async function StatusPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function StatusPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ attorney?: string }>;
+}) {
   const { id } = await params;
+  const { attorney: attorneyParam } = await searchParams;
 
   const supabase = await createClient();
   const {
@@ -30,7 +41,7 @@ export default async function StatusPage({ params }: { params: Promise<{ id: str
 
   const { data: submission } = await supabase
     .from("submissions")
-    .select("id, title, status, stripe_session_id")
+    .select("id, title, status, stripe_session_id, attorney_requested_at")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
@@ -179,6 +190,49 @@ export default async function StatusPage({ params }: { params: Promise<{ id: str
                 </li>
               ))}
             </ul>
+
+            {(() => {
+              const rec = recommendationFor(evaluation.verdict as Verdict);
+              const requested = Boolean(submission.attorney_requested_at);
+              return (
+                <div className="mt-6 rounded-2xl border border-line bg-paper/50 p-5">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted">
+                    Our recommendation
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-ink">{rec.headline}</p>
+                  <p className="mt-1 text-sm text-muted">{rec.body}</p>
+                  {rec.offerAttorney && (
+                    <div className="mt-4">
+                      {requested ? (
+                        <p className="text-sm font-medium text-ink">
+                          Request received — we&apos;ll be in touch by email with a patent-attorney
+                          recommendation.
+                        </p>
+                      ) : (
+                        <form action={requestAttorneyReferral}>
+                          <input type="hidden" name="submissionId" value={id} />
+                          <p className="text-sm text-ink">
+                            Would you like us to recommend a patent attorney?
+                          </p>
+                          <SubmitButton
+                            variant="primary"
+                            className="mt-3"
+                            pendingLabel="Sending request…"
+                          >
+                            Yes, recommend a patent attorney
+                          </SubmitButton>
+                        </form>
+                      )}
+                      {attorneyParam === "error" && (
+                        <p className="mt-2 text-sm text-red-600">
+                          Something went wrong recording your request. Please try again.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             <div className="mt-7 flex flex-col gap-3">
               {reportUrl && (

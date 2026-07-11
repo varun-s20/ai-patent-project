@@ -9,6 +9,7 @@ import {
   Layers,
   Users,
   CreditCard,
+  Scale,
   Plus,
   SignOut,
   ArrowUpRight,
@@ -20,6 +21,7 @@ export type NavLink = { href: string; label: string; icon: IconType; exact?: boo
 export const NAV_LINKS: NavLink[] = [
   { href: "/admin", label: "Overview", icon: Gauge, exact: true },
   { href: "/admin/submissions", label: "Submissions", icon: Layers },
+  { href: "/admin/referrals", label: "Referrals", icon: Scale },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/payments", label: "Payments", icon: CreditCard },
 ];

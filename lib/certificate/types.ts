@@ -12,8 +12,12 @@ export interface CertificateData {
   title: string;
   inventorName: string;
   industry: Industry;
-  /** Pre-formatted human date, e.g. "June 9, 2026". */
+  /** Pre-formatted date + time + timezone, e.g. "June 9, 2026 at 3:42 PM UTC". */
   issuedAt: string;
+  /** Registry-comparison line for the certificate face (e.g. "Checked against
+   * 12 previously registered ideas — no close conceptual match found."), or
+   * null when the check was unavailable or would weaken the certificate. */
+  registryLine: string | null;
   /** Absolute URL to the public verification page (also printed under the QR). */
   verifyUrl: string;
   /** PNG data URL of the QR code that encodes `verifyUrl`. */

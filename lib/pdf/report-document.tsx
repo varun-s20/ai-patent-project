@@ -5,6 +5,8 @@ import type { ReportData } from "@/lib/report/types";
 import type { Dimension } from "@/lib/types";
 import { styles, brand, DISCLAIMER, verdictColor, verdictLabel } from "@/lib/pdf/theme";
 import { ScoreGauge } from "@/lib/pdf/gauge";
+import { recommendationFor } from "@/lib/report/recommendation";
+import { registrySummary } from "@/lib/registry/check";
 
 function ReportPage({
   data,
@@ -56,12 +58,21 @@ function DimensionHeader({ data, dimension }: { data: ReportData; dimension: Dim
 
 export function ReportDocument({ data }: { data: ReportData }) {
   const { submission, scores, avgScore, verdict, content } = data;
+  const recommendation = recommendationFor(verdict);
   const dims: Dimension[] = ["novelty", "commercial", "defensibility", "licensing", "timing"];
 
   return (
-    <Document title={`Pre-Patent Intelligence Report — ${submission.title}`}>
+    <Document title={`Pre-Patent Intelligence Report: ${submission.title}`}>
       {/* Page 1 — Idea Summary */}
       <ReportPage data={data} pageNo={1} title="Idea Summary">
+        <View style={styles.securedBanner}>
+          <Text style={styles.securedEyebrow}>SECURED IN THE AI INVENTION REGISTRY</Text>
+          <Text style={styles.securedStamp}>{data.issuedAt}</Text>
+          <Text style={styles.securedLine}>
+            This idea was recorded and timestamped at the date and time above under
+            Certificate {data.certId}.
+          </Text>
+        </View>
         <Text style={styles.meta}>Inventor: {submission.inventorName}</Text>
         <Text style={styles.meta}>Industry: {submission.industry}</Text>
         <Text style={styles.meta}>Invention: {submission.title}</Text>
@@ -91,6 +102,16 @@ export function ReportDocument({ data }: { data: ReportData }) {
             </View>
           ))}
         </View>
+        <Text style={styles.h2}>Registry comparison</Text>
+        <Text style={styles.body}>
+          {data.registry
+            ? registrySummary(data.registry)
+            : "The registry comparison was unavailable for this evaluation."}
+        </Text>
+        <Text style={styles.meta}>
+          Comparison measures description-text similarity across ideas recorded in the AI
+          Invention Registry as of {data.issuedAt}. It is not a prior-art or trademark search.
+        </Text>
       </ReportPage>
 
       {/* Page 3 — Novelty */}
@@ -175,6 +196,17 @@ export function ReportDocument({ data }: { data: ReportData }) {
             attorney before filing.
           </Text>
         )}
+        <Text style={styles.h2}>Our recommendation</Text>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>{recommendation.headline}</Text>
+          <Text style={styles.body}>{recommendation.body}</Text>
+          {recommendation.offerAttorney && (
+            <Text style={styles.body}>
+              Would you like us to recommend a patent attorney? Request a referral from your
+              dashboard: {data.statusUrl}
+            </Text>
+          )}
+        </View>
       </ReportPage>
 
       {/* Page 8 — Top Buyers & Licensing */}
@@ -183,7 +215,7 @@ export function ReportDocument({ data }: { data: ReportData }) {
         {content.topBuyers.length > 0 ? (
           content.topBuyers.map((b, i) => (
             <View key={i} style={styles.card}>
-              <Text style={styles.cardTitle}>{b.name} — {b.segment}</Text>
+              <Text style={styles.cardTitle}>{b.name} ({b.segment})</Text>
               <Text style={styles.body}>{b.why}</Text>
             </View>
           ))

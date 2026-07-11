@@ -36,6 +36,7 @@ function FrontPage({ data }: { data: CertificateData }) {
               <Text style={s.metaLabel}>Certificate ID: </Text>
               {data.certId}
             </Text>
+            {data.registryLine && <Text style={s.metaLine}>{data.registryLine}</Text>}
           </View>
 
           <View style={{ marginTop: "auto" }}>

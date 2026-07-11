@@ -10,8 +10,21 @@ import type { ReportContent } from "@/lib/report/types";
 const NA = "Not assessed in this report.";
 const UNKNOWN_RATING = "Unknown";
 
-/** A required-but-tolerant string: trims, and falls back to `fallback` if missing/empty. */
-const prose = (fallback: string) => z.string().trim().min(1).catch(fallback);
+// The narrative model reaches for em/en dashes constantly; the report must
+// read as plain prose, so every dash gets normalized once, here, rather than
+// scrubbed ad hoc at each call site.
+function stripDashes(s: string): string {
+  return s.replace(/\s*[—–]\s*/g, ", ");
+}
+
+/** A required-but-tolerant string: trims, strips em/en dashes, and falls back to `fallback` if missing/empty. */
+const prose = (fallback: string) =>
+  z
+    .string()
+    .trim()
+    .min(1)
+    .catch(fallback)
+    .transform(stripDashes);
 
 /** A list of objects that never throws: malformed or missing → empty array (PDF omits it). */
 const objectList = <T extends z.ZodTypeAny>(item: T) => z.array(item).catch([]);
@@ -20,7 +33,7 @@ const objectList = <T extends z.ZodTypeAny>(item: T) => z.array(item).catch([]);
 const stringList = z
   .array(z.string().trim().min(1).catch(""))
   .catch([])
-  .transform((arr) => arr.filter((s) => s.length > 0));
+  .transform((arr) => arr.filter((s) => s.length > 0).map(stripDashes));
 
 const comparablePatent = z.object({ name: prose("Unnamed"), why: prose(NA) });
 const topBuyer = z.object({ name: prose("Unnamed"), segment: prose(NA), why: prose(NA) });

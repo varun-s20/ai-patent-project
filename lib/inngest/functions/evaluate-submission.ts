@@ -21,6 +21,13 @@ import { renderCertificatePdf } from "@/lib/pdf/certificate-render";
 import { certificateVerifyUrl } from "@/lib/certificate/verify-url";
 import { generateQrDataUrl } from "@/lib/certificate/qr";
 import { type CertificateData } from "@/lib/certificate/types";
+import { formatTimestamp } from "@/lib/time/timestamp";
+import {
+  CLOSE_SIMILARITY,
+  MODERATE_SIMILARITY,
+  certificateRegistryLine,
+  type RegistryCheck,
+} from "@/lib/registry/check";
 
 export const evaluateSubmission = inngest.createFunction(
   {
@@ -185,6 +192,33 @@ export const evaluateSubmission = inngest.createFunction(
       );
     });
 
+    // Step 3b — registry-uniqueness check (pg_trgm, entirely in Postgres).
+    // Best-effort by design: a DB hiccup here must never fail (and refund) a
+    // paid evaluation — the report just prints "comparison unavailable".
+    const registry = await step.run("registry-check", async () => {
+      try {
+        const admin = createAdminClient();
+        const { data, error } = await admin.rpc("registry_similarity", {
+          p_submission_id: submissionId,
+          p_close: CLOSE_SIMILARITY,
+          p_moderate: MODERATE_SIMILARITY,
+        });
+        if (error) throw new Error(`registry_similarity failed: ${error.message}`);
+        const row = Array.isArray(data) ? data[0] : data;
+        if (!row) throw new Error("registry_similarity returned no row");
+
+        const check: RegistryCheck = {
+          compared: Number(row.compared),
+          closeMatches: Number(row.close_matches),
+          moderateMatches: Number(row.moderate_matches),
+        };
+        return check;
+      } catch (err) {
+        console.error(`[evaluate-submission] registry check failed for ${submissionId}:`, err);
+        return null;
+      }
+    });
+
     // Step 4 — render the PDF, upload to private storage, record the certificate.
     // certId is derived from the submission UUID and only has ~16.7M possible
     // values per year, so a same-year collision with a different submission's
@@ -195,13 +229,19 @@ export const evaluateSubmission = inngest.createFunction(
     const report = await step.run("render-and-upload-report", async () => {
       const now = new Date();
       const year = now.getFullYear();
-      const issuedAt = now.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
+      // Full date + time + explicit timezone (PRD 6.3) — the timestamp is the
+      // product; a date-only stamp undersells "secured at this moment".
+      const issuedAt = formatTimestamp(now.toISOString());
       const path = documentPath(submission.user_id, submissionId, "report");
       const admin = createAdminClient();
+
+      // Printed in the report's attorney-referral ask. Fails loudly like
+      // certificateVerifyUrl — a baked-in broken link can't be fixed later.
+      const base = process.env.NEXT_PUBLIC_BASE_URL;
+      if (!base) {
+        throw new Error("NEXT_PUBLIC_BASE_URL is not set — cannot build the report status URL");
+      }
+      const statusUrl = `${base.replace(/\/$/, "")}/status/${submissionId}`;
 
       const MAX_CERT_ID_ATTEMPTS = 5;
       // certIdFor is a pure function of (submissionId, year, attempt) — if
@@ -231,6 +271,8 @@ export const evaluateSubmission = inngest.createFunction(
           content,
           certId,
           issuedAt,
+          statusUrl,
+          registry,
         };
 
         const pdf = await renderReportPdf(data);
@@ -280,6 +322,7 @@ export const evaluateSubmission = inngest.createFunction(
               inventorName: submission.inventor_name,
               industry: submission.industry,
               issuedAt,
+              registryLine: certificateRegistryLine(registry),
               verifyUrl,
               qrDataUrl,
             };

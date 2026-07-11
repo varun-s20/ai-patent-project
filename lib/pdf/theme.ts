@@ -82,4 +82,21 @@ export const styles = StyleSheet.create({
   },
   cardTitle: { fontFamily: "Helvetica-Bold", fontSize: 11, color: brand.navy, marginBottom: 2 },
   ratingPill: { fontFamily: "Helvetica-Bold", fontSize: 11, color: brand.navy },
+  securedBanner: {
+    backgroundColor: brand.navy,
+    borderLeftWidth: 3,
+    borderLeftColor: brand.gold,
+    borderRadius: 4,
+    padding: 14,
+    marginBottom: 18,
+  },
+  securedEyebrow: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 9,
+    color: brand.gold,
+    letterSpacing: 1.5,
+    marginBottom: 4,
+  },
+  securedStamp: { fontFamily: "Helvetica-Bold", fontSize: 13, color: "#FFFFFF", marginBottom: 3 },
+  securedLine: { fontSize: 9, color: "#D6DCE8" },
 });

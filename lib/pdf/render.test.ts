@@ -45,7 +45,9 @@ const DATA: ReportData = {
     ],
   },
   certId: "GC-AI-2026-8F14E4",
-  issuedAt: "June 9, 2026",
+  issuedAt: "June 9, 2026 at 3:42 PM UTC",
+  statusUrl: "https://example.com/status/00000000-0000-0000-0000-000000000000",
+  registry: { compared: 12, closeMatches: 0, moderateMatches: 1 },
 };
 
 describe("renderReportPdf", () => {
