@@ -1,5 +1,6 @@
 // lib/report/types.ts
 import type { EvaluationScores, Industry, Verdict } from "@/lib/types";
+import type { RegistryCheck } from "@/lib/registry/check";
 
 export interface ComparablePatent {
   name: string;
@@ -52,6 +53,11 @@ export interface ReportData {
   verdict: Verdict;
   content: ReportContent;
   certId: string;
-  /** Pre-formatted human date, e.g. "June 9, 2026". */
+  /** Pre-formatted date + time + timezone, e.g. "June 9, 2026 at 3:42 PM UTC". */
   issuedAt: string;
+  /** Absolute URL of the customer's status page — printed in the report so the
+   * attorney-referral ask has somewhere actionable to point. */
+  statusUrl: string;
+  /** Registry-uniqueness comparison; null when the check was unavailable. */
+  registry: RegistryCheck | null;
 }

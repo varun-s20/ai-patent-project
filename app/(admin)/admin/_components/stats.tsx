@@ -232,10 +232,12 @@ export function AdminAlert({
   failed,
   inFlight,
   refunded,
+  pendingReferrals = 0,
 }: {
   failed: number;
   inFlight: number;
   refunded: number;
+  pendingReferrals?: number;
 }) {
   let tone: "warn" | "info" | "ok";
   let title: string;
@@ -247,6 +249,11 @@ export function AdminAlert({
     title = "Failed evaluations";
     body = `${failed} ${failed === 1 ? "evaluation has" : "evaluations have"} failed and may need a refund.`;
     href = "/admin/submissions?status=failed";
+  } else if (pendingReferrals > 0) {
+    tone = "info";
+    title = "Attorney referrals waiting";
+    body = `${pendingReferrals} customer${pendingReferrals === 1 ? "" : "s"} asked for a patent-attorney referral and ${pendingReferrals === 1 ? "is" : "are"} awaiting a reply.`;
+    href = "/admin/referrals";
   } else if (inFlight > 0) {
     tone = "info";
     title = "Evaluations in progress";

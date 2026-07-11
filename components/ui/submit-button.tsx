@@ -15,20 +15,28 @@ export function SubmitButton({
   className = "",
   pendingLabel,
   disabled = false,
+  unstyled = false,
+  ariaLabel,
 }: {
   children: ReactNode;
   variant?: Variant;
   className?: string;
   pendingLabel?: string;
   disabled?: boolean;
+  /** Skip the default button styling — caller's className is the whole look
+   * (for row pills and other non-CTA buttons). */
+  unstyled?: boolean;
+  ariaLabel?: string;
 }) {
   const { pending } = useFormStatus();
+  const shell = unstyled ? "inline-flex items-center justify-center" : buttonClasses(variant);
   return (
     <button
       type="submit"
       disabled={pending || disabled}
       aria-busy={pending}
-      className={`${buttonClasses(variant)} ${className}`}
+      aria-label={ariaLabel}
+      className={`${shell} ${pending ? "cursor-not-allowed opacity-60" : ""} ${className}`}
     >
       {pending && <Spinner className="mr-2 h-4 w-4" />}
       {pending ? (pendingLabel ?? children) : children}

@@ -63,6 +63,32 @@ export async function markFailed(formData: FormData) {
   revalidatePath("/admin", "layout");
 }
 
+/** Mark an attorney-referral request as handled (admin has sent the referral),
+ * or clear it back to pending. Only meaningful for a submission that actually
+ * requested a referral. */
+export async function setReferralContacted(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("submissionId"));
+  const contacted = formData.get("contacted") === "true";
+  const admin = createAdminClient();
+
+  const { data: sub } = await admin
+    .from("submissions")
+    .select("attorney_requested_at")
+    .eq("id", id)
+    .single();
+  if (!sub?.attorney_requested_at) {
+    console.error(`[admin] setReferralContacted: ${id} never requested a referral — ignoring.`);
+    return;
+  }
+
+  await admin
+    .from("submissions")
+    .update({ attorney_referred_at: contacted ? new Date().toISOString() : null })
+    .eq("id", id);
+  revalidatePath("/admin", "layout");
+}
+
 async function setProfileFlag(
   userId: string,
   column: "is_disabled" | "is_flagged" | "is_admin",

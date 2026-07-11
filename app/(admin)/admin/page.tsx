@@ -35,15 +35,21 @@ type RecentRow = {
 export default async function AdminOverviewPage() {
   const admin = createAdminClient();
 
-  const [total, paid, refunded, completed, failed, inFlight, users] = await Promise.all([
-    admin.from("submissions").select("id", { count: "exact", head: true }),
-    admin.from("submissions").select("id", { count: "exact", head: true }).in("status", [...PAID_STATUSES]),
-    admin.from("submissions").select("id", { count: "exact", head: true }).eq("status", "refunded"),
-    admin.from("submissions").select("id", { count: "exact", head: true }).eq("status", "complete"),
-    admin.from("submissions").select("id", { count: "exact", head: true }).eq("status", "failed"),
-    admin.from("submissions").select("id", { count: "exact", head: true }).in("status", ["paid", "processing"]),
-    admin.from("profiles").select("id", { count: "exact", head: true }),
-  ]);
+  const [total, paid, refunded, completed, failed, inFlight, users, pendingReferrals] =
+    await Promise.all([
+      admin.from("submissions").select("id", { count: "exact", head: true }),
+      admin.from("submissions").select("id", { count: "exact", head: true }).in("status", [...PAID_STATUSES]),
+      admin.from("submissions").select("id", { count: "exact", head: true }).eq("status", "refunded"),
+      admin.from("submissions").select("id", { count: "exact", head: true }).eq("status", "complete"),
+      admin.from("submissions").select("id", { count: "exact", head: true }).eq("status", "failed"),
+      admin.from("submissions").select("id", { count: "exact", head: true }).in("status", ["paid", "processing"]),
+      admin.from("profiles").select("id", { count: "exact", head: true }),
+      admin
+        .from("submissions")
+        .select("id", { count: "exact", head: true })
+        .not("attorney_requested_at", "is", null)
+        .is("attorney_referred_at", null),
+    ]);
 
   const revenue = computeRevenue({
     paidCount: paid.count ?? 0,
@@ -62,9 +68,16 @@ export default async function AdminOverviewPage() {
 
   // Any of these failing would otherwise render as "0" / "no submissions" —
   // indistinguishable from a genuinely empty, healthy registry.
-  const queryError = [total, paid, refunded, completed, failed, inFlight, users].find(
-    (r) => r.error,
-  )?.error;
+  const queryError = [
+    total,
+    paid,
+    refunded,
+    completed,
+    failed,
+    inFlight,
+    users,
+    pendingReferrals,
+  ].find((r) => r.error)?.error;
 
   return (
     <main className="flex flex-col gap-8">
@@ -188,6 +201,7 @@ export default async function AdminOverviewPage() {
             failed={failed.count ?? 0}
             inFlight={inFlightCount}
             refunded={revenue.refundedCount}
+            pendingReferrals={pendingReferrals.count ?? 0}
           />
         </aside>
       </div>

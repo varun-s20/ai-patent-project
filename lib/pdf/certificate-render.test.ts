@@ -12,7 +12,8 @@ const DATA: CertificateData = {
   title: "Self-cooling water bottle",
   inventorName: "Ada Lovelace",
   industry: "Consumer Goods",
-  issuedAt: "June 9, 2026",
+  issuedAt: "June 9, 2026 at 3:42 PM UTC",
+  registryLine: "Checked against 12 previously registered ideas. No closely matching description found.",
   verifyUrl: "https://registry.example.com/verify/GC-AI-2026-8F14E4",
   qrDataUrl: PNG_1x1,
 };

@@ -79,7 +79,7 @@ export function fallbackReportContent(args: ReportContentArgs): ReportContent {
       easeOfReplicationRating: "Unknown",
       competitorLandscape: scores.defensibility.rationale,
     },
-    decisionRationale: `Overall ${avgScore}/100 — ${verdict}. ${scores.licensing.rationale}`,
+    decisionRationale: `Overall ${avgScore}/100 (${verdict}). ${scores.licensing.rationale}`,
     nextSteps: [],
     topBuyers: [],
   };

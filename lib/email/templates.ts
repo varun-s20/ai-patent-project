@@ -49,6 +49,25 @@ export function evaluationFailedNoRefundEmail(args: { title: string }): EmailCon
   };
 }
 
+/** Admin notification: a customer answered yes to the attorney-referral ask. */
+export function attorneyRequestAdminEmail(args: {
+  title: string;
+  inventorName: string;
+  email: string;
+  submissionId: string;
+}): EmailContent {
+  const title = escapeHtml(args.title);
+  const inventorName = escapeHtml(args.inventorName);
+  const email = escapeHtml(args.email);
+  return {
+    subject: `Attorney referral requested — ${args.title}`,
+    html: `<p><strong>${inventorName}</strong> (${email}) requested a patent-attorney referral for "<strong>${title}</strong>".</p>
+<p>Submission: ${args.submissionId}</p>
+<p>Reply to them directly with a referral.</p>`,
+    text: `${args.inventorName} (${args.email}) requested a patent-attorney referral for "${args.title}".\n\nSubmission: ${args.submissionId}\n\nReply to them directly with a referral.`,
+  };
+}
+
 export function reportReadyEmail(args: { title: string; submissionId: string }): EmailContent {
   const title = escapeHtml(args.title);
   // Fails loudly rather than silently degrading to a relative, unclickable
@@ -68,12 +87,15 @@ export function reportReadyEmail(args: { title: string; submissionId: string }):
 </ul>
 <p>You can also view your results and re-download both any time here:</p>
 <p><a href="${link}">${link}</a></p>
+<p>The report ends with our recommendation on what to do next. If it points to a patent attorney, you can request a referral from the same page.</p>
 <p style="font-size:12px;color:#6B7280;margin-top:24px">These are AI-generated estimates, not legal advice. This report confers no intellectual-property rights.</p>`,
     text: `Your 8-page Pre-Patent Intelligence Report for "${args.title}" is ready.
 
 Two PDFs are attached to this email: your Pre-Patent Intelligence Report and your Certificate of Idea Registration.
 
 View your results and re-download both any time here: ${link}
+
+The report ends with our recommendation on what to do next. If it points to a patent attorney, you can request a referral from the same page.
 
 These are AI-generated estimates, not legal advice. This report confers no intellectual-property rights.`,
   };
