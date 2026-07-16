@@ -65,9 +65,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { certId } = await params;
   const loaded = await loadCertificate(certId);
-  if (!loaded?.submission) return { title: "Certificate — AI Invention Registry" };
+  if (!loaded?.submission) return { title: "Certificate — AI Patent Register" };
   const title = `${loaded.submission.title} — Verified Certificate`;
-  const description = `${loaded.submission.title} by ${loaded.submission.inventor_name} is timestamped and AI-certified on the AI Invention Registry.`;
+  const description = `${loaded.submission.title} by ${loaded.submission.inventor_name} is timestamped and AI-certified on the AI Patent Register.`;
   return {
     title,
     description,
@@ -104,7 +104,7 @@ export default async function VerifyPage({
         <div className="rounded-[1.85rem] border border-gold/50 bg-card px-8 py-10">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-semibold tracking-[0.28em] text-gold">
-              AI INVENTION REGISTRY
+              AI PATENT REGISTER
             </p>
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/10 ring-1 ring-gold/30">
               <Seal className="h-5 w-5 text-gold" />

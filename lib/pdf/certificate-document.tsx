@@ -44,7 +44,7 @@ function FrontPage({ data }: { data: CertificateData }) {
               This certificate confirms the digital existence and structured evaluation of the
               concept at the time stated.
             </Text>
-            <Text style={s.footer}>Recorded within the AI Invention Registry system.</Text>
+            <Text style={s.footer}>Recorded within the AI Patent Register system.</Text>
             <Text style={s.disclaimer}>{DISCLAIMER}</Text>
           </View>
         </View>
@@ -95,7 +95,7 @@ function BackPage({ data }: { data: CertificateData }) {
 
 export function CertificateDocument({ data }: { data: CertificateData }) {
   return (
-    <Document title={`Certificate ${data.certId}`} author="AI Invention Registry">
+    <Document title={`Certificate ${data.certId}`} author="AI Patent Register">
       <FrontPage data={data} />
       <BackPage data={data} />
     </Document>

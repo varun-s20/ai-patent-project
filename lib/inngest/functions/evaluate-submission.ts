@@ -397,7 +397,11 @@ export const evaluateSubmission = inngest.createFunction(
 
         await sendEmail(
           submission.email,
-          reportReadyEmail({ title: submission.title, submissionId }),
+          reportReadyEmail({
+            title: submission.title,
+            submissionId,
+            hasCertificate: Boolean(certPath),
+          }),
           attachments,
         );
       } catch (err) {

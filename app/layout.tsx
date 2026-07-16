@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI Invention Registry: know if your idea is worth patenting",
+  title: "AI Patent Register: know if your idea is worth patenting",
   description:
     "A five-dimension AI evaluation, a pre-patent intelligence report, and a timestamped certificate of registration. For $49, not $10,000.",
 };

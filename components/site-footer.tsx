@@ -41,7 +41,7 @@ export function SiteFooter() {
                 <Patent className="relative h-[18px] w-[18px] text-navy-900" />
               </span>
               <span className="font-display text-xl font-semibold tracking-tight text-ink">
-                AI Invention Registry
+                AI Patent Register
               </span>
             </div>
             <p className="mt-4 text-[15px] leading-relaxed text-muted">
@@ -81,7 +81,7 @@ export function SiteFooter() {
             intellectual-property rights and is not a substitute for a registered patent
             attorney.
           </p>
-          <p className="mt-3 text-[13px] text-muted/70">© 2026 AI Invention Registry</p>
+          <p className="mt-3 text-[13px] text-muted/70">© 2026 AI Patent Register</p>
         </div>
       </div>
     </footer>

@@ -2,8 +2,13 @@ import { z } from "zod";
 import { INDUSTRIES } from "@/lib/types";
 
 export const DESCRIPTION_MIN = 100;
-export const DESCRIPTION_MAX = 2000;
-export const PROBLEM_MAX = 2000;
+/** Not a product limit — a context-window guard. The description is interpolated
+ * raw into the Groq prompt (lib/report/prompt.ts, lib/evaluation/prompt.ts), so
+ * an unbounded body would fail the model call instead of the form. 50k chars is
+ * ~12k tokens, well inside the window with room for the rest of the prompt.
+ * ponytail: raise it if a real submission ever gets close. */
+export const DESCRIPTION_MAX = 50_000;
+export const PROBLEM_MAX = 50_000;
 export const TITLE_MAX = 120;
 export const INVENTOR_NAME_MAX = 120;
 

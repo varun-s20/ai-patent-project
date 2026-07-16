@@ -1,17 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { Fragment, useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { InView } from "@/components/motion/in-view";
-import {
-  ArrowRight,
-  Certificate,
-  Check,
-  CreditCard,
-  Cursor,
-  FileText,
-} from "@/components/ui/icons";
+import { Certificate, Check, CreditCard, Cursor, FileText } from "@/components/ui/icons";
 
 type Step = {
   key: string;
@@ -32,70 +24,35 @@ const STEPS: Step[] = [
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 /**
- * Tightly-coupled card strip (ref: ref/howitworks.webp) — cards share a single
- * hairline border with no gap, arrow badges straddle the seam between them,
- * and each card's middle is the concept's own mini visual rather than a
- * generic icon tile. Six steps don't fit four-wide, so the strip scrolls on
- * the x-axis with the 5th card peeking at the edge as the scroll affordance.
+ * Six steps as a grid — one per row on phones, 2-up on tablet, 3x2 on desktop.
+ * Replaces the earlier drag-to-scroll strip, whose 2.5k-px track ran off every
+ * viewport. Every measurement here is the sitewide section scale shared by
+ * dimensions/comparison/deliverables (max-w-[1500px], py-24, the 2.5rem→6xl h2,
+ * the p-7 sm:p-8 card) rather than a set of one-off values, so this section
+ * lines up with its neighbours instead of reading as a smaller inset block.
  */
 export function HowItWorks() {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const drag = useRef({ down: false, startX: 0, startScroll: 0 });
-
-  // Mouse click-drag to scroll the strip. Touch/trackpad use native overflow.
-  const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (e.pointerType !== "mouse") return;
-    const el = scrollRef.current;
-    if (!el) return;
-    drag.current = { down: true, startX: e.clientX, startScroll: el.scrollLeft };
-    el.setPointerCapture(e.pointerId);
-  };
-  const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (!drag.current.down) return;
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollLeft = drag.current.startScroll - (e.clientX - drag.current.startX);
-  };
-  const endDrag = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (!drag.current.down) return;
-    drag.current.down = false;
-    scrollRef.current?.releasePointerCapture?.(e.pointerId);
-  };
-
   return (
     <section id="how" className="scroll-mt-24 section-tint border-y border-line">
-      <div className="mx-auto py-20 sm:py-24">
-        <InView className="max-w-6xl px-6 sm:px-10 lg:px-16" y={14}>
+      <div className="mx-auto w-full max-w-[1500px] px-6 py-24 sm:px-10 lg:px-16">
+        <InView y={14}>
           <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-gold">
             How it works
           </p>
-          <h2 className="mt-4 font-display text-[2.25rem] font-semibold leading-[1.08] tracking-tight text-ink sm:text-4xl lg:text-[2.75rem]">
+          <h2 className="mt-4 font-display text-[2.5rem] font-semibold leading-[1.05] tracking-tight text-ink sm:text-5xl lg:text-6xl">
             Six steps. One straight line to a verifiable record.
           </h2>
-          <p className="mt-3 text-base leading-relaxed text-ink-2">
+          <p className="mt-4 max-w-7xl text-xl leading-relaxed text-muted">
             Everything between clicking Evaluate and holding a timestamped certificate
             in order.
           </p>
         </InView>
 
-        <div
-          ref={scrollRef}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={endDrag}
-          onPointerCancel={endDrag}
-          tabIndex={0}
-          role="region"
-          aria-label="How it works — six steps, scroll or use arrow keys"
-          className="mt-12 flex cursor-grab items-stretch gap-0 overflow-x-auto overflow-y-hidden px-6 pt-4 pb-6 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold active:cursor-grabbing sm:px-10 lg:px-16 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
+        <ol className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {STEPS.map((step, i) => (
-            <Fragment key={step.key}>
-              <StepCard step={step} delay={i * 0.08} />
-              {i < STEPS.length - 1 && <Connector delay={i * 0.08 + 0.1} />}
-            </Fragment>
+            <StepCard key={step.key} step={step} delay={i * 0.06} />
           ))}
-        </div>
+        </ol>
       </div>
     </section>
   );
@@ -106,17 +63,17 @@ export function HowItWorks() {
 function StepCard({ step, delay }: { step: Step; delay: number }) {
   const reduce = useReducedMotion();
   return (
-    <motion.div
+    <motion.li
       initial={reduce ? false : { opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.3 }}
       transition={{ duration: 0.55, delay, ease: EASE }}
-      className="js-reveal hover-lift flex h-[26rem] w-80 shrink-0 flex-col rounded-2xl border border-line bg-paper p-6 shadow-[0_1px_2px_rgba(26,43,74,0.04)] sm:w-96 sm:p-7"
+      className="js-reveal hover-lift flex h-[21rem] min-w-0 flex-col rounded-2xl border border-line bg-card p-7 shadow-[0_30px_70px_-50px_rgba(26,43,74,0.4)] sm:p-8"
     >
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+      <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-muted">
         Step {step.ordinal}
       </p>
-      <h3 className="mt-1.5 font-display text-lg font-semibold leading-snug tracking-tight text-ink sm:text-xl">
+      <h3 className="mt-1.5 font-display text-xl font-semibold leading-snug tracking-tight text-ink">
         {step.label}
       </h3>
 
@@ -124,30 +81,10 @@ function StepCard({ step, delay }: { step: Step; delay: number }) {
         <StepVisual stepKey={step.key} delay={delay} />
       </div>
 
-      <span className="inline-flex w-fit items-center whitespace-nowrap rounded-lg bg-white px-3 py-1.5 text-[11px] font-medium text-ink shadow-[0_10px_22px_-10px_rgba(26,43,74,0.4)] ring-1 ring-black/[0.04]">
+      <span className="inline-flex w-fit items-center rounded-lg bg-white px-3 py-1.5 text-[11px] font-medium text-ink shadow-[0_10px_22px_-10px_rgba(26,43,74,0.4)] ring-1 ring-black/[0.04]">
         {step.tag}
       </span>
-    </motion.div>
-  );
-}
-
-/* ---- Arrow connector — a grey circular badge floating between cards ---- */
-
-function Connector({ delay }: { delay: number }) {
-  const reduce = useReducedMotion();
-  return (
-    <motion.span
-      aria-hidden
-      initial={reduce ? false : { opacity: 0, scale: 0.7 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true, amount: 0.6 }}
-      transition={{ duration: 0.35, delay, ease: EASE }}
-      className="js-reveal relative z-20 -mx-4 flex h-14 w-14 shrink-0 self-center items-center justify-center rounded-full bg-ink/[0.06]"
-    >
-      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ink/[0.04] text-ink-2 ring-1 ring-ink/10">
-        <ArrowRight className="h-4 w-4" />
-      </span>
-    </motion.span>
+    </motion.li>
   );
 }
 
@@ -190,9 +127,10 @@ function StepVisual({ stepKey, delay }: { stepKey: string; delay: number }) {
   if (stepKey === "login") {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="w-full max-w-[13.5rem] rounded-xl bg-white p-4 shadow-[0_24px_48px_-24px_rgba(26,43,74,0.4)] ring-1 ring-black/[0.05]">
-          <p className="font-display text-sm font-semibold tracking-tight text-ink">Log in</p>
-          <div className="mt-3 space-y-2">
+        {/* No "Log in" heading inside the mock — the card's own h3 already says
+            it, and the duplicate is what pushed this visual past the box. */}
+        <div className="w-full max-w-[13.5rem] rounded-xl bg-white p-3.5 shadow-[0_24px_48px_-24px_rgba(26,43,74,0.4)] ring-1 ring-black/[0.05]">
+          <div className="space-y-1.5">
             <div className="rounded-md border border-line px-2.5 py-2">
               <span className="block text-[9px] uppercase tracking-wide text-muted">Email</span>
               <span className="mt-0.5 block h-1.5 w-3/4 rounded-full bg-ink/[0.12]" />
@@ -202,7 +140,7 @@ function StepVisual({ stepKey, delay }: { stepKey: string; delay: number }) {
               <span className="mt-0.5 block h-1.5 w-1/2 rounded-full bg-ink/[0.12]" />
             </div>
           </div>
-          <span className="mt-3 block rounded-md bg-ink py-1.5 text-center text-[11px] font-medium text-cream">
+          <span className="mt-2.5 block rounded-md bg-ink py-1.5 text-center text-[11px] font-medium text-cream">
             Continue
           </span>
         </div>
@@ -288,7 +226,7 @@ function StepVisual({ stepKey, delay }: { stepKey: string; delay: number }) {
         transition={{ duration: 0.5, delay, ease: EASE }}
         className="js-reveal absolute left-4 top-2 w-[58%] overflow-hidden rounded-lg bg-white p-1.5 shadow-[0_20px_40px_-20px_rgba(26,43,74,0.45)] ring-1 ring-black/[0.05]"
       >
-        <div className="relative aspect-[3/4] p-4">
+        <div className="relative h-24 p-2">
           <Image
             src="/sample-report-scorecard.png"
             alt="Intelligence report scorecard page"
@@ -308,7 +246,7 @@ function StepVisual({ stepKey, delay }: { stepKey: string; delay: number }) {
         transition={{ duration: 0.5, delay: delay + 0.1, ease: EASE }}
         className="js-reveal absolute bottom-2 right-1 w-[58%] overflow-hidden rounded-lg bg-white p-1.5 shadow-[0_20px_40px_-20px_rgba(26,43,74,0.5)] ring-1 ring-black/[0.05]"
       >
-        <div className="relative aspect-[4/3] p-4">
+        <div className="relative h-20 p-2">
           <Image
             src="/sample-certificate.png"
             alt="Certificate of idea registration"

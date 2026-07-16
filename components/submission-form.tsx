@@ -13,8 +13,6 @@ import { ChevronDown, ShieldCheck } from "@/components/ui/icons";
 import { clearDraft } from "@/lib/draft/draft-storage";
 import {
   DESCRIPTION_MIN,
-  DESCRIPTION_MAX,
-  PROBLEM_MAX,
   TITLE_MAX,
   INVENTOR_NAME_MAX,
 } from "@/lib/validation/submission";
@@ -148,7 +146,6 @@ export function SubmissionForm({
           placeholder={EXAMPLE_SUBMISSION.description}
           required
           rows={6}
-          maxLength={DESCRIPTION_MAX}
           value={description}
           onChange={(e) => {
             setDescription(e.target.value);
@@ -156,10 +153,10 @@ export function SubmissionForm({
           }}
           className={`mt-1.5 ${inputClass}`}
         />
-        <CharacterCounter count={description.length} min={DESCRIPTION_MIN} max={DESCRIPTION_MAX} />
+        <CharacterCounter count={description.length} min={DESCRIPTION_MIN} />
         <p className="mt-1 text-[12px] leading-relaxed text-muted">
-          A few detailed sentences works best — how it works, what makes it new, and the
-          problem it solves.
+          Write as much as you want — there is no upper limit. How it works, what makes
+          it new, and the problem it solves. More detail, sharper read.
         </p>
       </div>
 
@@ -172,12 +169,10 @@ export function SubmissionForm({
           name="problem"
           placeholder="What problem does it solve? (optional)"
           rows={3}
-          maxLength={PROBLEM_MAX}
           value={fields.problem ?? ""}
           onChange={(e) => persist({ ...fields, problem: e.target.value })}
           className={`mt-1.5 ${inputClass}`}
         />
-        <CharacterCounter count={(fields.problem ?? "").length} max={PROBLEM_MAX} />
       </div>
 
       <div>
