@@ -3,7 +3,7 @@ import { StyleSheet } from "@react-pdf/renderer";
 
 /** Placeholder branding — swap these when client assets arrive. */
 export const brand = {
-  wordmark: "AI INVENTION REGISTRY",
+  wordmark: "AI PATENT REGISTER",
   navy: "#1A2B4A",
   gold: "#C8A020",
   ink: "#1F2937",

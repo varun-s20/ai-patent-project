@@ -134,7 +134,7 @@ export function SiteNav({ authed, isAdmin = false }: { authed: boolean; isAdmin?
                 <Patent className="relative h-[18px] w-[18px] text-navy-900" />
               </span>
               <span className="text-[15px] font-medium tracking-tight text-ink">
-                AI Invention Registry
+                AI Patent Register
               </span>
             </Link>
 

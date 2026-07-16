@@ -18,7 +18,7 @@ if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
 
 const t = nodemailer.createTransport({ service: "gmail", auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD } });
 const info = await t.sendMail({
-  from: `AI Invention Registry <${GMAIL_USER}>`,
+  from: `AI Patent Register <${GMAIL_USER}>`,
   to,
   subject: "Gmail SMTP test ✓",
   html: "<p>If you can read this, Gmail SMTP works.</p>",

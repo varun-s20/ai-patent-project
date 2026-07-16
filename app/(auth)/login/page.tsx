@@ -39,7 +39,7 @@ export default async function LoginPage({
               <Patent className="h-5 w-5 text-navy-900" />
             </span>
             <span className="font-display text-lg tracking-tight text-cream">
-              AI Invention Registry
+              AI Patent Register
             </span>
           </div>
 

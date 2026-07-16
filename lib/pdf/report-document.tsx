@@ -66,7 +66,7 @@ export function ReportDocument({ data }: { data: ReportData }) {
       {/* Page 1 — Idea Summary */}
       <ReportPage data={data} pageNo={1} title="Idea Summary">
         <View style={styles.securedBanner}>
-          <Text style={styles.securedEyebrow}>SECURED IN THE AI INVENTION REGISTRY</Text>
+          <Text style={styles.securedEyebrow}>SECURED IN THE AI PATENT REGISTER</Text>
           <Text style={styles.securedStamp}>{data.issuedAt}</Text>
           <Text style={styles.securedLine}>
             This idea was recorded and timestamped at the date and time above under
@@ -110,7 +110,7 @@ export function ReportDocument({ data }: { data: ReportData }) {
         </Text>
         <Text style={styles.meta}>
           Comparison measures description-text similarity across ideas recorded in the AI
-          Invention Registry as of {data.issuedAt}. It is not a prior-art or trademark search.
+          Patent Register as of {data.issuedAt}. It is not a prior-art or trademark search.
         </Text>
       </ReportPage>
 

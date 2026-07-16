@@ -97,7 +97,7 @@ export function Comparison() {
                   className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-[radial-gradient(90%_130%_at_50%_120%,rgba(228,196,90,0.24),transparent_72%)]"
                 />
                 <div className="relative flex items-center justify-between gap-3">
-                  <p className="text-base font-medium text-cream">AI Invention Registry</p>
+                  <p className="text-base font-medium text-cream">AI Patent Register</p>
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-cream px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink shadow-sm">
                     <Seal className="h-3 w-3 text-gold" />
                     Recommended

@@ -1,4 +1,5 @@
 import nodemailer, { type Transporter } from "nodemailer";
+import { BRAND } from "@/lib/email/layout";
 import { type EmailContent } from "@/lib/email/templates";
 
 let transporter: Transporter | null = null;
@@ -27,7 +28,7 @@ function getTransporter(): Transporter {
 
 // Gmail rewrites the From header to the authenticated account, so this name is
 // just the display label; the address must be the GMAIL_USER account.
-export const EMAIL_FROM_NAME = process.env.EMAIL_FROM_NAME ?? "AI Invention Registry";
+export const EMAIL_FROM_NAME = BRAND;
 
 export interface EmailAttachment {
   filename: string;

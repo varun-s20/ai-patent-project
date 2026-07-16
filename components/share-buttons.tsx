@@ -5,7 +5,7 @@ import { xShareUrl, linkedInShareUrl, whatsAppShareUrl } from "@/lib/share/share
 
 export function ShareButtons({ url, title }: { url: string; title: string }) {
   const [copied, setCopied] = useState(false);
-  const text = `My invention "${title}" is timestamped and AI-certified on the AI Invention Registry.`;
+  const text = `My invention "${title}" is timestamped and AI-certified on the AI Patent Register.`;
 
   const links = [
     { label: "X", href: xShareUrl(url, text) },

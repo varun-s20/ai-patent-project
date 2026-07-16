@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { authRedirectBase } from "@/lib/auth/redirect-base";
 import { createClient } from "@/lib/supabase/server";
 import { validatePassword, PASSWORD_ERROR } from "@/lib/validation/password";
 import { isValidEmail, EMAIL_ERROR } from "@/lib/validation/email";
@@ -34,7 +35,7 @@ export async function signUp(formData: FormData) {
     password,
     options: {
       data: { full_name: fullName },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/confirm`,
+      emailRedirectTo: `${await authRedirectBase()}/auth/confirm`,
     },
   });
 

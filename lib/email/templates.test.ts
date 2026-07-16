@@ -16,24 +16,49 @@ describe("reportReadyEmail", () => {
     else process.env.NEXT_PUBLIC_BASE_URL = original;
   });
 
-  it("mentions both the report and the certificate", () => {
+  it("mentions both the report and the certificate when one was issued", () => {
     process.env.NEXT_PUBLIC_BASE_URL = "https://registry.example.com";
-    const email = reportReadyEmail({ title: "My Idea", submissionId: "sub-1" });
+    const email = reportReadyEmail({
+      title: "My Idea",
+      submissionId: "sub-1",
+      hasCertificate: true,
+    });
     expect(email.html).toContain("Certificate of Idea Registration");
     expect(email.html).toContain("Pre-Patent Intelligence Report");
     expect(email.text).toContain("Certificate of Idea Registration");
   });
 
+  // A certificate is only issued for PROCEED_NOW; promising one on a
+  // REFINE_FIRST verdict would describe an attachment that isn't there.
+  it("never promises a certificate when none was issued", () => {
+    process.env.NEXT_PUBLIC_BASE_URL = "https://registry.example.com";
+    const email = reportReadyEmail({
+      title: "My Idea",
+      submissionId: "sub-1",
+      hasCertificate: false,
+    });
+    expect(email.html).not.toMatch(/certificate/i);
+    expect(email.text).not.toMatch(/certificate/i);
+    expect(email.subject).not.toMatch(/certificate/i);
+    expect(email.html).toContain("Pre-Patent Intelligence Report");
+  });
+
   it("escapes html in the title", () => {
     process.env.NEXT_PUBLIC_BASE_URL = "https://registry.example.com";
-    const email = reportReadyEmail({ title: "<script>", submissionId: "sub-1" });
+    const email = reportReadyEmail({
+      title: "<script>",
+      submissionId: "sub-1",
+      hasCertificate: true,
+    });
     expect(email.html).not.toContain("<script>");
     expect(email.html).toContain("&lt;script&gt;");
   });
 
   it("throws instead of silently building a broken relative link", () => {
     delete process.env.NEXT_PUBLIC_BASE_URL;
-    expect(() => reportReadyEmail({ title: "My Idea", submissionId: "sub-1" })).toThrow();
+    expect(() =>
+      reportReadyEmail({ title: "My Idea", submissionId: "sub-1", hasCertificate: true }),
+    ).toThrow();
   });
 });
 
