@@ -25,54 +25,60 @@ export default function ResetPasswordPage() {
   const error = clientError ?? state.error ?? null;
 
   // Establish the recovery session from whatever the link carries (implicit
-  // hash, PKCE code, or token_hash), the same way auth/confirm does.
+  // hash, PKCE code, or token_hash).
   useEffect(() => {
     if (ran.current) return;
     ran.current = true;
     const supabase = createClient();
 
+    let settled = false;
+    const settle = (s: "ready" | "invalid") => {
+      if (settled) return;
+      settled = true;
+      setStatus(s);
+    };
+
+    // The default recovery email is an implicit-flow link (`#access_token…`).
+    // The browser client's `detectSessionInUrl` (on by default) consumes and
+    // strips that hash on mount BEFORE any manual `hash.get()` here can read it,
+    // which is why the old code fell through to "invalid" on a perfectly valid
+    // link. Supabase emits PASSWORD_RECOVERY when it processes such a link — and
+    // ONLY for a recovery link in the URL, never for a pre-existing ambient
+    // session — so keying off it fixes the false negative while preserving the
+    // guard against letting a stray live session reach this form.
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") settle("ready");
+    });
+
     async function init() {
       const query = new URLSearchParams(window.location.search);
-      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
       const tokenHash = query.get("token_hash");
       const code = query.get("code");
-      const accessToken = hash.get("access_token");
-      const refreshToken = hash.get("refresh_token");
 
-      // A pre-existing, ambient session (stolen/XSS'd cookie, a shared or
-      // unlocked device, a session left open in another tab) must never be
-      // enough to reach this form — only a genuine recovery token in the URL
-      // may. Falling through to `getSession()` with no token present would
-      // let anyone with a live session set a brand-new password with zero
-      // re-authentication.
-      let establishError: { message: string } | null = null;
+      // token_hash / code ride in the query string, which survives
+      // detectSessionInUrl — verify them explicitly.
       if (tokenHash) {
-        ({ error: establishError } = await supabase.auth.verifyOtp({
+        const { error } = await supabase.auth.verifyOtp({
           type: "recovery",
           token_hash: tokenHash,
-        }));
-      } else if (accessToken && refreshToken) {
-        ({ error: establishError } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        }));
-      } else if (code) {
-        ({ error: establishError } = await supabase.auth.exchangeCodeForSession(code));
-      } else {
-        setStatus("invalid");
-        return;
+        });
+        return settle(error ? "invalid" : "ready");
+      }
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        return settle(error ? "invalid" : "ready");
       }
 
-      if (establishError) {
-        setStatus("invalid");
-        return;
-      }
-
-      const { data } = await supabase.auth.getSession();
-      setStatus(data.session ? "ready" : "invalid");
+      // Implicit link: the PASSWORD_RECOVERY listener above resolves it. If no
+      // recovery token is in the URL at all, that event never fires — bound the
+      // wait so the page doesn't spin forever.
+      // ponytail: 4s cap is ample for a same-tab hash parse; raise if a slow
+      // client ever trips it.
+      setTimeout(() => settle("invalid"), 4000);
     }
 
-    init().catch(() => setStatus("invalid"));
+    init().catch(() => settle("invalid"));
+    return () => sub.subscription.unsubscribe();
   }, []);
 
   // Once the server action confirms the password was set, hard-navigate so
