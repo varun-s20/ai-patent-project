@@ -2,7 +2,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createBrowserClient } from "@supabase/ssr";
 import { Card } from "@/components/ui/card";
 import { PasswordRequirements } from "@/components/ui/password-requirements";
 import { Spinner } from "@/components/ui/spinner";
@@ -29,56 +29,56 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     if (ran.current) return;
     ran.current = true;
-    const supabase = createClient();
 
-    let settled = false;
-    const settle = (s: "ready" | "invalid") => {
-      if (settled) return;
-      settled = true;
-      setStatus(s);
-    };
+    // Own client with detectSessionInUrl OFF. The shared browser client leaves
+    // it ON (the default), which auto-consumes the single-use `?code=` on mount
+    // — so the manual exchangeCodeForSession below then hit an already-spent
+    // code and errored to "invalid", racing the PASSWORD_RECOVERY listener.
+    // Turning it off makes this the sole consumer: one deterministic path, no
+    // race, and we parse every link shape ourselves.
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { auth: { detectSessionInUrl: false } },
+    );
 
-    // The default recovery email is an implicit-flow link (`#access_token…`).
-    // The browser client's `detectSessionInUrl` (on by default) consumes and
-    // strips that hash on mount BEFORE any manual `hash.get()` here can read it,
-    // which is why the old code fell through to "invalid" on a perfectly valid
-    // link. Supabase emits PASSWORD_RECOVERY when it processes such a link — and
-    // ONLY for a recovery link in the URL, never for a pre-existing ambient
-    // session — so keying off it fixes the false negative while preserving the
-    // guard against letting a stray live session reach this form.
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") settle("ready");
-    });
-
-    async function init() {
+    async function init(): Promise<"ready" | "invalid"> {
       const query = new URLSearchParams(window.location.search);
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
       const tokenHash = query.get("token_hash");
       const code = query.get("code");
+      const accessToken = hash.get("access_token");
+      const refreshToken = hash.get("refresh_token");
 
-      // token_hash / code ride in the query string, which survives
-      // detectSessionInUrl — verify them explicitly.
+      // Custom token_hash template — verifier-free, works cross-device.
       if (tokenHash) {
         const { error } = await supabase.auth.verifyOtp({
           type: "recovery",
           token_hash: tokenHash,
         });
-        return settle(error ? "invalid" : "ready");
+        return error ? "invalid" : "ready";
       }
+      // PKCE link: `/auth/v1/verify` redirects here with `?code=`. Needs the
+      // code-verifier cookie the reset request set in THIS browser.
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
-        return settle(error ? "invalid" : "ready");
+        return error ? "invalid" : "ready";
       }
-
-      // Implicit link: the PASSWORD_RECOVERY listener above resolves it. If no
-      // recovery token is in the URL at all, that event never fires — bound the
-      // wait so the page doesn't spin forever.
-      // ponytail: 4s cap is ample for a same-tab hash parse; raise if a slow
-      // client ever trips it.
-      setTimeout(() => settle("invalid"), 4000);
+      // Default implicit link: the session rides in the URL fragment.
+      if (accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        return error ? "invalid" : "ready";
+      }
+      // Fallback: a recovery session may already be established (e.g. the shared
+      // client on a prior page consumed the link before forwarding here).
+      const { data } = await supabase.auth.getSession();
+      return data.session ? "ready" : "invalid";
     }
 
-    init().catch(() => settle("invalid"));
-    return () => sub.subscription.unsubscribe();
+    init().then(setStatus).catch(() => setStatus("invalid"));
   }, []);
 
   // Once the server action confirms the password was set, hard-navigate so
