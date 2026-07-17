@@ -309,52 +309,48 @@ export const evaluateSubmission = inngest.createFunction(
 
     const { reportPath, certId, issuedAt } = report;
 
-    // Step 4b — certificate is issued ONLY for patentable ideas (PROCEED_NOW).
-    // REFINE_FIRST / DO_NOT_PATENT get the report but no certificate.
-    const certPath =
-      result.verdict === "PROCEED_NOW"
-        ? await step.run("render-and-upload-certificate", async () => {
-            const verifyUrl = certificateVerifyUrl(certId);
-            const qrDataUrl = await generateQrDataUrl(verifyUrl);
-            const data: CertificateData = {
-              certId,
-              title: submission.title,
-              inventorName: submission.inventor_name,
-              industry: submission.industry,
-              issuedAt,
-              registryLine: certificateRegistryLine(registry),
-              verifyUrl,
-              qrDataUrl,
-            };
+    // Step 4b — every paid submission gets a certificate, regardless of verdict.
+    const certPath = await step.run("render-and-upload-certificate", async () => {
+      const verifyUrl = certificateVerifyUrl(certId);
+      const qrDataUrl = await generateQrDataUrl(verifyUrl);
+      const data: CertificateData = {
+        certId,
+        title: submission.title,
+        inventorName: submission.inventor_name,
+        industry: submission.industry,
+        issuedAt,
+        registryLine: certificateRegistryLine(registry),
+        verifyUrl,
+        qrDataUrl,
+      };
 
-            const pdf = await renderCertificatePdf(data);
-            const path = documentPath(submission.user_id, submissionId, "certificate");
+      const pdf = await renderCertificatePdf(data);
+      const path = documentPath(submission.user_id, submissionId, "certificate");
 
-            const admin = createAdminClient();
-            const { error: upErr } = await admin.storage
-              .from("documents")
-              .upload(path, pdf, { contentType: "application/pdf", upsert: true });
-            if (upErr) throw new Error(`Certificate upload failed: ${upErr.message}`);
+      const admin = createAdminClient();
+      const { error: upErr } = await admin.storage
+        .from("documents")
+        .upload(path, pdf, { contentType: "application/pdf", upsert: true });
+      if (upErr) throw new Error(`Certificate upload failed: ${upErr.message}`);
 
-            // Supabase/PostgREST doesn't error on a 0-row update — check that
-            // a row actually came back, or a missing/renamed row at this
-            // instant would let the PDF upload "succeed" while
-            // certificate_pdf_path silently stays null forever (the public
-            // verify page gates on that column, so this would permanently
-            // read as "certificate not found" for a customer who paid and
-            // was emailed the PDF).
-            const { data: updated, error: updErr } = await admin
-              .from("certificates")
-              .update({ certificate_pdf_path: path })
-              .eq("submission_id", submissionId)
-              .select("submission_id")
-              .maybeSingle();
-            if (updErr) throw new Error(`Certificate path update failed: ${updErr.message}`);
-            if (!updated) throw new Error(`Certificate row for ${submissionId} not found on update`);
+      // Supabase/PostgREST doesn't error on a 0-row update — check that
+      // a row actually came back, or a missing/renamed row at this
+      // instant would let the PDF upload "succeed" while
+      // certificate_pdf_path silently stays null forever (the public
+      // verify page gates on that column, so this would permanently
+      // read as "certificate not found" for a customer who paid and
+      // was emailed the PDF).
+      const { data: updated, error: updErr } = await admin
+        .from("certificates")
+        .update({ certificate_pdf_path: path })
+        .eq("submission_id", submissionId)
+        .select("submission_id")
+        .maybeSingle();
+      if (updErr) throw new Error(`Certificate path update failed: ${updErr.message}`);
+      if (!updated) throw new Error(`Certificate row for ${submissionId} not found on update`);
 
-            return path;
-          })
-        : null;
+      return path;
+    });
 
     // Step 5 — persist evaluation + mark complete (only now that the PDF exists).
     await step.run("persist-and-complete", async () => {
@@ -370,7 +366,7 @@ export const evaluateSubmission = inngest.createFunction(
         .eq("id", submissionId);
     });
 
-    // Step 6 — best-effort email; attach the certificate only if one was issued.
+    // Step 6 — best-effort email with report + certificate attached.
     await step.run("send-report-email", async () => {
       try {
         const admin = createAdminClient();
