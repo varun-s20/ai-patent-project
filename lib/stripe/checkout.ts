@@ -1,4 +1,5 @@
 import type Stripe from "stripe";
+import { siteMeta } from "@/lib/stripe/client";
 
 export const PRICE_CENTS = 4900;
 export const PRODUCT_NAME = "AI Invention Evaluation";
@@ -12,6 +13,16 @@ export function buildCheckoutParams(args: {
   email: string;
   baseUrl: string;
 }): Stripe.Checkout.SessionCreateParams {
+  // Session metadata does NOT propagate to the PaymentIntent, so the same tags
+  // go on both: `checkout.session.*` events read one, `payment_intent.*` and
+  // `charge.*` (refunds, disputes) read the other. Tag only one and half the
+  // account's events arrive with no `site` and can't be attributed or paid out.
+  const metadata = siteMeta({ kind: "evaluation", submission_id: args.submissionId });
+
+  // Must stay EMPTY until the shared account has a statement-descriptor prefix
+  // set in Live mode — Stripe rejects a suffix without one.
+  const suffix = process.env.STRIPE_DESCRIPTOR_SUFFIX;
+
   return {
     mode: "payment",
     customer_email: args.email,
@@ -30,8 +41,11 @@ export function buildCheckoutParams(args: {
         },
       },
     ],
-    metadata: { submission_id: args.submissionId },
-    payment_intent_data: { metadata: { submission_id: args.submissionId } },
+    metadata,
+    payment_intent_data: {
+      metadata,
+      ...(suffix ? { statement_descriptor_suffix: suffix } : {}),
+    },
     success_url: `${args.baseUrl}/status/${args.submissionId}?paid=1`,
     cancel_url: `${args.baseUrl}/pay/${args.submissionId}?canceled=1`,
   };
