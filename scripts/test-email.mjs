@@ -16,11 +16,18 @@ if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
   process.exit(1);
 }
 
-const t = nodemailer.createTransport({ service: "gmail", auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD } });
+// Mirrors lib/email/send.ts: SMTP_HOST set = custom mailbox, unset = Google.
+const auth = { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD };
+const port = Number(process.env.SMTP_PORT ?? 465);
+const t = nodemailer.createTransport(
+  process.env.SMTP_HOST
+    ? { host: process.env.SMTP_HOST, port, secure: port === 465, auth }
+    : { service: "gmail", auth },
+);
 const info = await t.sendMail({
   from: `AI Patent Register <${GMAIL_USER}>`,
   to,
-  subject: "Gmail SMTP test ✓",
-  html: "<p>If you can read this, Gmail SMTP works.</p>",
+  subject: "SMTP test ✓",
+  html: "<p>If you can read this, SMTP works.</p>",
 });
 console.log("Sent:", info.messageId, "→", to);

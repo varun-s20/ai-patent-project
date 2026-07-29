@@ -1,6 +1,6 @@
 import { type NextRequest } from "next/server";
 import type Stripe from "stripe";
-import { getStripe } from "@/lib/stripe/client";
+import { getStripe, SITE } from "@/lib/stripe/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { inngest, submissionPaid } from "@/lib/inngest/client";
 import { sendEmail } from "@/lib/email/send";
@@ -25,6 +25,17 @@ export async function POST(req: NextRequest) {
       `Webhook signature verification failed: ${(err as Error).message}`,
       { status: 400 },
     );
+  }
+
+  // Four sites share this Stripe account, and Stripe fans every event out to
+  // EVERY endpoint subscribed to that type — signed with each endpoint's own
+  // secret, so verification above does NOT scope us. Drop other sites' events
+  // with a 200 (a non-2xx would make Stripe retry them forever). Events with no
+  // metadata at all still fall through and are isolated by the submission_id
+  // lookup below, which only ever matches our own rows.
+  const meta = (event.data.object as { metadata?: Record<string, string> | null }).metadata;
+  if (meta?.site && meta.site !== SITE) {
+    return new Response("ignored (other site)", { status: 200 });
   }
 
   if (event.type === "checkout.session.completed") {

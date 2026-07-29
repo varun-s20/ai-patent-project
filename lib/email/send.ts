@@ -4,30 +4,38 @@ import { type EmailContent } from "@/lib/email/templates";
 
 let transporter: Transporter | null = null;
 
-// Gmail SMTP transport. Requires:
-//   GMAIL_USER          — your full Gmail address (e.g. you@gmail.com)
-//   GMAIL_APP_PASSWORD  — a 16-char App Password (Google Account → Security →
-//                         2-Step Verification → App passwords). NOT your login
-//                         password; that won't work.
+// SMTP transport. Requires:
+//   GMAIL_USER          — the full sending address (Gmail, Google Workspace, or
+//                         any mailbox on your own domain)
+//   GMAIL_APP_PASSWORD  — for Google, a 16-char App Password (Account → Security
+//                         → 2-Step Verification → App passwords), NOT the login
+//                         password. For other hosts, the mailbox password.
+//   SMTP_HOST/SMTP_PORT — only for NON-Google mailboxes (cPanel, Zoho, M365).
+//                         Unset means Google, which nodemailer resolves itself.
 function getTransporter(): Transporter {
   if (!transporter) {
     const user = process.env.GMAIL_USER;
     const pass = process.env.GMAIL_APP_PASSWORD;
     if (!user || !pass) {
-      throw new Error(
-        "GMAIL_USER and GMAIL_APP_PASSWORD must be set to send email via Gmail SMTP",
-      );
+      throw new Error("GMAIL_USER and GMAIL_APP_PASSWORD must be set to send email over SMTP");
     }
-    transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: { user, pass },
-    });
+    const host = process.env.SMTP_HOST;
+    const port = Number(process.env.SMTP_PORT ?? 465);
+    transporter = nodemailer.createTransport(
+      host
+        ? // 465 is implicit TLS; 587 is STARTTLS, which nodemailer upgrades into
+          // only when `secure` is false.
+          { host, port, secure: port === 465, auth: { user, pass } }
+        : { service: "gmail", auth: { user, pass } },
+    );
   }
   return transporter;
 }
 
-// Gmail rewrites the From header to the authenticated account, so this name is
-// just the display label; the address must be the GMAIL_USER account.
+// Google rewrites the From header to the authenticated account, so on Gmail/
+// Workspace this name is only the display label and the address must be
+// GMAIL_USER. Other SMTP hosts generally honour whatever From you send, but
+// keeping it equal to the authenticated mailbox is what keeps SPF/DMARC aligned.
 export const EMAIL_FROM_NAME = BRAND;
 
 export interface EmailAttachment {
