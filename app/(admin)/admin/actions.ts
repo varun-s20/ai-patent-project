@@ -142,6 +142,36 @@ export async function setReferralContacted(formData: FormData) {
   finish(back, "ok", contacted ? "Marked as contacted." : "Reopened — back in the pending list.");
 }
 
+/**
+ * Mark a landing-page lead as contacted (we've replied), or put it back in the
+ * pending list. Only ever moves a row between `new` and `contacted` — a lead
+ * that converted has paid for an evaluation, and this toggle must not erase
+ * that record.
+ */
+export async function setLeadContacted(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("leadId"));
+  const contacted = formData.get("contacted") === "true";
+  const back = adminReturnPath(formData.get("returnTo"), "/admin/leads");
+  const admin = createAdminClient();
+
+  const { data, error } = await admin
+    .from("leads")
+    .update({
+      status: contacted ? "contacted" : "new",
+      contacted_at: contacted ? new Date().toISOString() : null,
+    })
+    .eq("id", id)
+    .in("status", ["new", "contacted"])
+    .select("id")
+    .maybeSingle();
+
+  if (error) finish(back, "error", `Couldn't update that lead: ${error.message}`);
+  if (!data) finish(back, "error", "Not changed — that lead is no longer pending or contacted.");
+
+  finish(back, "ok", contacted ? "Marked as contacted." : "Reopened — back in the pending list.");
+}
+
 async function setProfileFlag(
   formData: FormData,
   column: "is_disabled" | "is_flagged" | "is_admin",

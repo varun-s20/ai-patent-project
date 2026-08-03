@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { CtaLink } from "@/components/ui/button";
 import { InView } from "@/components/motion/in-view";
-import { FileText, Seal } from "@/components/ui/icons";
+import { Certificate, FileText } from "@/components/ui/icons";
 
 const VERDICTS = [
   { label: "PROCEED NOW", tone: "text-emerald-600" },
@@ -16,7 +16,9 @@ const ITEMS = [
     body: "The full pre-patent analysis (scores, rationale, and competitive read) as a downloadable PDF.",
   },
   {
-    icon: Seal,
+    // The rosette, not the verified-check seal: this row is the certificate
+    // itself, and Seal is reserved for "we checked this" badges.
+    icon: Certificate,
     title: "Certificate of registration",
     body: "Timestamped, QR-verifiable, and shareable at a public link with investors, partners, or counsel.",
   },
@@ -71,10 +73,11 @@ export function Deliverables() {
                 ))}
               </div>
 
+              {/* Ink, like the nav and hero CTAs. Gold is an accent here, not a
+                  button fill — a gold pill on the gold-tinted panel behind it
+                  had almost no edge. */}
               <div className="flex">
-                <CtaLink href="/submit" variant="gold">
-                  Evaluate for $49
-                </CtaLink>
+                <CtaLink href="/submit">Evaluate for $49</CtaLink>
               </div>
             </div>
 
