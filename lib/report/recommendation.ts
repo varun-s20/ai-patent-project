@@ -11,7 +11,24 @@ export interface Recommendation {
   offerAttorney: boolean;
 }
 
-export function recommendationFor(verdict: Verdict): Recommendation {
+/** Any idea scoring above this is worth offering a referral on, whatever the
+ * verdict says. A DO_NOT_PATENT can still clear it (the verdict has hard
+ * novelty/defensibility floors that a strong overall score does not override),
+ * and those customers are exactly the ones worth putting in front of an
+ * attorney. */
+export const ATTORNEY_OFFER_SCORE = 50;
+
+/** `avgScore` is optional so callers that only print the copy (the PDF) need
+ * not thread it through; omitting it keeps the verdict-only behaviour. */
+export function recommendationFor(verdict: Verdict, avgScore?: number): Recommendation {
+  const rec = copyFor(verdict);
+  return {
+    ...rec,
+    offerAttorney: rec.offerAttorney || (avgScore ?? 0) > ATTORNEY_OFFER_SCORE,
+  };
+}
+
+function copyFor(verdict: Verdict): Recommendation {
   switch (verdict) {
     case "PROCEED_NOW":
       return {

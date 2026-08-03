@@ -4,6 +4,8 @@ import {
   paymentConfirmationEmail,
   evaluationFailedEmail,
   evaluationFailedNoRefundEmail,
+  refundIssuedEmail,
+  refundFailedAdminEmail,
 } from "./templates";
 
 describe("reportReadyEmail", () => {
@@ -85,5 +87,54 @@ describe("evaluationFailedNoRefundEmail", () => {
     const email = evaluationFailedNoRefundEmail({ title: "My Idea" });
     expect(email.html).not.toMatch(/refunded your/i);
     expect(email.text).toContain("contact support");
+  });
+});
+
+describe("refundIssuedEmail", () => {
+  it("confirms the refund and sets the bank-delay expectation", () => {
+    const email = refundIssuedEmail({ title: "My Idea" });
+    expect(email.text).toContain("refunded");
+    expect(email.text).toMatch(/5 to 10 business days/);
+  });
+
+  // A manual refund is usually goodwill on a submission that ran fine, so this
+  // must never repeat evaluationFailedEmail's "we hit a problem" framing.
+  it("never blames a failed evaluation", () => {
+    const email = refundIssuedEmail({ title: "My Idea" });
+    expect(email.html).not.toMatch(/fail|problem/i);
+    expect(email.text).not.toMatch(/fail|problem/i);
+  });
+
+  it("escapes html in the title", () => {
+    const email = refundIssuedEmail({ title: "<script>" });
+    expect(email.html).not.toContain("<script>");
+  });
+});
+
+describe("refundFailedAdminEmail", () => {
+  const args = {
+    title: "My Idea",
+    email: "customer@example.com",
+    submissionId: "sub-1",
+    reason: "No such payment_intent: pi_123",
+  };
+
+  it("carries everything needed to refund by hand", () => {
+    const email = refundFailedAdminEmail(args);
+    expect(email.text).toContain("customer@example.com");
+    expect(email.text).toContain("sub-1");
+    expect(email.text).toContain("No such payment_intent: pi_123");
+  });
+
+  it("states plainly that the customer has NOT been refunded", () => {
+    const email = refundFailedAdminEmail(args);
+    expect(email.text).toMatch(/NOT been refunded/);
+    expect(email.subject).toMatch(/ACTION NEEDED/);
+  });
+
+  it("escapes html in the title and the Stripe reason", () => {
+    const email = refundFailedAdminEmail({ ...args, title: "<script>", reason: "<img onerror>" });
+    expect(email.html).not.toContain("<script>");
+    expect(email.html).not.toContain("<img onerror>");
   });
 });

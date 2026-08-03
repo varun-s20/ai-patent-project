@@ -19,6 +19,14 @@ describe("recommendationFor", () => {
     expect(recommendationFor("DO_NOT_PATENT").offerAttorney).toBe(false);
   });
 
+  it("also offers a referral on any idea scoring above 50, verdict aside", () => {
+    expect(recommendationFor("DO_NOT_PATENT", 51).offerAttorney).toBe(true);
+    expect(recommendationFor("DO_NOT_PATENT", 50).offerAttorney).toBe(false);
+    expect(recommendationFor("DO_NOT_PATENT", 0).offerAttorney).toBe(false);
+    // The score never removes an offer the verdict already made.
+    expect(recommendationFor("REFINE_FIRST", 10).offerAttorney).toBe(true);
+  });
+
   it("never contains an em or en dash", () => {
     for (const v of VERDICTS) {
       const rec = recommendationFor(v);

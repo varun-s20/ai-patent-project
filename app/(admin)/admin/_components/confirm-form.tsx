@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useFormStatus } from "react-dom";
+import { ReturnTo } from "./return-to";
 
 /**
  * Wraps a server-action form with a native confirm() before it submits —
@@ -25,6 +26,7 @@ export function ConfirmForm({
         if (!confirm(message)) e.preventDefault();
       }}
     >
+      <ReturnTo />
       <PendingFieldset>{children}</PendingFieldset>
     </form>
   );

@@ -12,6 +12,7 @@ import { SectionHead } from "../_components/stats";
 import { RecordCard, RecordHead, Field } from "../_components/record-list";
 import { ConfirmForm } from "../_components/confirm-form";
 import { Pagination } from "../_components/pagination";
+import { ActionNotice } from "../_components/notice";
 import { PAGE_SIZE, pageRange, parsePage } from "@/lib/admin/pagination";
 import { REFUNDABLE_STATUSES, FAILABLE_STATUSES } from "@/lib/admin/submission-status";
 
@@ -74,9 +75,16 @@ type SubRow = {
 export default async function AdminSubmissionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string; verdict?: string; sort?: string; page?: string }>;
+  searchParams: Promise<{
+    status?: string;
+    q?: string;
+    verdict?: string;
+    sort?: string;
+    page?: string;
+    notice?: string;
+  }>;
 }) {
-  const { status, q, verdict, sort, page: pageParam } = await searchParams;
+  const { status, q, verdict, sort, page: pageParam, notice } = await searchParams;
   const page = parsePage(pageParam);
   const admin = createAdminClient();
 
@@ -125,6 +133,7 @@ export default async function AdminSubmissionsPage({
     <main>
       <SectionHead title="Submissions" count={totalCount ?? subs.length} />
       <AdminFilters />
+      <ActionNotice notice={notice} />
       {subsError && (
         <p className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           Couldn&apos;t load submissions ({subsError.message}). This is not the same as &quot;no
@@ -134,12 +143,13 @@ export default async function AdminSubmissionsPage({
       {/* Desktop: table. */}
       <Card padded={false} className="mt-4 hidden md:block">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[820px] text-sm">
+          <table className="w-full min-w-[900px] text-sm">
             <thead className="border-b border-line bg-paper/40">
               <tr>
                 <th className={th}>Title</th>
                 <th className={th}>User</th>
                 <th className={th}>Status</th>
+                <th className={th}>Score</th>
                 <th className={th}>Verdict</th>
                 <th className={th}>Created</th>
                 <th className={th}>Actions</th>
@@ -166,6 +176,9 @@ export default async function AdminSubmissionsPage({
                     <td className={td}>
                       <StatusBadge status={s.status} />
                     </td>
+                    <td className={`${td} tabular-nums text-ink-2`}>
+                      {evaluation ? `${evaluation.avg_score}/100` : <span className="text-muted">—</span>}
+                    </td>
                     <td className={td}>
                       {evaluation ? <VerdictBadge verdict={evaluation.verdict} /> : "—"}
                     </td>
@@ -178,7 +191,7 @@ export default async function AdminSubmissionsPage({
               })}
               {subs.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-5 py-8 text-center text-muted">
+                  <td colSpan={7} className="px-5 py-8 text-center text-muted">
                     No submissions match.
                   </td>
                 </tr>
@@ -208,6 +221,12 @@ export default async function AdminSubmissionsPage({
               </RecordHead>
               <div className="mt-3 space-y-1.5">
                 <Field label="User">{profile?.full_name ?? s.email}</Field>
+                <Field label="Email">
+                  <a href={`mailto:${s.email}`} className="hover:text-gold">
+                    {s.email}
+                  </a>
+                </Field>
+                <Field label="Score">{evaluation ? `${evaluation.avg_score}/100` : "—"}</Field>
                 <Field label="Verdict">
                   {evaluation ? <VerdictBadge verdict={evaluation.verdict} /> : "—"}
                 </Field>

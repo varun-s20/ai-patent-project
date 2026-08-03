@@ -66,6 +66,49 @@ export function evaluationFailedNoRefundEmail(args: { title: string }): EmailCon
   };
 }
 
+/** Sent when an admin issues a refund by hand from the console. Deliberately
+ * says nothing about the evaluation failing — a manual refund is usually goodwill
+ * on a submission that ran fine, so evaluationFailedEmail's copy would be wrong. */
+export function refundIssuedEmail(args: { title: string }): EmailContent {
+  const title = escapeHtml(args.title);
+  return {
+    subject: "We've refunded your $49",
+    html: emailLayout({
+      preheader: "Your $49 is on its way back to your original payment method.",
+      heading: "We've refunded your $49",
+      body: `<p style="margin:0 0 14px">We've refunded the $49 you paid for "<strong>${title}</strong>".</p>
+<p style="margin:0 0 14px">The money goes back to the card you paid with. Banks usually take 5 to 10 business days to show it.</p>
+<p style="margin:0">If anything about this looks wrong, just reply to this email.</p>`,
+    }),
+    text: `We've refunded the $49 you paid for "${args.title}".\n\nThe money goes back to the card you paid with. Banks usually take 5 to 10 business days to show it.\n\nIf anything about this looks wrong, just reply to this email.`,
+  };
+}
+
+/** Admin alert: the automatic refund after a failed evaluation was refused by
+ * Stripe. The customer has been told to contact support and is out $49 until
+ * someone acts, so this must reach a human rather than only a server log. */
+export function refundFailedAdminEmail(args: {
+  title: string;
+  email: string;
+  submissionId: string;
+  reason: string;
+}): EmailContent {
+  const title = escapeHtml(args.title);
+  const email = escapeHtml(args.email);
+  return {
+    subject: `ACTION NEEDED: auto-refund failed — ${args.title}`,
+    html: emailLayout({
+      preheader: `A customer was charged $49, the evaluation failed, and the refund did not go through.`,
+      heading: "Auto-refund failed",
+      body: `<p style="margin:0 0 14px">The evaluation for "<strong>${title}</strong>" failed and the automatic refund was refused by Stripe. The customer has been charged $49 and has <strong>not</strong> been refunded.</p>
+<p style="margin:0 0 14px">Customer: ${email}<br>Submission: ${escapeHtml(args.submissionId)}</p>
+<p style="margin:0 0 14px">Stripe said: ${escapeHtml(args.reason)}</p>
+<p style="margin:0">They have been emailed to contact support. Refund them from the admin console, or directly in Stripe.</p>`,
+    }),
+    text: `The evaluation for "${args.title}" failed and the automatic refund was refused by Stripe. The customer has been charged $49 and has NOT been refunded.\n\nCustomer: ${args.email}\nSubmission: ${args.submissionId}\n\nStripe said: ${args.reason}\n\nThey have been emailed to contact support. Refund them from the admin console, or directly in Stripe.`,
+  };
+}
+
 /** Admin notification: a customer answered yes to the attorney-referral ask. */
 export function attorneyRequestAdminEmail(args: {
   title: string;
