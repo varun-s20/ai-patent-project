@@ -13,15 +13,51 @@ const SORTS = [
   ["oldest", "Oldest first"],
 ] as const;
 
+const USER_ROLES = [
+  ["all", "Any role"],
+  ["admin", "Admins"],
+  ["flagged", "Flagged"],
+  ["disabled", "Disabled"],
+] as const;
+const USER_REFERRALS = [
+  ["all", "Any referral state"],
+  ["requested", "Referral requested"],
+  ["pending", "Referral pending"],
+] as const;
+export const USER_SORTS = [
+  ["newest", "Newest first"],
+  ["oldest", "Oldest first"],
+  ["ideas", "Most ideas"],
+  ["score", "Highest avg score"],
+] as const;
+
 const control =
   "h-9 rounded-full border border-line bg-card px-4 text-sm outline-none transition-colors focus:border-gold";
+
+/** One URL-backed dropdown. `fallback` is the value that means "no filter" and
+ * is dropped from the query string rather than cluttering it. */
+export type FilterSelect = {
+  key: string;
+  label: string;
+  fallback: string;
+  options: readonly (readonly [string, string])[];
+};
 
 /**
  * Live admin filter bar. The text search is debounced (300ms); selects apply
  * instantly. State lives entirely in the URL query string, so the server page
  * re-renders with the filtered query and everything stays shareable/back-able.
+ * Shared by every admin ledger — each one just declares its own selects.
  */
-export function AdminFilters() {
+export function FilterBar({
+  searchLabel,
+  searchPlaceholder,
+  selects,
+}: {
+  searchLabel: string;
+  searchPlaceholder: string;
+  selects: readonly FilterSelect[];
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -32,7 +68,7 @@ export function AdminFilters() {
 
   // Defaults that should drop the param entirely rather than clutter the URL.
   const isDefault = (key: string, value: string) =>
-    !value || value === "all" || (key === "sort" && value === "newest");
+    !value || selects.some((s) => s.key === key && s.fallback === value);
 
   const commit = (patch: Record<string, string>) => {
     const sp = new URLSearchParams(params.toString());
@@ -44,6 +80,9 @@ export function AdminFilters() {
     // result set can strand the view on a now-nonexistent page, rendering
     // "no results" even though page 1 of the new filter has plenty.
     sp.delete("page");
+    // The last action's banner belongs to the view it fired from, not to
+    // whatever the admin filters to next.
+    sp.delete("notice");
     const qs = sp.toString();
     startTransition(() => router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false }));
   };
@@ -60,10 +99,8 @@ export function AdminFilters() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
-  const status = params.get("status") ?? "all";
-  const verdict = params.get("verdict") ?? "all";
-  const sort = params.get("sort") ?? "newest";
-  const hasFilters = q !== "" || status !== "all" || verdict !== "all" || sort !== "newest";
+  const hasFilters =
+    q !== "" || selects.some((s) => (params.get(s.key) ?? s.fallback) !== s.fallback);
 
   return (
     <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -72,9 +109,9 @@ export function AdminFilters() {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search title or email…"
+          placeholder={searchPlaceholder}
           className={`${control} w-full pl-9 sm:w-64 ${q ? "pr-9" : ""}`}
-          aria-label="Search submissions"
+          aria-label={searchLabel}
         />
         {q && (
           <button
@@ -88,24 +125,15 @@ export function AdminFilters() {
         )}
       </div>
 
-      <Select
-        label="Status"
-        value={status}
-        onChange={(v) => commit({ status: v })}
-        options={STATUSES.map((s) => [s, s === "all" ? "All statuses" : statusLabel(s)])}
-      />
-      <Select
-        label="Verdict"
-        value={verdict}
-        onChange={(v) => commit({ verdict: v })}
-        options={VERDICTS.map((v) => [v, v === "all" ? "Any verdict" : verdictLabel(v)])}
-      />
-      <Select
-        label="Sort"
-        value={sort}
-        onChange={(v) => commit({ sort: v })}
-        options={SORTS.map(([v, l]) => [v, l])}
-      />
+      {selects.map((s) => (
+        <Select
+          key={s.key}
+          label={s.label}
+          value={params.get(s.key) ?? s.fallback}
+          onChange={(v) => commit({ [s.key]: v })}
+          options={s.options}
+        />
+      ))}
 
       {hasFilters && (
         <button
@@ -127,6 +155,46 @@ export function AdminFilters() {
         }`}
       />
     </div>
+  );
+}
+
+/** Filter bar for /admin/submissions. */
+export function AdminFilters() {
+  return (
+    <FilterBar
+      searchLabel="Search submissions"
+      searchPlaceholder="Search title or email…"
+      selects={[
+        {
+          key: "status",
+          label: "Status",
+          fallback: "all",
+          options: STATUSES.map((s) => [s, s === "all" ? "All statuses" : statusLabel(s)]),
+        },
+        {
+          key: "verdict",
+          label: "Verdict",
+          fallback: "all",
+          options: VERDICTS.map((v) => [v, v === "all" ? "Any verdict" : verdictLabel(v)]),
+        },
+        { key: "sort", label: "Sort", fallback: "newest", options: SORTS },
+      ]}
+    />
+  );
+}
+
+/** Filter bar for /admin/users. */
+export function UserFilters() {
+  return (
+    <FilterBar
+      searchLabel="Search users"
+      searchPlaceholder="Search name or email…"
+      selects={[
+        { key: "role", label: "Role", fallback: "all", options: USER_ROLES },
+        { key: "referral", label: "Referral", fallback: "all", options: USER_REFERRALS },
+        { key: "sort", label: "Sort", fallback: "newest", options: USER_SORTS },
+      ]}
+    />
   );
 }
 

@@ -10,6 +10,8 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { SectionHead } from "../_components/stats";
 import { RecordCard, RecordHead, Field } from "../_components/record-list";
 import { Pagination } from "../_components/pagination";
+import { ActionNotice } from "../_components/notice";
+import { ReturnTo } from "../_components/return-to";
 import { PAGE_SIZE, pageRange, parsePage } from "@/lib/admin/pagination";
 
 export const dynamic = "force-dynamic";
@@ -25,17 +27,30 @@ type ReferralRow = {
   title: string;
   email: string;
   inventor_name: string;
+  status: string;
   attorney_requested_at: string;
   attorney_referred_at: string | null;
   evaluations: EvalEmbed | EvalEmbed[] | null;
   profiles: ProfileEmbed | ProfileEmbed[] | null;
 };
 
+/** A refund doesn't withdraw the request — the idea and the recommendation
+ * were real when the customer asked. It's a flag for the admin to weigh
+ * (goodwill refund vs. a dispute), not an automatic exclusion. */
+function RefundedTag() {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-paper/60 px-2.5 py-0.5 text-[11px] font-medium text-muted">
+      Refunded
+    </span>
+  );
+}
+
 /** Pending "Mark contacted" / handled "Undo" control for one request. */
 function ReferralAction({ r }: { r: ReferralRow }) {
   const contacted = Boolean(r.attorney_referred_at);
   return (
     <form action={setReferralContacted}>
+      <ReturnTo />
       <input type="hidden" name="submissionId" value={r.id} />
       <input type="hidden" name="contacted" value={contacted ? "false" : "true"} />
       <SubmitButton
@@ -77,9 +92,9 @@ function StatusChip({ contacted }: { contacted: boolean }) {
 export default async function AdminReferralsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; notice?: string }>;
 }) {
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, notice } = await searchParams;
   const page = parsePage(pageParam);
   const admin = createAdminClient();
   const { from, to } = pageRange(page);
@@ -90,7 +105,7 @@ export default async function AdminReferralsPage({
   const rowsQuery = admin
     .from("submissions")
     .select(
-      "id, title, email, inventor_name, attorney_requested_at, attorney_referred_at, evaluations(verdict), profiles(full_name)",
+      "id, title, email, inventor_name, status, attorney_requested_at, attorney_referred_at, evaluations(verdict), profiles(full_name)",
     )
     .not("attorney_requested_at", "is", null)
     .order("attorney_referred_at", { ascending: true, nullsFirst: true })
@@ -130,6 +145,8 @@ export default async function AdminReferralsPage({
           <span className="font-medium text-emerald-700">All caught up.</span>
         )}
       </p>
+
+      <ActionNotice notice={notice} />
 
       {rowsError && (
         <p className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
@@ -173,7 +190,10 @@ export default async function AdminReferralsPage({
                       </a>
                     </td>
                     <td className={td}>
-                      {evaluation ? <VerdictBadge verdict={evaluation.verdict} /> : "—"}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {evaluation ? <VerdictBadge verdict={evaluation.verdict} /> : "—"}
+                        {r.status === "refunded" && <RefundedTag />}
+                      </div>
                     </td>
                     <td className={`${td} whitespace-nowrap text-muted`}>
                       {formatDate(r.attorney_requested_at)}
@@ -226,6 +246,11 @@ export default async function AdminReferralsPage({
                   {evaluation ? <VerdictBadge verdict={evaluation.verdict} /> : "—"}
                 </Field>
                 <Field label="Requested">{formatDate(r.attorney_requested_at)}</Field>
+                {r.status === "refunded" && (
+                  <Field label="Payment">
+                    <RefundedTag />
+                  </Field>
+                )}
               </div>
               <div className="mt-3 border-t border-line pt-3">
                 <ReferralAction r={r} />

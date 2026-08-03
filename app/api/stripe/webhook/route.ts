@@ -4,7 +4,8 @@ import { getStripe, SITE } from "@/lib/stripe/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { inngest, submissionPaid } from "@/lib/inngest/client";
 import { sendEmail } from "@/lib/email/send";
-import { paymentConfirmationEmail } from "@/lib/email/templates";
+import { paymentConfirmationEmail, refundIssuedEmail } from "@/lib/email/templates";
+import { APP_INITIATED, isFullRefund } from "@/lib/stripe/refund";
 
 export const runtime = "nodejs";
 
@@ -88,6 +89,71 @@ export async function POST(req: NextRequest) {
           // e.g. the Inngest dev server isn't running — payment still succeeded.
           console.error("Failed to enqueue evaluation:", err);
         }
+      }
+    }
+  }
+
+  // A refund made by hand in the Stripe Dashboard is the only way money leaves
+  // the account without this app knowing. Without this branch the row stays
+  // "complete": revenue keeps counting the $49 as earned, the customer is never
+  // told, and their report stays downloadable.
+  if (event.type === "refund.created") {
+    const refund = event.data.object as Stripe.Refund;
+
+    // Refunds this app created have already updated the row and emailed the
+    // customer. Re-doing that here would send a second, differently-worded
+    // email about the same $49.
+    if (refund.metadata?.initiated_by === APP_INITIATED) {
+      return new Response("ignored (app-initiated)", { status: 200 });
+    }
+
+    // ponytail: we only accept card payments, whose refunds settle immediately,
+    // so "succeeded" covers every real case. Add a `refund.updated` branch if a
+    // delayed-notification method is ever enabled in buildCheckoutParams.
+    if (refund.status !== "succeeded") {
+      return new Response("ignored (refund not settled)", { status: 200 });
+    }
+    if (!isFullRefund(refund.amount)) {
+      console.error(
+        `[stripe-webhook] partial refund of ${refund.amount} on ${refund.payment_intent} — not marking the submission refunded`,
+      );
+      return new Response("ignored (partial refund)", { status: 200 });
+    }
+
+    const paymentIntentId =
+      typeof refund.payment_intent === "string"
+        ? refund.payment_intent
+        : (refund.payment_intent?.id ?? "");
+    if (!paymentIntentId) {
+      return new Response("ignored (no payment intent)", { status: 200 });
+    }
+
+    const admin = createAdminClient();
+    // Guarding on the current status makes this idempotent: a re-delivered
+    // event updates zero rows and so cannot email the customer twice. It also
+    // isolates us from the other three sites on this account — their payment
+    // intents match no row here.
+    const { data: updated, error: refundErr } = await admin
+      .from("submissions")
+      .update({ status: "refunded" })
+      .eq("stripe_payment_intent_id", paymentIntentId)
+      .neq("status", "refunded")
+      .select("title, email")
+      .maybeSingle();
+
+    if (refundErr) {
+      console.error(`[stripe-webhook] failed to mark ${paymentIntentId} refunded:`, refundErr);
+      return new Response("Database update failed", { status: 500 });
+    }
+
+    if (updated?.email) {
+      // The refund already happened at Stripe, so a mail failure must never
+      // become a non-200 — that would make Stripe retry an event whose
+      // database work is already done.
+      try {
+        await sendEmail(updated.email, refundIssuedEmail({ title: updated.title }));
+      } catch (err) {
+        console.error(`[stripe-webhook] refund email failed for ${paymentIntentId}:`, err);
       }
     }
   }

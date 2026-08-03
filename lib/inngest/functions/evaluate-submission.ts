@@ -2,13 +2,14 @@ import { NonRetriableError } from "inngest";
 import { inngest, submissionPaid } from "@/lib/inngest/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getChatClient, activeModel, resolveProvider } from "@/lib/ai/provider";
-import { getStripe } from "@/lib/stripe/client";
+import { createRefund } from "@/lib/stripe/refund";
 import { evaluateInvention } from "@/lib/evaluation/evaluate";
 import { toEvaluationRow } from "@/lib/evaluation/row";
 import { sendEmail } from "@/lib/email/send";
 import {
   evaluationFailedEmail,
   evaluationFailedNoRefundEmail,
+  refundFailedAdminEmail,
   reportReadyEmail,
 } from "@/lib/email/templates";
 import { type SubmissionInput } from "@/lib/types";
@@ -94,15 +95,19 @@ export const evaluateSubmission = inngest.createFunction(
         }
 
         let refunded = false;
+        // Why the refund didn't happen, for the admin alert below. Null once a
+        // refund succeeds, and null for a submission that was never charged.
+        let refundFailure: string | null = null;
         if (sub.stripe_payment_intent_id) {
           try {
-            await getStripe().refunds.create({ payment_intent: sub.stripe_payment_intent_id });
+            await createRefund(sub.stripe_payment_intent_id);
             refunded = true;
           } catch (err) {
             console.error(
               `[evaluate-submission] onFailure: Stripe refund failed for ${submissionId}:`,
               err,
             );
+            refundFailure = err instanceof Error ? err.message : String(err);
           }
         } else {
           console.error(
@@ -129,6 +134,29 @@ export const evaluateSubmission = inngest.createFunction(
           } catch (err) {
             console.error(
               `[evaluate-submission] onFailure: failure-notice email failed for ${submissionId}:`,
+              err,
+            );
+          }
+        }
+
+        // A customer who was charged, got no report, and whose automatic refund
+        // was refused is out $49 until a human intervenes — and the only thing
+        // that has happened so far is a line in a log nobody reads. Alert the
+        // admin inbox so someone can refund by hand.
+        if (refundFailure && process.env.GMAIL_USER) {
+          try {
+            await sendEmail(
+              process.env.GMAIL_USER,
+              refundFailedAdminEmail({
+                title: sub.title,
+                email: sub.email,
+                submissionId,
+                reason: refundFailure,
+              }),
+            );
+          } catch (err) {
+            console.error(
+              `[evaluate-submission] onFailure: admin refund alert failed for ${submissionId}:`,
               err,
             );
           }

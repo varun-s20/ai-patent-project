@@ -192,7 +192,7 @@ export default async function StatusPage({
             </ul>
 
             {(() => {
-              const rec = recommendationFor(evaluation.verdict as Verdict);
+              const rec = recommendationFor(evaluation.verdict as Verdict, evaluation.avg_score);
               const requested = Boolean(submission.attorney_requested_at);
               return (
                 <div className="mt-6 rounded-2xl border border-line bg-paper/50 p-5">
