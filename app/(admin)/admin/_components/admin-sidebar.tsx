@@ -10,6 +10,7 @@ import {
   Users,
   CreditCard,
   Scale,
+  Cursor,
   Plus,
   SignOut,
   ArrowUpRight,
@@ -22,6 +23,7 @@ export const NAV_LINKS: NavLink[] = [
   { href: "/admin", label: "Overview", icon: Gauge, exact: true },
   { href: "/admin/submissions", label: "Submissions", icon: Layers },
   { href: "/admin/referrals", label: "Referrals", icon: Scale },
+  { href: "/admin/leads", label: "Leads", icon: Cursor },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/payments", label: "Payments", icon: CreditCard },
 ];

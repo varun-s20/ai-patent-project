@@ -66,10 +66,20 @@ export function EyeOff(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/**
+ * Verified seal — a check inside a scalloped burst.
+ *
+ * The outline is a true 8-point star: sixteen vertices on 22.5° steps about
+ * (12,12), alternating radius 9 and 7. The previous path was drawn by hand with
+ * relative offsets that didn't close symmetrically, so the burst sat lopsided —
+ * most visible at the 12-14px sizes this icon actually renders at, where one
+ * lobe read as a dent. Every coordinate here is generated from the centre, so
+ * the shape is symmetric on both axes and both diagonals.
+ */
 export function Seal(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...base} {...props}>
-      <path d="M12 3l2.2 1.7 2.7-.4 1 2.6 2.3 1.5-.7 2.6.7 2.6-2.3 1.5-1 2.6-2.7-.4L12 21l-2.2-1.7-2.7.4-1-2.6L3.8 16l.7-2.6-.7-2.6 2.3-1.5 1-2.6 2.7.4z" />
+      <path d="M12 3 14.68 5.53 18.36 5.64 18.47 9.32 21 12 18.47 14.68 18.36 18.36 14.68 18.47 12 21 9.32 18.47 5.64 18.36 5.53 14.68 3 12 5.53 9.32 5.64 5.64 9.32 5.53Z" />
       <path d="m9 12 2 2 4-4" />
     </svg>
   );
