@@ -5,6 +5,7 @@ import { createLead, type LeadState } from "./actions";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { LEAD_STAGES, PATENT_TYPES } from "@/lib/types";
 import { FULL_NAME_MAX, HONEYPOT_FIELD, PHONE_MAX } from "@/lib/validation/lead";
+import { CountrySelect } from "@/components/ui/country-select";
 
 // Mirrors the field styling in components/submission-form.tsx, a touch denser:
 // five fields sit inside a card here, not down a full page. Restated rather
@@ -122,17 +123,21 @@ export function LeadForm({ attribution }: { attribution: Attribution }) {
 
       <div>
         <label htmlFor="l-phone" className={labelClass}>
-          Phone <span className="normal-case tracking-normal text-muted/70">- optional</span>
+          Phone
         </label>
-        <input
-          id="l-phone"
-          name="phone"
-          type="tel"
-          maxLength={PHONE_MAX}
-          autoComplete="tel"
-          placeholder="If you'd rather we call"
-          className={`mt-1.5 ${inputClass}`}
-        />
+        <div className="mt-1.5 flex gap-2">
+          <CountrySelect name="country" />
+          <input
+            id="l-phone"
+            name="phone"
+            type="tel"
+            required
+            maxLength={PHONE_MAX}
+            autoComplete="tel"
+            placeholder="Your number"
+            className={`min-w-0 flex-1 ${inputClass}`}
+          />
+        </div>
       </div>
 
       {/* Attribution — invisible to the visitor, and the reason we can tell

@@ -1,10 +1,12 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { parsePhoneNumber } from "libphonenumber-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/send";
 import { leadNotifyAdminEmail, leadWelcomeEmail } from "@/lib/email/templates";
 import { HONEYPOT_FIELD, leadSchema } from "@/lib/validation/lead";
+import type { CountryCode } from "@/lib/phone";
 
 export type LeadState = { error?: string };
 
@@ -23,7 +25,8 @@ export async function createLead(_prev: LeadState, formData: FormData): Promise<
   const parsed = leadSchema.safeParse({
     fullName: formData.get("fullName"),
     email: formData.get("email"),
-    phone: formData.get("phone") || undefined,
+    country: formData.get("country"),
+    phone: formData.get("phone"),
     stage: formData.get("stage"),
     patentType: formData.get("patentType"),
     utmSource: formData.get("utmSource") || undefined,
@@ -51,7 +54,11 @@ export async function createLead(_prev: LeadState, formData: FormData): Promise<
     {
       full_name: d.fullName,
       email,
-      phone: d.phone || null,
+      country: d.country,
+      // Stored in E.164 rather than whatever formatting the visitor typed —
+      // schema validation already confirmed it's a real number for this
+      // country, so the parse here can't fail.
+      phone: parsePhoneNumber(d.phone, d.country as CountryCode).format("E.164"),
       stage: d.stage,
       patent_type: d.patentType,
       utm_source: d.utmSource || null,

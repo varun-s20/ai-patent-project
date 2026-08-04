@@ -236,12 +236,22 @@ export default async function StatusPage({
 
             <div className="mt-7 flex flex-col gap-3">
               {reportUrl && (
-                <a href={reportUrl} className={`${buttonClasses("primary")} w-full`}>
+                <a
+                  href={reportUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`${buttonClasses("primary")} w-full`}
+                >
                   Download report (PDF)
                 </a>
               )}
               {certificateUrl && (
-                <a href={certificateUrl} className={`${buttonClasses("gold")} w-full`}>
+                <a
+                  href={certificateUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`${buttonClasses("gold")} w-full`}
+                >
                   Download certificate (PDF)
                 </a>
               )}
