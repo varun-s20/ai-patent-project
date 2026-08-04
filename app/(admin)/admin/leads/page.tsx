@@ -11,6 +11,7 @@ import { ActionNotice } from "../_components/notice";
 import { ReturnTo } from "../_components/return-to";
 import { PAGE_SIZE, pageRange, parsePage } from "@/lib/admin/pagination";
 import type { LeadStatus } from "@/lib/types";
+import { COUNTRIES, type CountryCode } from "@/lib/phone";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,8 @@ type LeadRow = {
   full_name: string;
   email: string;
   phone: string | null;
+  /** Null only for leads captured before 0013 added the column. */
+  country: string | null;
   stage: string;
   /** Null only for leads captured before 0012 added the column. */
   patent_type: string | null;
@@ -91,6 +94,12 @@ function contactHref(lead: LeadRow): string {
   return `mailto:${lead.email}?subject=${encodeURIComponent("Your invention idea evaluation")}`;
 }
 
+/** Flag for the lead's captured region, next to their phone number. Blank for
+ * leads written before 0013 added the column, or an unrecognised code. */
+function countryFlag(country: string | null): string {
+  return COUNTRIES.find((c) => c.iso2 === (country as CountryCode))?.flag ?? "";
+}
+
 export default async function AdminLeadsPage({
   searchParams,
 }: {
@@ -104,7 +113,7 @@ export default async function AdminLeadsPage({
   const rowsQuery = admin
     .from("leads")
     .select(
-      "id, full_name, email, phone, stage, patent_type, utm_source, utm_campaign, status, created_at",
+      "id, full_name, email, phone, country, stage, patent_type, utm_source, utm_campaign, status, created_at",
     )
     .order("created_at", { ascending: false })
     .range(from, to);
@@ -183,7 +192,7 @@ export default async function AdminLeadsPage({
                         href={`tel:${lead.phone}`}
                         className="block truncate text-xs text-muted hover:text-gold"
                       >
-                        {lead.phone}
+                        {countryFlag(lead.country)} {lead.phone}
                       </a>
                     )}
                   </td>
@@ -229,7 +238,7 @@ export default async function AdminLeadsPage({
               {lead.phone && (
                 <Field label="Phone">
                   <a href={`tel:${lead.phone}`} className="hover:text-gold">
-                    {lead.phone}
+                    {countryFlag(lead.country)} {lead.phone}
                   </a>
                 </Field>
               )}

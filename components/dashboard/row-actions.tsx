@@ -111,13 +111,23 @@ export function RowActions({
       {stack ? (
         <>
           {reportUrl && (
-            <a href={reportUrl} className={`${PRIMARY} ${GHOST} w-full`}>
+            <a
+              href={reportUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${PRIMARY} ${GHOST} w-full`}
+            >
               <FileText className="h-4 w-4" />
               Report
             </a>
           )}
           {certUrl && (
-            <a href={certUrl} className={`${PRIMARY} ${GHOST_GOLD} w-full`}>
+            <a
+              href={certUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${PRIMARY} ${GHOST_GOLD} w-full`}
+            >
               <Certificate className="h-4 w-4" />
               Certificate
             </a>
@@ -128,6 +138,8 @@ export function RowActions({
           {reportUrl && (
             <a
               href={reportUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label="Download report (PDF)"
               title="Download report (PDF)"
               className={`${TILE} ${GHOST}`}
@@ -138,6 +150,8 @@ export function RowActions({
           {certUrl && (
             <a
               href={certUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label="Download certificate (PDF)"
               title="Download certificate (PDF)"
               className={`${TILE} ${GHOST_GOLD}`}

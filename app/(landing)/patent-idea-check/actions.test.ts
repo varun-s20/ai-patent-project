@@ -54,6 +54,8 @@ function form(overrides: Record<string, string> = {}): FormData {
   const values: Record<string, string> = {
     fullName: "Ada Lovelace",
     email: "Ada@Example.com",
+    country: "US",
+    phone: "2015550123",
     stage: "Just an idea",
     patentType: "Utility patent",
     utm_campaign: "",
@@ -82,8 +84,10 @@ describe("createLead", () => {
     expect(payload.full_name).toBe("Ada Lovelace");
     expect(payload.stage).toBe("Just an idea");
     expect(payload.patent_type).toBe("Utility patent");
-    // Empty optional fields become null, never "".
-    expect(payload.phone).toBeNull();
+    expect(payload.country).toBe("US");
+    // Stored in E.164, not whatever formatting the visitor typed.
+    expect(payload.phone).toBe("+12015550123");
+    // Empty optional attribution fields become null, never "".
     expect(payload.utm_campaign).toBeNull();
     expect(options).toEqual({ onConflict: "email" });
     // Welcome email to the lead, notification to the admin.
@@ -117,6 +121,27 @@ describe("createLead", () => {
 
   it("rejects a patent type that isn't one of ours", async () => {
     const { state } = await run(form({ patentType: "Copyright" }));
+
+    expect(state?.error).toBeTruthy();
+    expect(upsert).not.toHaveBeenCalled();
+  });
+
+  it("rejects a missing phone number", async () => {
+    const { state } = await run(form({ phone: "" }));
+
+    expect(state?.error).toBeTruthy();
+    expect(upsert).not.toHaveBeenCalled();
+  });
+
+  it("rejects a country not in the list", async () => {
+    const { state } = await run(form({ country: "Narnia" }));
+
+    expect(state?.error).toBeTruthy();
+    expect(upsert).not.toHaveBeenCalled();
+  });
+
+  it("rejects a phone number that isn't valid for the selected country", async () => {
+    const { state } = await run(form({ phone: "123" }));
 
     expect(state?.error).toBeTruthy();
     expect(upsert).not.toHaveBeenCalled();

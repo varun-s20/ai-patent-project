@@ -1,3 +1,9 @@
+/* Imported before tailwindcss so its own `.fi{width:1.333333em}` sizing rule
+   loses the cascade tie to our `h-*`/`w-*` utilities, which compile in at
+   the @import "tailwindcss" point below. Country flags are SVG, not emoji —
+   Windows Chrome/Edge render flag emoji as literal two-letter text (no
+   colored regional-indicator glyphs shipped). */
+@import "flag-icons/css/flag-icons.min.css";
 @import "tailwindcss";
 
 @theme {
