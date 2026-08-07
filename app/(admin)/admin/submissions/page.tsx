@@ -14,9 +14,13 @@ import { ConfirmForm } from "../_components/confirm-form";
 import { Pagination } from "../_components/pagination";
 import { ActionNotice } from "../_components/notice";
 import { PAGE_SIZE, pageRange, parsePage } from "@/lib/admin/pagination";
+import { sanitizeSearch } from "@/lib/admin/search";
 import { REFUNDABLE_STATUSES, FAILABLE_STATUSES } from "@/lib/admin/submission-status";
 
 export const dynamic = "force-dynamic";
+
+/** Synthetic `?status=` value: draft rows that DO have a checkout session. */
+const UNCONFIRMED_CHECKOUT = "unconfirmed";
 
 const th = "px-5 py-3 text-left text-[10px] font-medium uppercase tracking-[0.15em] text-muted";
 const td = "px-5 py-3";
@@ -94,7 +98,7 @@ export default async function AdminSubmissionsPage({
     : "evaluations(avg_score, verdict)";
 
   const { from, to } = pageRange(page);
-  const safeQ = q ? q.replace(/[,()*\\]/g, " ").trim() : "";
+  const safeQ = sanitizeSearch(q);
 
   let subQuery = admin
     .from("submissions")
@@ -109,7 +113,16 @@ export default async function AdminSubmissionsPage({
     .from("submissions")
     .select(`id, ${evalEmbed}`, { count: "exact", head: true });
 
-  if (status && status !== "all") {
+  if (status === UNCONFIRMED_CHECKOUT) {
+    // Still `draft` but a Stripe Checkout session was created for it — the
+    // signature of a payment whose `checkout.session.completed` webhook never
+    // landed (wrong signing secret, missing endpoint, outage). The customer
+    // may have been charged and is sitting on "Confirming your payment…" with
+    // no report, and every other view files these under plain "draft" next to
+    // ideas nobody ever tried to pay for.
+    subQuery = subQuery.eq("status", "draft").not("stripe_session_id", "is", null);
+    countQuery = countQuery.eq("status", "draft").not("stripe_session_id", "is", null);
+  } else if (status && status !== "all") {
     subQuery = subQuery.eq("status", status);
     countQuery = countQuery.eq("status", status);
   }
@@ -165,7 +178,7 @@ export default async function AdminSubmissionsPage({
                     className="border-b border-line/60 transition-colors duration-150 last:border-0 hover:bg-paper/40"
                   >
                     <td className={`${td} max-w-[220px] truncate font-medium text-ink`}>
-                      <Link href={`/status/${s.id}`} className="hover:text-gold">
+                      <Link href={`/admin/submissions/${s.id}`} className="hover:text-gold">
                         {s.title}
                       </Link>
                     </td>
@@ -212,7 +225,7 @@ export default async function AdminSubmissionsPage({
             <RecordCard key={s.id}>
               <RecordHead>
                 <Link
-                  href={`/status/${s.id}`}
+                  href={`/admin/submissions/${s.id}`}
                   className="min-w-0 truncate font-medium text-ink hover:text-gold"
                 >
                   {s.title}

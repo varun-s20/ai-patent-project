@@ -1,7 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-
-const PROTECTED_PREFIXES = ["/submit", "/dashboard", "/settings", "/processing", "/admin"];
+import { needsAuth as isProtected } from "@/lib/auth/protected-routes";
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -34,11 +33,17 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const needsAuth = PROTECTED_PREFIXES.some((p) => request.nextUrl.pathname.startsWith(p));
+  const needsAuth = isProtected(request.nextUrl.pathname);
 
   if (needsAuth && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    // Come back to where they were headed instead of dumping everyone on
+    // /dashboard — a session that expires while someone reads their report
+    // used to lose the report. safeNextPath() re-checks this on the way out.
+    const next = `${request.nextUrl.pathname}${request.nextUrl.search}`;
+    url.search = "";
+    url.searchParams.set("next", next);
     return NextResponse.redirect(url);
   }
 

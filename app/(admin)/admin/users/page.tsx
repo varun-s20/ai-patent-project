@@ -12,6 +12,7 @@ import { UserFilters } from "../filters";
 import { Pagination } from "../_components/pagination";
 import { ActionNotice } from "../_components/notice";
 import { PAGE_SIZE, pageRange, parsePage } from "@/lib/admin/pagination";
+import { sanitizeSearch } from "@/lib/admin/search";
 
 export const dynamic = "force-dynamic";
 
@@ -140,9 +141,7 @@ export default async function AdminUsersPage({
   const page = parsePage(pageParam);
   const admin = createAdminClient();
   const { from, to } = pageRange(page);
-  // PostgREST parses these characters structurally inside `or(...)`, so a raw
-  // search string could otherwise break (or reshape) the filter.
-  const safeQ = q ? q.replace(/[,()*\\]/g, " ").trim() : "";
+  const safeQ = sanitizeSearch(q);
   const order = SORT_COLUMNS[sort ?? ""] ?? SORT_COLUMNS.newest;
 
   let rowQuery = admin

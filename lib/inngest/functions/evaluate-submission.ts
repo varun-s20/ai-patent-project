@@ -30,6 +30,18 @@ import {
   type RegistryCheck,
 } from "@/lib/registry/check";
 
+/**
+ * Failure message meaning "another run of this function already owns this
+ * submission" — NOT "this evaluation failed".
+ *
+ * Both arrive at onFailure, and the difference is money: a genuine failure
+ * must refund, while this one must not. The status alone can't tell them
+ * apart — a legitimately failing run is also sitting at `processing` when
+ * onFailure runs, so keying off the status would either refund an evaluation
+ * that is still succeeding, or stop refunding the ones that really failed.
+ */
+const ALREADY_CLAIMED = "submission already claimed by another run";
+
 export const evaluateSubmission = inngest.createFunction(
   {
     id: "evaluate-submission",
@@ -48,9 +60,19 @@ export const evaluateSubmission = inngest.createFunction(
     // Runs once all retries are exhausted: refund + mark + notify. Every step
     // is wrapped so a failure here never disappears silently — this is the
     // one path standing between a paying customer and a stuck submission.
-    onFailure: async ({ event }) => {
+    onFailure: async ({ event, error }) => {
       const submissionId = (event.data.event.data as { submissionId: string }).submissionId;
       const admin = createAdminClient();
+
+      // A run that failed ONLY because another run already holds the claim
+      // must not touch the money. The holder is still evaluating; refunding
+      // here would claw back the $49 for a report that then gets delivered.
+      if (error?.message?.includes(ALREADY_CLAIMED)) {
+        console.error(
+          `[evaluate-submission] onFailure skipped for ${submissionId}: ${ALREADY_CLAIMED}`,
+        );
+        return;
+      }
 
       try {
         // A transient read failure here (vs. a genuinely missing row) must
@@ -172,18 +194,22 @@ export const evaluateSubmission = inngest.createFunction(
     // Step 1 — payment gate + claim the job by moving paid -> processing.
     const submission = await step.run("mark-processing", async () => {
       const admin = createAdminClient();
+      // The claim IS the lock: gating the UPDATE on `status = 'paid'` lets
+      // exactly one run make that transition. SELECT-then-UPDATE left a window
+      // where two runs could both read "paid" and both proceed.
       const { data, error } = await admin
         .from("submissions")
-        .select("id, user_id, title, description, problem, industry, inventor_name, email, status")
+        .update({ status: "processing" })
         .eq("id", submissionId)
-        .single();
+        .eq("status", "paid")
+        .select("id, user_id, title, description, problem, industry, inventor_name, email")
+        .maybeSingle();
 
-      if (error || !data) throw new NonRetriableError("Submission not found");
-      if (data.status !== "paid") {
-        throw new NonRetriableError(`Submission not in paid state: ${data.status}`);
-      }
-
-      await admin.from("submissions").update({ status: "processing" }).eq("id", submissionId);
+      if (error) throw new Error(`Failed to claim submission: ${error.message}`);
+      // No row = the submission is missing, or is in some status other than
+      // `paid` — which for a re-delivered event means another run already owns
+      // it and is still working. onFailure keys off this exact message.
+      if (!data) throw new NonRetriableError(ALREADY_CLAIMED);
       return data;
     });
 

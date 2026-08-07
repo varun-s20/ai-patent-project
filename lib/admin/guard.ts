@@ -12,12 +12,22 @@ export async function requireAdmin(): Promise<string> {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  if (!(await isAdminUser(user.id))) redirect("/dashboard");
+  return user.id;
+}
+
+/**
+ * Whether a user is an admin, without redirecting. For surfaces that stay open
+ * to every logged-in user but show an admin more — the status page, which the
+ * admin console links to for other people's submissions.
+ */
+export async function isAdminUser(userId: string): Promise<boolean> {
+  const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
     .select("is_admin")
-    .eq("id", user.id)
+    .eq("id", userId)
     .single();
 
-  if (!profile?.is_admin) redirect("/dashboard");
-  return user.id;
+  return Boolean(profile?.is_admin);
 }
