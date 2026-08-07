@@ -89,6 +89,21 @@ export async function POST(req: NextRequest) {
           // e.g. the Inngest dev server isn't running — payment still succeeded.
           console.error("Failed to enqueue evaluation:", err);
         }
+        // Close the loop on the landing funnel: `converted` is a lead_status
+        // the console renders and setLeadContacted refuses to overwrite, but
+        // nothing ever set it — so a lead who paid stayed "new" forever and
+        // the admin would chase a customer who had already bought. Matched on
+        // the lowercased email, the same key the lead table dedupes on.
+        try {
+          const { error: leadErr } = await admin
+            .from("leads")
+            .update({ status: "converted" })
+            .eq("email", updated.email.toLowerCase())
+            .in("status", ["new", "contacted"]);
+          if (leadErr) throw leadErr;
+        } catch (err) {
+          console.error(`[stripe-webhook] could not mark lead converted for ${submissionId}:`, err);
+        }
       }
     }
   }

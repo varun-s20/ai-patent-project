@@ -30,6 +30,22 @@ export async function updateProfile(formData: FormData) {
     redirect(`/account?error=${encodeURIComponent(GENERIC_ERROR)}`);
   }
 
+  // auth.users metadata is only what THIS page reads back. `profiles.full_name`
+  // is the copy every other surface reads — the admin Users console, the user
+  // column of the submissions/payments/referrals tables, and the admin topbar -
+  // and the on_auth_user_created trigger (0001_init.sql) only ever populates it
+  // at signup. Without this write a rename is invisible everywhere but here.
+  // 0004_rls_hardening.sql's protect_profile_fields trigger permits exactly
+  // this one column from a user's own session.
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .update({ full_name: fullName })
+    .eq("id", user.id);
+  if (profileError) {
+    console.error("[account] updateProfile: profiles row not updated:", profileError);
+    redirect(`/account?error=${encodeURIComponent(GENERIC_ERROR)}`);
+  }
+
   redirect("/account?saved=profile");
 }
 

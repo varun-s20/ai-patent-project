@@ -1,11 +1,13 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isAdminUser } from "@/lib/admin/guard";
 import { DIMENSIONS } from "@/lib/types";
 import { Card } from "@/components/ui/card";
 import { VerdictBadge } from "@/components/ui/verdict-badge";
 import { Eyebrow } from "@/components/ui/badge";
 import { buttonClasses } from "@/components/ui/button";
 import { AutoDownload } from "./auto-download";
+import { StatusPoller } from "./status-poller";
 import { recommendationFor } from "@/lib/report/recommendation";
 import { requestAttorneyReferral } from "./actions";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -39,25 +41,33 @@ export default async function StatusPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: submission } = await supabase
+  // Every admin-console listing (submissions, payments, referrals, overview)
+  // links here, so an admin must be able to open a submission they don't own.
+  // RLS already grants them the row (`user_id = auth.uid() or is_admin()`,
+  // 0001_init.sql) — it was this app-level owner filter, and only this filter,
+  // that turned every one of those links into a 404. Keep it for everyone else
+  // rather than leaning on RLS alone.
+  const viewerIsAdmin = await isAdminUser(user.id);
+  let query = supabase
     .from("submissions")
-    .select("id, title, status, stripe_session_id, attorney_requested_at")
-    .eq("id", id)
-    .eq("user_id", user.id)
-    .single();
+    .select("id, user_id, title, status, stripe_session_id, attorney_requested_at")
+    .eq("id", id);
+  if (!viewerIsAdmin) query = query.eq("user_id", user.id);
+  const { data: submission } = await query.single();
 
   if (!submission) notFound();
 
+  const isOwner = submission.user_id === user.id;
+
   // A submission that never even started checkout (no Stripe session at all)
-  // must not sit on an infinite spinner — send it to checkout. But one that
-  // DID start checkout and is still "draft" here is very likely just waiting
-  // on the async webhook (Stripe already redirected the browser here) —
-  // bouncing it to /pay would show "Pay & Evaluate" again to someone who
-  // already paid. Treat that case as "confirming payment" instead.
-  if (submission.status === "draft" && !submission.stripe_session_id) {
+  // must not sit on an infinite spinner — send its owner to checkout. An admin
+  // is NOT sent there: /pay is owner-scoped, so bouncing them would just move
+  // the 404 one route over. They get the unpaid-draft notice below instead.
+  if (isOwner && submission.status === "draft" && !submission.stripe_session_id) {
     redirect(`/pay/${id}`);
   }
   const confirmingPayment = submission.status === "draft" && Boolean(submission.stripe_session_id);
+  const unpaidDraft = submission.status === "draft" && !submission.stripe_session_id;
 
   const processing = confirmingPayment || submission.status === "paid" || submission.status === "processing";
   const refunded = submission.status === "refunded";
@@ -109,7 +119,13 @@ export default async function StatusPage({
 
   return (
     <main className="mx-auto w-full max-w-lg px-6 py-12">
-      {processing && <meta httpEquiv="refresh" content="5" />}
+      {/* No-JS fallback only. With JS, StatusPoller below drives the refresh
+          and can actually stop; a meta refresh never can. */}
+      {processing && (
+        <noscript>
+          <meta httpEquiv="refresh" content="5" />
+        </noscript>
+      )}
 
       <Eyebrow>Describe › Pay › Receive</Eyebrow>
       <h1 className="mt-5 font-display text-4xl tracking-tight text-ink">{submission.title}</h1>
@@ -128,6 +144,32 @@ export default async function StatusPage({
                   : "This usually takes 2–5 minutes. The page refreshes automatically."}
               </p>
             </div>
+          </div>
+        )}
+
+        {/* Both waits are bounded. "Confirming" depends on the Stripe webhook,
+            which either arrives in seconds or (misconfigured endpoint, wrong
+            signing secret) never arrives at all — so 90s is already generous.
+            Evaluation runs two model calls with retries, so it gets 10 min. */}
+        {processing &&
+          (confirmingPayment ? (
+            <StatusPoller
+              timeoutMs={90_000}
+              message={`We haven't had confirmation of your payment from Stripe yet. If you were charged, contact support and quote submission ${id} — we'll sort it out. Nothing further is needed from you here.`}
+            />
+          ) : (
+            <StatusPoller
+              timeoutMs={600_000}
+              message={`This is taking longer than usual. Your evaluation is still queued — you'll get an email the moment it's ready. If you hear nothing, contact support and quote submission ${id}.`}
+            />
+          ))}
+
+        {/* Only an admin ever reaches this — the owner is redirected to /pay
+            above. Without it their card would render empty. */}
+        {unpaidDraft && (
+          <div className="rounded-2xl border border-line bg-paper/50 p-4 text-sm text-muted">
+            This idea is still an unpaid draft — no payment has been started, so there is no
+            evaluation to show.
           </div>
         )}
 
@@ -203,7 +245,17 @@ export default async function StatusPage({
                   <p className="mt-1 text-sm text-muted">{rec.body}</p>
                   {rec.offerAttorney && (
                     <div className="mt-4">
-                      {requested ? (
+                      {/* requestAttorneyReferral is owner-scoped, so an admin
+                          viewing someone else's record would click a button
+                          that updates nothing and reports nothing. Show them
+                          the state instead of a dead control. */}
+                      {!isOwner ? (
+                        <p className="text-sm text-muted">
+                          {requested
+                            ? "This customer has asked for a patent-attorney referral."
+                            : "This customer has not asked for a patent-attorney referral."}
+                        </p>
+                      ) : requested ? (
                         <p className="text-sm font-medium text-ink">
                           Request received — we&apos;ll be in touch by email with a patent-attorney
                           recommendation.

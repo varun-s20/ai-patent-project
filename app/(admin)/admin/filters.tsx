@@ -7,6 +7,10 @@ import { statusLabel } from "@/lib/ui/status";
 import { verdictLabel } from "@/lib/ui/verdict";
 
 const STATUSES = ["all", "draft", "paid", "processing", "complete", "failed", "refunded"] as const;
+/** Not a real status — see UNCONFIRMED_CHECKOUT in admin/submissions/page.tsx.
+ * These rows read as plain "draft" everywhere else, which is exactly the
+ * problem: a customer may already have been charged for one. */
+const UNCONFIRMED_OPTION = ["unconfirmed", "Checkout unconfirmed"] as const;
 const VERDICTS = ["all", "PROCEED_NOW", "REFINE_FIRST", "DO_NOT_PATENT"] as const;
 const SORTS = [
   ["newest", "Newest first"],
@@ -169,7 +173,10 @@ export function AdminFilters() {
           key: "status",
           label: "Status",
           fallback: "all",
-          options: STATUSES.map((s) => [s, s === "all" ? "All statuses" : statusLabel(s)]),
+          options: [
+            ...STATUSES.map((s) => [s, s === "all" ? "All statuses" : statusLabel(s)] as const),
+            UNCONFIRMED_OPTION,
+          ],
         },
         {
           key: "verdict",

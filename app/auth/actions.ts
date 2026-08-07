@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { authRedirectBase } from "@/lib/auth/redirect-base";
+import { safeNextPath } from "@/lib/auth/protected-routes";
 import { createClient } from "@/lib/supabase/server";
 import { validatePassword, PASSWORD_ERROR } from "@/lib/validation/password";
 import { isValidEmail, EMAIL_ERROR } from "@/lib/validation/email";
@@ -56,6 +57,9 @@ export async function signUp(formData: FormData) {
 export async function signIn(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  // Where the middleware bounced them from. Attacker-controlled (it rides in
+  // the URL), so it is validated back down to an in-app path or /dashboard.
+  const next = safeNextPath(formData.get("next") as string | null);
   const supabase = await createClient();
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -81,7 +85,7 @@ export async function signIn(formData: FormData) {
     redirect(`/login?error=${encodeURIComponent("Your account has been disabled.")}`);
   }
 
-  redirect("/dashboard");
+  redirect(next);
 }
 
 export async function signOut() {

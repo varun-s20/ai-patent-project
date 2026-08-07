@@ -233,11 +233,13 @@ export function AdminAlert({
   inFlight,
   refunded,
   pendingReferrals = 0,
+  drafts = 0,
 }: {
   failed: number;
   inFlight: number;
   refunded: number;
   pendingReferrals?: number;
+  drafts?: number;
 }) {
   let tone: "warn" | "info" | "ok";
   let title: string;
@@ -259,6 +261,15 @@ export function AdminAlert({
     title = "Evaluations in progress";
     body = `${inFlight} ${inFlight === 1 ? "submission is" : "submissions are"} paid or processing.`;
     href = "/admin/submissions?status=processing";
+  } else if (drafts > 0) {
+    // Deliberately ranked above "all clear": an unpaid draft is someone who
+    // described an invention and stopped, which is the most engageable state
+    // in the funnel. Calling that "nothing needs attention" is what let the
+    // console read as idle while the warmest leads sat unworked.
+    tone = "info";
+    title = "Ideas awaiting a nudge";
+    body = `${drafts} ${drafts === 1 ? "idea was" : "ideas were"} described but never paid for. Open one, read the invention, and reach out about it.`;
+    href = "/admin/submissions?status=draft";
   } else {
     tone = "ok";
     title = "All clear";

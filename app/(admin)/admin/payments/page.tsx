@@ -111,7 +111,7 @@ export default async function AdminPaymentsPage({
                         <span className="block text-xs text-muted">{r.email}</span>
                       </td>
                       <td className={`${td} max-w-[220px] truncate font-medium text-ink`}>
-                        <Link href={`/status/${r.id}`} className="hover:text-gold">
+                        <Link href={`/admin/submissions/${r.id}`} className="hover:text-gold">
                           {r.title}
                         </Link>
                       </td>
@@ -145,7 +145,7 @@ export default async function AdminPaymentsPage({
               <RecordCard key={r.id}>
                 <RecordHead>
                   <Link
-                    href={`/status/${r.id}`}
+                    href={`/admin/submissions/${r.id}`}
                     className="min-w-0 truncate font-medium text-ink hover:text-gold"
                   >
                     {r.title}

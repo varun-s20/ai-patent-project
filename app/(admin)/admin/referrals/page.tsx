@@ -179,7 +179,7 @@ export default async function AdminReferralsPage({
                     className="border-b border-line/60 transition-colors duration-150 last:border-0 hover:bg-paper/40"
                   >
                     <td className={`${td} max-w-[220px] truncate font-medium text-ink`}>
-                      <Link href={`/status/${r.id}`} className="hover:text-gold">
+                      <Link href={`/admin/submissions/${r.id}`} className="hover:text-gold">
                         {r.title}
                       </Link>
                     </td>
@@ -228,7 +228,7 @@ export default async function AdminReferralsPage({
             <RecordCard key={r.id}>
               <RecordHead>
                 <Link
-                  href={`/status/${r.id}`}
+                  href={`/admin/submissions/${r.id}`}
                   className="min-w-0 truncate font-medium text-ink hover:text-gold"
                 >
                   {r.title}

@@ -35,7 +35,7 @@ type RecentRow = {
 export default async function AdminOverviewPage() {
   const admin = createAdminClient();
 
-  const [total, paid, refunded, completed, failed, inFlight, users, pendingReferrals] =
+  const [total, paid, refunded, completed, failed, inFlight, users, pendingReferrals, drafts] =
     await Promise.all([
       admin.from("submissions").select("id", { count: "exact", head: true }),
       admin.from("submissions").select("id", { count: "exact", head: true }).in("status", [...PAID_STATUSES]),
@@ -49,6 +49,9 @@ export default async function AdminOverviewPage() {
         .select("id", { count: "exact", head: true })
         .not("attorney_requested_at", "is", null)
         .is("attorney_referred_at", null),
+      // Ideas described but never paid for. Not an error state — the warmest
+      // list in the console, and nothing used to surface it.
+      admin.from("submissions").select("id", { count: "exact", head: true }).eq("status", "draft"),
     ]);
 
   const revenue = computeRevenue({
@@ -77,6 +80,7 @@ export default async function AdminOverviewPage() {
     inFlight,
     users,
     pendingReferrals,
+    drafts,
   ].find((r) => r.error)?.error;
 
   return (
@@ -157,7 +161,7 @@ export default async function AdminOverviewPage() {
                           {regId}
                         </td>
                         <td className={`${td} max-w-[220px] truncate font-medium text-ink`}>
-                          <Link href={`/status/${s.id}`} className="hover:text-gold">
+                          <Link href={`/admin/submissions/${s.id}`} className="hover:text-gold">
                             {s.title}
                           </Link>
                           {evaluation && (
@@ -202,6 +206,7 @@ export default async function AdminOverviewPage() {
             inFlight={inFlightCount}
             refunded={revenue.refundedCount}
             pendingReferrals={pendingReferrals.count ?? 0}
+            drafts={drafts.count ?? 0}
           />
         </aside>
       </div>
