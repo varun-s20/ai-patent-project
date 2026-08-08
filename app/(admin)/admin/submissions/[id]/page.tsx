@@ -192,7 +192,10 @@ export default async function AdminSubmissionDetailPage({
           ← All submissions
         </Link>
         <div className="mt-3 flex flex-wrap items-center gap-3">
-          <h1 className="font-display text-3xl tracking-tight text-ink sm:text-4xl">
+          {/* min-w-0: a flex item's automatic minimum size is its min-content
+              width, which `overflow-wrap: break-word` does not shrink — without
+              this a one-word title still pushes the header past the shell. */}
+          <h1 className="min-w-0 font-display text-3xl tracking-tight text-ink sm:text-4xl">
             {submission.title}
           </h1>
           <StatusBadge status={submission.status} />

@@ -40,6 +40,13 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  /* User-supplied text (idea titles, descriptions, pasted URLs) can be one
+     unbroken run of characters with no space to break at — "aaaa…" would
+     otherwise run straight out of its card. Inherited, so every surface gets
+     it; `truncate` / `whitespace-nowrap` still win where they're applied.
+     ponytail: `break-word`, not `anywhere` — `anywhere` also shrinks
+     min-content, which would let button and badge labels split mid-word. */
+  overflow-wrap: break-word;
 }
 
 /* Plaid-style full-bleed section gradients — soft, navy/gold, never garish.
