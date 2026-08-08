@@ -79,8 +79,10 @@ export async function generateMetadata({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-4 border-b border-line py-3">
-      <dt className="text-muted">{label}</dt>
-      <dd className="text-right font-medium text-ink">{value}</dd>
+      <dt className="shrink-0 text-muted">{label}</dt>
+      {/* min-w-0 so a long single-word invention title wraps inside the
+          certificate frame instead of setting the row's min-content width. */}
+      <dd className="min-w-0 text-right font-medium text-ink">{value}</dd>
     </div>
   );
 }
