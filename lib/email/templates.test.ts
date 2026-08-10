@@ -6,6 +6,7 @@ import {
   evaluationFailedNoRefundEmail,
   refundIssuedEmail,
   refundFailedAdminEmail,
+  accountWelcomeEmail,
 } from "./templates";
 
 describe("reportReadyEmail", () => {
@@ -136,5 +137,68 @@ describe("refundFailedAdminEmail", () => {
     const email = refundFailedAdminEmail({ ...args, title: "<script>", reason: "<img onerror>" });
     expect(email.html).not.toContain("<script>");
     expect(email.html).not.toContain("<img onerror>");
+  });
+});
+
+describe("accountWelcomeEmail", () => {
+  const original = process.env.NEXT_PUBLIC_BASE_URL;
+  afterEach(() => {
+    if (original === undefined) delete process.env.NEXT_PUBLIC_BASE_URL;
+    else process.env.NEXT_PUBLIC_BASE_URL = original;
+  });
+
+  it("points at the dashboard, not the old lead-form /submit link", () => {
+    process.env.NEXT_PUBLIC_BASE_URL = "https://registry.example.com";
+    const email = accountWelcomeEmail({ fullName: "Priya Shah" });
+    expect(email.html).toContain("/dashboard");
+    expect(email.text).toContain("/dashboard");
+    expect(email.html).not.toContain("/submit");
+  });
+
+  it("escapes html in the name", () => {
+    process.env.NEXT_PUBLIC_BASE_URL = "https://registry.example.com";
+    const email = accountWelcomeEmail({ fullName: "<script>" });
+    expect(email.html).not.toContain("<script>");
+  });
+
+  it("throws instead of silently building a broken relative link", () => {
+    delete process.env.NEXT_PUBLIC_BASE_URL;
+    expect(() => accountWelcomeEmail({ fullName: "Priya Shah" })).toThrow();
+  });
+});
+
+describe("claim links for a customer with no account yet", () => {
+  // Same restore pattern as the reportReadyEmail describe above — siteBase()
+  // requires NEXT_PUBLIC_BASE_URL, and it isn't set globally in the test env.
+  const original = process.env.NEXT_PUBLIC_BASE_URL;
+  afterEach(() => {
+    if (original === undefined) delete process.env.NEXT_PUBLIC_BASE_URL;
+    else process.env.NEXT_PUBLIC_BASE_URL = original;
+  });
+
+  it("tells an unclaimed payer to create an account, with the token", () => {
+    process.env.NEXT_PUBLIC_BASE_URL = "https://registry.example.com";
+    const mail = paymentConfirmationEmail({ title: "Drip valve", claimToken: "tok123" });
+    expect(mail.html).toContain("/register?claim=tok123");
+    expect(mail.text).toContain("/register?claim=tok123");
+    expect(mail.text).toMatch(/create your account/i);
+  });
+
+  it("leaves the email unchanged for someone who already has an account", () => {
+    const mail = paymentConfirmationEmail({ title: "Drip valve" });
+    expect(mail.html).not.toContain("claim=");
+    expect(mail.text).not.toMatch(/create your account/i);
+  });
+
+  it("points the report email at the claim page rather than the gated status page", () => {
+    process.env.NEXT_PUBLIC_BASE_URL = "https://registry.example.com";
+    const mail = reportReadyEmail({
+      title: "Drip valve",
+      submissionId: "sub-1",
+      hasCertificate: true,
+      claimToken: "tok123",
+    });
+    expect(mail.html).toContain("/register?claim=tok123");
+    expect(mail.html).not.toContain("/status/sub-1");
   });
 });

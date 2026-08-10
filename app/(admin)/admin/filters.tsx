@@ -7,10 +7,14 @@ import { statusLabel } from "@/lib/ui/status";
 import { verdictLabel } from "@/lib/ui/verdict";
 
 const STATUSES = ["all", "draft", "paid", "processing", "complete", "failed", "refunded"] as const;
-/** Not a real status — see UNCONFIRMED_CHECKOUT in admin/submissions/page.tsx.
- * These rows read as plain "draft" everywhere else, which is exactly the
- * problem: a customer may already have been charged for one. */
-const UNCONFIRMED_OPTION = ["unconfirmed", "Checkout unconfirmed"] as const;
+/** Not a real status — see UNCLAIMED in admin/submissions/page.tsx. Every
+ * other status option is scoped to owned rows only; this is the one way to
+ * see the unowned ones this filter bar otherwise hides. */
+const UNCLAIMED_OPTION = ["unclaimed", "Unclaimed"] as const;
+/** Not a real status — see UNCLAIMED_PAID in admin/submissions/page.tsx. The
+ * subset of "unclaimed" that already paid: the customer an operator actually
+ * needs to find. */
+const UNCLAIMED_PAID_OPTION = ["unclaimed-paid", "Paid, unclaimed"] as const;
 const VERDICTS = ["all", "PROCEED_NOW", "REFINE_FIRST", "DO_NOT_PATENT"] as const;
 const SORTS = [
   ["newest", "Newest first"],
@@ -175,7 +179,8 @@ export function AdminFilters() {
           fallback: "all",
           options: [
             ...STATUSES.map((s) => [s, s === "all" ? "All statuses" : statusLabel(s)] as const),
-            UNCONFIRMED_OPTION,
+            UNCLAIMED_OPTION,
+            UNCLAIMED_PAID_OPTION,
           ],
         },
         {

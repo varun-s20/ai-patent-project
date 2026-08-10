@@ -1,5 +1,6 @@
 import { signIn } from "@/app/auth/actions";
 import { safeNextPath } from "@/lib/auth/protected-routes";
+import { lookupClaim } from "@/lib/claim/lookup";
 import { Patent } from "@/components/ui/icons";
 import { PasswordField } from "@/components/ui/password-field";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -17,18 +18,24 @@ const ASSURANCES = [
 const NOTICES: Record<string, string> = {
   confirmed: "Your email is confirmed — please sign in.",
   reset: "Password updated — please sign in with your new password.",
+  claim: "You already have an account with this email — log in and your new evaluation will be waiting.",
+  // Paid while signed out, with an email that already had an account: the
+  // submission is already theirs, so there is nothing to claim — only to
+  // sign in and look at.
+  paid: "Payment received — log in to open your report and certificate.",
 };
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; notice?: string; next?: string }>;
+  searchParams: Promise<{ error?: string; notice?: string; next?: string; claim?: string }>;
 }) {
-  const { error, notice, next } = await searchParams;
+  const { error, notice, next, claim } = await searchParams;
   const noticeMessage = notice ? NOTICES[notice] : undefined;
   // Set by the middleware when it bounced an unauthenticated request; carried
   // through the form so signIn can land them back where they were headed.
   const nextPath = safeNextPath(next);
+  const claimed = await lookupClaim(claim);
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 items-center px-6 py-16">
       <div className="grid w-full overflow-hidden rounded-[1.9rem] bg-card ring-1 ring-ink/[0.06] shadow-[inset_0_1px_1px_rgba(255,255,255,0.75),0_0_0_6px_var(--color-paper),0_0_0_7px_rgba(22,29,43,0.05),0_30px_70px_-40px_rgba(20,25,40,0.4)] lg:grid-cols-2">
@@ -98,7 +105,17 @@ export default async function LoginPage({
 
           <form action={signIn} className="mt-6 space-y-4">
             <input type="hidden" name="next" value={nextPath} />
-            <input name="email" type="email" placeholder="Email" required className={inputClass} />
+            {claim && <input type="hidden" name="claim" value={claim} />}
+            <input
+              name="email"
+              type="email"
+              placeholder="Email"
+              required
+              defaultValue={claimed?.email}
+              readOnly={Boolean(claimed)}
+              aria-readonly={Boolean(claimed)}
+              className={`${inputClass} ${claimed ? "bg-paper text-muted" : ""}`}
+            />
             <div>
               <PasswordField autoComplete="current-password" className={inputClass} />
               <div className="mt-2 text-right">

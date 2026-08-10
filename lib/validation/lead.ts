@@ -16,7 +16,8 @@ export const HONEYPOT_FIELD = "company_website";
  * trusted — long enough for a real campaign name, short enough that nobody can
  * stuff the admin console (or a column) with a novel. */
 const ATTRIBUTION_MAX = 200;
-const attribution = z.string().trim().max(ATTRIBUTION_MAX).optional();
+/** Shared with the public evaluation form, which posts the same UTM set. */
+export const attributionField = z.string().trim().max(ATTRIBUTION_MAX).optional();
 
 export const leadSchema = z
   .object({
@@ -38,13 +39,13 @@ export const leadSchema = z
     // the form: the shorter the form, the more leads, and the follow-up email can
     // ask anything a five-field form had to leave out.
     patentType: z.enum(PATENT_TYPES),
-    utmSource: attribution,
-    utmMedium: attribution,
-    utmCampaign: attribution,
-    utmTerm: attribution,
-    utmContent: attribution,
-    referrer: attribution,
-    landingPath: attribution,
+    utmSource: attributionField,
+    utmMedium: attributionField,
+    utmCampaign: attributionField,
+    utmTerm: attributionField,
+    utmContent: attributionField,
+    referrer: attributionField,
+    landingPath: attributionField,
   })
   // Real per-region validity, not just "non-empty" — a country + phone that
   // don't actually match is worse than no phone at all for a follow-up call.

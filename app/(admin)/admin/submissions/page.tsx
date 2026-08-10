@@ -19,8 +19,35 @@ import { REFUNDABLE_STATUSES, FAILABLE_STATUSES } from "@/lib/admin/submission-s
 
 export const dynamic = "force-dynamic";
 
-/** Synthetic `?status=` value: draft rows that DO have a checkout session. */
-const UNCONFIRMED_CHECKOUT = "unconfirmed";
+/**
+ * What "draft" means, since it is the status this console sees most:
+ * a submission row exists and `checkout.session.completed` has not landed for
+ * it. Nothing more. The public form writes one on every submit and immediately
+ * opens Stripe, so a draft is an idea that was described and not paid for —
+ * usually an abandoned checkout, occasionally a payment whose webhook never
+ * arrived. (The two are indistinguishable from the row alone: every draft now
+ * carries a `stripe_session_id`, which is why the old "checkout unconfirmed"
+ * filter — draft AND has-a-session — matched practically every draft and was
+ * dropped. Telling them apart needs Stripe's own payment_status.)
+ *
+ * Ownership is a separate axis: a draft has a `user_id` when the submitter was
+ * signed in or used the email of an existing account, and none at all when
+ * they are new here. Both are drafts, so this view must not scope to owned
+ * rows the way the paid statuses do.
+ */
+const DRAFT = "draft";
+
+/** Synthetic `?status=` value: paid-first ideas with no account behind them
+ * yet. Excluded from every other view — a public form writes one of these on
+ * every submit, and they'd otherwise bury the paid work this console is for.
+ * They are already followed up as leads, with the idea attached. */
+const UNCLAIMED = "unclaimed";
+
+/** Synthetic `?status=` value: the subset of UNCLAIMED that already paid — a
+ * customer who spent $49 and never made an account. That is the one support
+ * query the operator actually needs; without it, a paid-but-unclaimed
+ * customer is buried among every unpaid form fill under plain UNCLAIMED. */
+const UNCLAIMED_PAID = "unclaimed-paid";
 
 const th = "px-5 py-3 text-left text-[10px] font-medium uppercase tracking-[0.15em] text-muted";
 const td = "px-5 py-3";
@@ -71,7 +98,7 @@ type SubRow = {
   status: string;
   email: string;
   created_at: string;
-  user_id: string;
+  user_id: string | null;
   evaluations: EvalEmbed | EvalEmbed[] | null;
   profiles: ProfileEmbed | ProfileEmbed[] | null;
 };
@@ -113,18 +140,28 @@ export default async function AdminSubmissionsPage({
     .from("submissions")
     .select(`id, ${evalEmbed}`, { count: "exact", head: true });
 
-  if (status === UNCONFIRMED_CHECKOUT) {
-    // Still `draft` but a Stripe Checkout session was created for it — the
-    // signature of a payment whose `checkout.session.completed` webhook never
-    // landed (wrong signing secret, missing endpoint, outage). The customer
-    // may have been charged and is sitting on "Confirming your payment…" with
-    // no report, and every other view files these under plain "draft" next to
-    // ideas nobody ever tried to pay for.
-    subQuery = subQuery.eq("status", "draft").not("stripe_session_id", "is", null);
-    countQuery = countQuery.eq("status", "draft").not("stripe_session_id", "is", null);
-  } else if (status && status !== "all") {
-    subQuery = subQuery.eq("status", status);
-    countQuery = countQuery.eq("status", status);
+  if (status === DRAFT) {
+    // Owned and unowned together, unlike every other status. Most drafts have
+    // no account behind them, so the owned-rows scoping below hid nearly all
+    // of them — while the overview's "ideas awaiting a nudge" card counted
+    // drafts globally and linked straight here. The count said 40 and the
+    // list said none.
+    subQuery = subQuery.eq("status", DRAFT);
+    countQuery = countQuery.eq("status", DRAFT);
+  } else if (status === UNCLAIMED_PAID) {
+    subQuery = subQuery.is("user_id", null).in("status", ["paid", "processing", "complete"]);
+    countQuery = countQuery.is("user_id", null).in("status", ["paid", "processing", "complete"]);
+  } else if (status === UNCLAIMED) {
+    subQuery = subQuery.is("user_id", null);
+    countQuery = countQuery.is("user_id", null);
+  } else {
+    // Every other view is about work that has an owner.
+    subQuery = subQuery.not("user_id", "is", null);
+    countQuery = countQuery.not("user_id", "is", null);
+    if (status && status !== "all") {
+      subQuery = subQuery.eq("status", status);
+      countQuery = countQuery.eq("status", status);
+    }
   }
   if (verdict && verdict !== "all") {
     subQuery = subQuery.eq("evaluations.verdict", verdict);

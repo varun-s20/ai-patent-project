@@ -26,9 +26,15 @@ type LeadRow = {
   phone: string | null;
   /** Null only for leads captured before 0013 added the column. */
   country: string | null;
-  stage: string;
+  /** Null for leads captured after 0014 dropped the qualifier from the form. */
+  stage: string | null;
   /** Null only for leads captured before 0012 added the column. */
   patent_type: string | null;
+  /** The idea itself. Null only for leads captured before 0014 — every lead
+   * from the payment-first form carries one, which is what makes a follow-up
+   * able to name the invention instead of "your recent enquiry". */
+  title: string | null;
+  description: string | null;
   utm_source: string | null;
   utm_campaign: string | null;
   status: LeadStatus;
@@ -113,7 +119,7 @@ export default async function AdminLeadsPage({
   const rowsQuery = admin
     .from("leads")
     .select(
-      "id, full_name, email, phone, country, stage, patent_type, utm_source, utm_campaign, status, created_at",
+      "id, full_name, email, phone, country, stage, patent_type, title, description, utm_source, utm_campaign, status, created_at",
     )
     .order("created_at", { ascending: false })
     .range(from, to);
@@ -163,8 +169,7 @@ export default async function AdminLeadsPage({
               <tr>
                 <th className={th}>Received</th>
                 <th className={th}>Lead</th>
-                <th className={th}>Wants</th>
-                <th className={th}>Stage</th>
+                <th className={th}>Idea</th>
                 <th className={th}>Source</th>
                 <th className={th}>Status</th>
                 <th className={th}>Action</th>
@@ -196,8 +201,20 @@ export default async function AdminLeadsPage({
                       </a>
                     )}
                   </td>
-                  <td className={`${td} text-ink-2`}>{lead.patent_type ?? "—"}</td>
-                  <td className={`${td} text-ink-2`}>{lead.stage}</td>
+                  <td className={`${td} max-w-[280px] text-ink-2`}>
+                    {lead.title ? (
+                      <>
+                        <span className="block truncate font-medium text-ink">{lead.title}</span>
+                        {lead.description && (
+                          <span className="line-clamp-2 text-[12px] text-muted">
+                            {lead.description}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
                   <td className={`${td} max-w-[200px] truncate text-muted`}>
                     {sourceLabel(lead)}
                   </td>
@@ -211,7 +228,7 @@ export default async function AdminLeadsPage({
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-5 py-8 text-center text-muted">
+                  <td colSpan={6} className="px-5 py-8 text-center text-muted">
                     No leads yet.
                   </td>
                 </tr>
@@ -242,8 +259,7 @@ export default async function AdminLeadsPage({
                   </a>
                 </Field>
               )}
-              <Field label="Wants">{lead.patent_type ?? "—"}</Field>
-              <Field label="Stage">{lead.stage}</Field>
+              <Field label="Idea">{lead.title ?? "—"}</Field>
               <Field label="Source">{sourceLabel(lead)}</Field>
               <Field label="Received">{formatDate(lead.created_at)}</Field>
             </div>

@@ -7,7 +7,10 @@
 
 /** Route prefixes behind auth. A disabled user is bounced from all of them. */
 export const PROTECTED_PREFIXES = [
-  "/submit",
+  // /submit is public: it's the payment-first form now, open to anonymous
+  // visitors. A logged-in visitor still gets it (prefilled email, no urgency
+  // badges) — see app/(app)/submit/page.tsx — but the route itself no longer
+  // requires a session.
   "/dashboard",
   "/account",
   "/status",

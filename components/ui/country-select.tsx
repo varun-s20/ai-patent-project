@@ -40,7 +40,12 @@ function Flag({ iso2 }: { iso2: string }) {
  * re-snap the position on every scroll tick, which read as a jitter. */
 export function CountrySelect({
   name,
-  defaultValue = "",
+  // Australia by default. The trigger always *showed* "Australia" when nothing
+  // was chosen, but the hidden input posted "" — so a visitor who never opened
+  // the picker got "Select a country" back from validation while the form was
+  // plainly displaying one. Defaulting the value, not just the label, is what
+  // makes the two agree.
+  defaultValue = "AU",
 }: {
   name: string;
   defaultValue?: string;

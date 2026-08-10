@@ -37,7 +37,10 @@ export default async function AdminOverviewPage() {
 
   const [total, paid, refunded, completed, failed, inFlight, users, pendingReferrals, drafts] =
     await Promise.all([
-      admin.from("submissions").select("id", { count: "exact", head: true }),
+      // Scoped to owned rows: a public form fill now writes a draft on every
+      // visit whether or not anyone pays, and this is the console's headline
+      // count — it must describe owned work, not every idea ever typed in.
+      admin.from("submissions").select("id", { count: "exact", head: true }).not("user_id", "is", null),
       admin.from("submissions").select("id", { count: "exact", head: true }).in("status", [...PAID_STATUSES]),
       admin.from("submissions").select("id", { count: "exact", head: true }).eq("status", "refunded"),
       admin.from("submissions").select("id", { count: "exact", head: true }).eq("status", "complete"),
@@ -64,7 +67,10 @@ export default async function AdminOverviewPage() {
 
   const { data: recentData, error: recentError } = await admin
     .from("submissions")
+    // Same owned-rows scoping as the total above — otherwise this list is
+    // dominated by unpaid form fills instead of the work the console tracks.
     .select("id, title, status, email, created_at, evaluations(avg_score, verdict)")
+    .not("user_id", "is", null)
     .order("created_at", { ascending: false })
     .limit(8);
   const recent = (recentData ?? []) as RecentRow[];

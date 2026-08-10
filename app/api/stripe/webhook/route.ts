@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
         })
         .eq("id", submissionId)
         .eq("status", "draft")
-        .select("title, email")
+        .select("title, email, claim_token")
         .maybeSingle();
 
       // A real DB failure looks identical to "already processed" unless the
@@ -79,7 +79,13 @@ export async function POST(req: NextRequest) {
         // The payment is already recorded, so these side effects must never
         // turn into a non-200 (which would make Stripe retry the webhook).
         try {
-          await sendEmail(updated.email, paymentConfirmationEmail({ title: updated.title }));
+          await sendEmail(
+            updated.email,
+            paymentConfirmationEmail({
+              title: updated.title,
+              claimToken: updated.claim_token ?? undefined,
+            }),
+          );
         } catch (err) {
           console.error("Confirmation email failed:", err);
         }
@@ -92,13 +98,16 @@ export async function POST(req: NextRequest) {
         // Close the loop on the landing funnel: `converted` is a lead_status
         // the console renders and setLeadContacted refuses to overwrite, but
         // nothing ever set it — so a lead who paid stayed "new" forever and
-        // the admin would chase a customer who had already bought. Matched on
-        // the lowercased email, the same key the lead table dedupes on.
+        // the admin would chase a customer who had already bought.
+        //
+        // Matched on submission_id, not email (0016): leads are one row per
+        // idea now, and paying for the second invention must not mark the
+        // first one — still unpaid, still worth a follow-up — as converted.
         try {
           const { error: leadErr } = await admin
             .from("leads")
             .update({ status: "converted" })
-            .eq("email", updated.email.toLowerCase())
+            .eq("submission_id", submissionId)
             .in("status", ["new", "contacted"]);
           if (leadErr) throw leadErr;
         } catch (err) {

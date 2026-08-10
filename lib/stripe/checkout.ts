@@ -12,7 +12,18 @@ export function buildCheckoutParams(args: {
   submissionId: string;
   email: string;
   baseUrl: string;
+  /** Set only for the payment-first path. An anonymous payer has no session to
+   * return to, so success lands on registration carrying the claim token
+   * instead of on the auth-gated status page, which would bounce them to
+   * /login with no explanation of what just happened to their $49. */
+  claimToken?: string;
+  /** The third case: signed out, but the email already belongs to an account,
+   * so the submission is owned at insert and there is no token to claim. They
+   * still can't open the gated status page — send them through login with the
+   * destination attached rather than dumping them on a bare form. */
+  needsLogin?: boolean;
 }): Stripe.Checkout.SessionCreateParams {
+  const statusPath = `/status/${args.submissionId}`;
   // Session metadata does NOT propagate to the PaymentIntent, so the same tags
   // go on both: `checkout.session.*` events read one, `payment_intent.*` and
   // `charge.*` (refunds, disputes) read the other. Tag only one and half the
@@ -46,7 +57,17 @@ export function buildCheckoutParams(args: {
       metadata,
       ...(suffix ? { statement_descriptor_suffix: suffix } : {}),
     },
-    success_url: `${args.baseUrl}/status/${args.submissionId}?paid=1`,
-    cancel_url: `${args.baseUrl}/pay/${args.submissionId}?canceled=1`,
+    success_url: args.claimToken
+      ? `${args.baseUrl}/register?claim=${encodeURIComponent(args.claimToken)}`
+      : args.needsLogin
+        ? `${args.baseUrl}/login?next=${encodeURIComponent(statusPath)}&notice=paid`
+        : `${args.baseUrl}${statusPath}?paid=1`,
+    // ponytail: a cancelled anonymous payer loses the typed form and starts
+    // over; the lead row is already saved so nothing is lost on our side. Add
+    // a /resume/<token> page if abandoned checkouts turn out to come back.
+    cancel_url:
+      args.claimToken || args.needsLogin
+        ? `${args.baseUrl}/submit?canceled=1`
+        : `${args.baseUrl}/pay/${args.submissionId}?canceled=1`,
   };
 }
