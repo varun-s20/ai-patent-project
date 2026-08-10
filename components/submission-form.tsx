@@ -1,16 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import {
-  createSubmission,
-  updateSubmission,
-  type SubmitState,
-} from "@/app/(app)/submit/actions";
+import { useActionState, useState } from "react";
+import { updateSubmission, type SubmitState } from "@/app/(app)/edit/actions";
 import { CharacterCounter } from "@/components/ui/character-counter";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { ChevronDown, ShieldCheck } from "@/components/ui/icons";
-import { clearDraft } from "@/lib/draft/draft-storage";
 import {
   DESCRIPTION_MIN,
   TITLE_MAX,
@@ -23,46 +17,25 @@ const inputClass =
   "w-full rounded-xl border border-line bg-paper/40 px-4 py-3 text-base text-ink outline-none transition-colors duration-200 placeholder:text-muted/60 focus:border-gold focus:bg-card";
 const labelClass = "block text-xs font-medium uppercase tracking-[0.14em] text-muted";
 
+/**
+ * Edit-only. New submissions come from the public payment-first form
+ * (`components/start/idea-form.tsx` → `startEvaluation`); this form exists
+ * solely so an owner can amend a draft they haven't paid for yet.
+ */
 export function SubmissionForm({
   editId,
   initialValues,
-  userEmail,
 }: {
-  editId?: string;
+  editId: string;
   initialValues?: Record<string, string>;
-  userEmail?: string;
-} = {}) {
-  const isEdit = Boolean(editId);
+}) {
   const [showExample, setShowExample] = useState(false);
-  const router = useRouter();
-  // Edit mode binds the submission id so the action keeps the (prev, formData)
-  // shape useActionState needs; it redirects to the dashboard on success.
-  const action = isEdit ? updateSubmission.bind(null, editId!) : createSubmission;
+  // Binding the id keeps the action's (prev, formData) shape, which is what
+  // useActionState expects. It redirects to the dashboard on success.
+  const action = updateSubmission.bind(null, editId);
   const [description, setDescription] = useState(initialValues?.description ?? "");
-  // A fresh form prefills only the report email with the logged-in address;
-  // every other field stays blank until typed (or restored from a draft).
-  const [fields, setFields] = useState<Record<string, string>>(
-    initialValues ?? (userEmail ? { email: userEmail } : {}),
-  );
+  const [fields, setFields] = useState<Record<string, string>>(initialValues ?? {});
   const [state, formAction] = useActionState<SubmitState, FormData>(action, {});
-
-  useEffect(() => {
-    // A new evaluation always starts blank except the prefilled email — we no
-    // longer restore a draft. Purge any legacy draft so a previous session's
-    // answers (inventor name, industry, …) can never resurface here.
-    if (!isEdit) clearDraft();
-  }, [isEdit]);
-
-  // On a successful create, clear the in-memory field state so the form never
-  // carries one idea's content into the next, then go to payment. (Edit mode
-  // redirects server-side, so there's no state.id to react to.)
-  useEffect(() => {
-    if (state.id) {
-      setFields({});
-      setDescription("");
-      router.push(`/pay/${state.id}`);
-    }
-  }, [state.id, router]);
 
   // Field state is in-memory only — nothing is persisted between visits.
   function persist(next: Record<string, string>) {
@@ -230,13 +203,8 @@ export function SubmissionForm({
         />
       </div>
 
-      <SubmitButton
-        variant="primary"
-        className="w-full py-4 text-base"
-        disabled={Boolean(state.id)}
-        pendingLabel="Saving…"
-      >
-        {isEdit ? "Save changes" : "Get My Report"}
+      <SubmitButton variant="primary" className="w-full py-4 text-base" pendingLabel="Saving…">
+        Save changes
       </SubmitButton>
     </form>
   );

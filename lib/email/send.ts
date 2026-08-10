@@ -21,12 +21,22 @@ function getTransporter(): Transporter {
     }
     const host = process.env.SMTP_HOST;
     const port = Number(process.env.SMTP_PORT ?? 465);
+    // Bounded timeouts on SMTP connection: two send sites sit on the paying
+    // customer's critical path (account-welcome email before redirect, admin
+    // notification before Stripe checkout), so an unreachable mail host must
+    // fail fast rather than block a page transition. Callers already treat
+    // send failure as non-fatal and recover gracefully.
+    const timeoutConfig = {
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 20_000,
+    };
     transporter = nodemailer.createTransport(
       host
         ? // 465 is implicit TLS; 587 is STARTTLS, which nodemailer upgrades into
           // only when `secure` is false.
-          { host, port, secure: port === 465, auth: { user, pass } }
-        : { service: "gmail", auth: { user, pass } },
+          { host, port, secure: port === 465, auth: { user, pass }, ...timeoutConfig }
+        : { service: "gmail", auth: { user, pass }, ...timeoutConfig },
     );
   }
   return transporter;

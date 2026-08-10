@@ -48,3 +48,45 @@ describe("buildCheckoutParams", () => {
     expect(params.payment_method_types).toEqual(["card"]);
   });
 });
+
+describe("buildCheckoutParams with a claim token", () => {
+  const base = { submissionId: "sub-1", email: "ada@example.com", baseUrl: "https://x.test" };
+
+  it("sends an anonymous payer to registration carrying the token", () => {
+    const params = buildCheckoutParams({ ...base, claimToken: "tok+en/with=chars" });
+    expect(params.success_url).toBe(
+      "https://x.test/register?claim=tok%2Ben%2Fwith%3Dchars",
+    );
+  });
+
+  it("sends a cancelled anonymous payer back to the public form, not the gated one", () => {
+    const params = buildCheckoutParams({ ...base, claimToken: "tok" });
+    expect(params.cancel_url).toBe("https://x.test/submit?canceled=1");
+  });
+
+  it("leaves the logged-in flow exactly as it was", () => {
+    const params = buildCheckoutParams(base);
+    expect(params.success_url).toBe("https://x.test/status/sub-1?paid=1");
+    expect(params.cancel_url).toBe("https://x.test/pay/sub-1?canceled=1");
+  });
+});
+
+describe("buildCheckoutParams for an owned submission with no session", () => {
+  const base = { submissionId: "sub-1", email: "ada@example.com", baseUrl: "https://x.test" };
+
+  // Signed out, but the email already had an account: the row is owned at
+  // insert, so there is no claim token — and the status page is auth-gated,
+  // so landing there directly would bounce them to /login with no context.
+  it("sends them through login carrying the status page as the destination", () => {
+    const params = buildCheckoutParams({ ...base, needsLogin: true });
+    expect(params.success_url).toBe(
+      "https://x.test/login?next=%2Fstatus%2Fsub-1&notice=paid",
+    );
+    expect(params.cancel_url).toBe("https://x.test/submit?canceled=1");
+  });
+
+  it("still prefers the claim route when a token exists", () => {
+    const params = buildCheckoutParams({ ...base, claimToken: "tok", needsLogin: true });
+    expect(params.success_url).toBe("https://x.test/register?claim=tok");
+  });
+});

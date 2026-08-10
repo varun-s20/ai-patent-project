@@ -21,17 +21,43 @@ function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-export function paymentConfirmationEmail(args: { title: string }): EmailContent {
+/** Base URL for links in email. Fails loudly rather than silently producing a
+ * relative, unclickable link in the one message a paying customer must act on. */
+function siteBase(): string {
+  const base = process.env.NEXT_PUBLIC_BASE_URL;
+  if (!base) throw new Error("NEXT_PUBLIC_BASE_URL is not set — cannot build an email link");
+  return base.replace(/\/$/, "");
+}
+
+/** The link a payment-first customer needs before they have an account. */
+function claimUrl(token: string): string {
+  return `${siteBase()}/register?claim=${encodeURIComponent(token)}`;
+}
+
+/** `claimToken` is only set for a payment made with no account (see
+ * startEvaluation). It is absent for a logged-in customer's payment, and the
+ * email must read exactly as it did before this ever existed. */
+export function paymentConfirmationEmail(args: {
+  title: string;
+  claimToken?: string;
+}): EmailContent {
   const title = escapeHtml(args.title);
+  const link = args.claimToken ? claimUrl(args.claimToken) : null;
+  const closing = link
+    ? `<p style="margin:0">Create your account to open your report and certificate — it takes one field.</p>`
+    : `<p style="margin:0">Our AI is now evaluating your invention across five dimensions. You'll have your results shortly, by email and on your dashboard.</p>`;
   return {
     subject: "Payment received — your invention is being evaluated",
     html: emailLayout({
       preheader: "Your $49 payment is in. The evaluation is running now.",
       heading: "Payment received",
       body: `<p style="margin:0 0 14px">Thanks — we received your $49 payment for "<strong>${title}</strong>".</p>
-<p style="margin:0">Our AI is now evaluating your invention across five dimensions. You'll have your results shortly, by email and on your dashboard.</p>`,
+${closing}`,
+      ...(link ? { cta: { label: "Create your account", href: link } } : {}),
     }),
-    text: `Thanks — we received your $49 payment for "${args.title}".\n\nOur AI is now evaluating your invention across five dimensions. You'll have your results shortly, by email and on your dashboard.`,
+    text: link
+      ? `Thanks — we received your $49 payment for "${args.title}".\n\nCreate your account to open your report and certificate: ${link}`
+      : `Thanks — we received your $49 payment for "${args.title}".\n\nOur AI is now evaluating your invention across five dimensions. You'll have your results shortly, by email and on your dashboard.`,
   };
 }
 
@@ -133,63 +159,43 @@ export function attorneyRequestAdminEmail(args: {
 }
 
 /**
- * Sent the moment someone submits the ad landing-page form (/patent-idea-check).
- * This is a marketing send rather than transactional, so it carries an explicit
- * opt-out line — a reply we honour by hand, which is a real mechanism and
- * cheaper than a one-click endpoint nobody has needed yet.
- * ponytail: swap the reply-to-unsubscribe for a token link if volume makes
- * hand-processing painful.
+ * Sent once an account exists — from `signUp` in app/auth/actions.ts, right
+ * after Supabase creates the user. Not sent at lead-form submit: welcoming
+ * someone to an account they now have makes sense, welcoming a lead who
+ * hasn't done anything yet doesn't.
  */
-export function leadWelcomeEmail(args: { fullName: string }): EmailContent {
+export function accountWelcomeEmail(args: { fullName: string }): EmailContent {
   const firstName = escapeHtml(args.fullName.split(/\s+/)[0] ?? args.fullName);
-  // Same rule as reportReadyEmail: fail loudly rather than send the one email
-  // in this flow whose whole job is the link, with a dead relative link in it.
-  const base = process.env.NEXT_PUBLIC_BASE_URL;
-  if (!base) {
-    throw new Error("NEXT_PUBLIC_BASE_URL is not set — cannot build the lead welcome email link");
-  }
-  const link = `${base.replace(/\/$/, "")}/submit`;
+  const link = `${siteBase()}/dashboard`;
   return {
-    subject: "Your idea evaluation — here's what happens next",
+    subject: "Your account is ready",
     html: emailLayout({
-      preheader: "Three steps, minutes, $49. Here's how the evaluation works.",
-      heading: `Thanks, ${firstName}`,
-      body: `<p style="margin:0 0 14px">We got your details. Here's exactly how an evaluation runs:</p>
-<ol style="margin:0 0 14px;padding-left:20px">
-  <li style="margin-bottom:6px">You describe your invention — as much detail as you're comfortable sharing.</li>
-  <li style="margin-bottom:6px">You pay <strong>$49</strong>. A patent attorney charges up to $10,000 for the same read.</li>
-  <li>Within minutes you get your Pre-Patent Intelligence Report, scored across five dimensions, plus a timestamped Certificate of Idea Registration if the verdict supports it.</li>
-</ol>
-<p style="margin:0">Your idea stays private. We never share it, and we never file on it.</p>`,
-      cta: { label: "Start your $49 evaluation", href: link },
-      footnote: `You're getting this because you asked us about evaluating your invention. Don't want any more email from us? Reply with "unsubscribe" and we'll delete your details.<br><br>${DISCLAIMER}`,
+      preheader: "Your account is set up — here's where to go.",
+      heading: `Welcome, ${firstName}`,
+      body: `<p style="margin:0 0 14px">Your account is set up.</p>
+<p style="margin:0">From your dashboard you can start a new evaluation. Any report or certificate you've already paid for will show up there as soon as it's ready.</p>`,
+      cta: { label: "Go to your dashboard", href: link },
     }),
-    text: `Thanks, ${args.fullName.split(/\s+/)[0] ?? args.fullName}.
+    text: `Welcome, ${args.fullName.split(/\s+/)[0] ?? args.fullName}.
 
-We got your details. Here's exactly how an evaluation runs:
+Your account is set up.
 
-1. You describe your invention — as much detail as you're comfortable sharing.
-2. You pay $49. A patent attorney charges up to $10,000 for the same read.
-3. Within minutes you get your Pre-Patent Intelligence Report, scored across five dimensions, plus a timestamped Certificate of Idea Registration if the verdict supports it.
+From your dashboard you can start a new evaluation. Any report or certificate you've already paid for will show up there as soon as it's ready.
 
-Your idea stays private. We never share it, and we never file on it.
-
-Start your $49 evaluation: ${link}
-
-You're getting this because you asked us about evaluating your invention. Don't want any more email from us? Reply with "unsubscribe" and we'll delete your details.
-
-${DISCLAIMER}`,
+Go to your dashboard: ${link}`,
   };
 }
 
-/** Admin notification: a new landing-page lead, with the campaign that paid for
- * it so ad spend can be judged against the leads it actually produced. */
+/** Admin notification: a new lead, with the campaign that paid for it so ad
+ * spend can be judged against the leads it actually produced. The
+ * payment-first form (see startEvaluation) collects an idea, not a
+ * stage/patent-type qualifier, so `title` stands in for those — more useful
+ * to an admin deciding whether to follow up than the retired qualifiers were. */
 export function leadNotifyAdminEmail(args: {
   fullName: string;
   email: string;
   phone: string | null;
-  stage: string;
-  patentType: string;
+  title: string;
   campaign: string | null;
   source: string | null;
 }): EmailContent {
@@ -197,8 +203,7 @@ export function leadNotifyAdminEmail(args: {
     ["Name", args.fullName],
     ["Email", args.email],
     ["Phone", args.phone ?? "not given"],
-    ["Wants", args.patentType],
-    ["Stage", args.stage],
+    ["Idea", args.title],
     ["Source", args.source ?? "direct / unknown"],
     ["Campaign", args.campaign ?? "none"],
   ];
@@ -207,14 +212,14 @@ export function leadNotifyAdminEmail(args: {
     .join("<br>");
   const text = rows.map(([k, v]) => `${k}: ${v}`).join("\n");
   return {
-    subject: `New lead — ${args.fullName} (${args.stage})`,
+    subject: `New lead — ${args.fullName}`,
     html: emailLayout({
       preheader: `${args.fullName} asked about an evaluation.`,
-      heading: "New landing-page lead",
+      heading: "New lead",
       body: `<p style="margin:0 0 14px">${html}</p>
-<p style="margin:0">They've had the welcome email. Reply to them directly, then mark them contacted in the console.</p>`,
+<p style="margin:0">Reply to them directly, then mark them contacted in the console.</p>`,
     }),
-    text: `New landing-page lead.\n\n${text}\n\nThey've had the welcome email. Reply to them directly, then mark them contacted in the console.`,
+    text: `New lead.\n\n${text}\n\nReply to them directly, then mark them contacted in the console.`,
   };
 }
 
@@ -224,15 +229,13 @@ export function reportReadyEmail(args: {
   title: string;
   submissionId: string;
   hasCertificate: boolean;
+  claimToken?: string;
 }): EmailContent {
   const title = escapeHtml(args.title);
-  // Fails loudly rather than silently degrading to a relative, unclickable
-  // link — this is the single most important link in the highest-value email.
-  const base = process.env.NEXT_PUBLIC_BASE_URL;
-  if (!base) {
-    throw new Error("NEXT_PUBLIC_BASE_URL is not set — cannot build the report-ready email link");
-  }
-  const link = `${base.replace(/\/$/, "")}/status/${args.submissionId}`;
+  // An unclaimed report has no account behind it yet, so /status (auth-gated)
+  // would bounce the customer to /login with no explanation. Send them to the
+  // claim page instead — the same fail-loudly rule as before applies either way.
+  const link = args.claimToken ? claimUrl(args.claimToken) : `${siteBase()}/status/${args.submissionId}`;
   const attachedHtml = args.hasCertificate
     ? `<ul style="margin:0 0 14px;padding-left:20px">
   <li style="margin-bottom:6px">Your <strong>Pre-Patent Intelligence Report</strong></li>
@@ -252,7 +255,7 @@ export function reportReadyEmail(args: {
       body: `<p style="margin:0 0 14px">Your 8-page Pre-Patent Intelligence Report for "<strong>${title}</strong>" is ready.</p>
 ${attachedHtml}
 <p style="margin:0">You can view your results and re-download any time:</p>`,
-      cta: { label: "View your results", href: link },
+      cta: { label: args.claimToken ? "Create your account to view" : "View your results", href: link },
       footnote: `The report ends with our recommendation on what to do next. If it points to a patent attorney, you can request a referral from the same page.<br><br>${DISCLAIMER}`,
     }),
     text: `Your 8-page Pre-Patent Intelligence Report for "${args.title}" is ready.

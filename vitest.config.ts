@@ -9,6 +9,10 @@ export default defineConfig({
     setupFiles: ["./vitest.setup.ts"],
   },
   resolve: {
-    alias: { "@": path.resolve(__dirname, ".") },
+    alias: {
+      "@": path.resolve(__dirname, "."),
+      // See vitest.server-only-mock.ts for why this is needed.
+      "server-only": path.resolve(__dirname, "vitest.server-only-mock.ts"),
+    },
   },
 });
