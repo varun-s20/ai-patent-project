@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { LeadForm, type Attribution } from "./lead-form";
+import { StartPanel, type Attribution } from "@/components/start/start-panel";
+import { registeredCount } from "@/lib/registry/registered-count";
 import { Assurance } from "@/components/home/assurance";
 import { Deliverables } from "@/components/home/deliverables";
 import { Faq } from "@/components/home/faq";
@@ -21,6 +22,10 @@ export const metadata: Metadata = {
     "A five-dimension AI evaluation of your invention, a pre-patent intelligence report, and a timestamped certificate of registration. In minutes, for $49 instead of $10,000.",
   robots: { index: false, follow: false },
 };
+
+// The urgency badge reads a live count, so this page can no longer be
+// statically rendered.
+export const dynamic = "force-dynamic";
 
 /** Three claims we can stand behind literally — no counts, no fabricated
  * social proof. They run as one hairline-divided ledger row under the price. */
@@ -66,13 +71,24 @@ export default async function PatentIdeaCheckPage({
 
         <LandingHeader />
 
-        <div className="relative mx-auto w-full max-w-[1500px] px-6 pb-16 pt-4 sm:px-10 sm:pt-6 lg:px-16 lg:pb-40 lg:pt-16">
-          {/* The gutter hairline between copy and form only exists at lg, where
-              there are genuinely two columns to separate. */}
-          <div className="grid items-start gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-0">
-            <div className="max-w-2xl lg:pr-16">
+        {/* `scroll-mt` keeps the panel clear of the top edge when the in-page
+            CTAs jump back here. StartPanel owns the two-column split and takes
+            this page's pitch as `intro`, so the copy sits in the left column
+            above the live certificate rather than stranded above a full-width
+            panel with an empty half beside it. */}
+        <div
+          id="lead-form"
+          className="relative mx-auto w-full max-w-[1400px] scroll-mt-6 px-6 pb-16 pt-4 sm:px-10 sm:pt-6 lg:px-16 lg:pb-32 lg:pt-14"
+        >
+          <StartPanel
+            attribution={attribution}
+            registeredCount={await registeredCount()}
+            intro={
+              <div className="min-w-0">
               <InView>
-                <h1 className="font-display text-[2.5rem] font-semibold leading-[1.04] tracking-tight text-ink sm:text-[3.1rem] lg:text-[3.4rem]">
+                {/* Sized for a half-width column, not the full page it used to
+                    span — 3.4rem in this column set four words a line. */}
+                <h1 className="font-display text-[2.2rem] font-semibold leading-[1.06] tracking-tight text-ink sm:text-[2.7rem] lg:text-[2.9rem]">
                   Find out if your idea is worth patenting - before you spend a fortune
                   finding out.
                 </h1>
@@ -136,42 +152,9 @@ export default async function PatentIdeaCheckPage({
                   ))}
                 </dl>
               </InView>
-            </div>
-
-            {/* The form. `scroll-mt` keeps the card's heading clear of the top
-                edge when the in-page CTAs jump back here; the negative bottom
-                margin lets it hang past the fold into the next section so the
-                page doesn't read as having a clean stopping point. */}
-            <div
-              id="lead-form"
-              className="relative z-10 scroll-mt-6 lg:border-l lg:border-line lg:pl-16 lg:-mb-24"
-            >
-              <InView delay={0.1}>
-                <div className="overflow-hidden rounded-2xl border border-line bg-card shadow-[0_40px_90px_-52px_rgba(26,43,74,0.55)]">
-                  {/* The page's one piece of gold chrome, on the one thing that
-                      matters. */}
-                  <div aria-hidden className="h-1 bg-gradient-to-r from-gold to-gold-bright" />
-                  <div className="p-6 sm:p-8">
-                    <div className="flex items-start justify-between gap-4">
-                      <h2 className="font-display text-[1.6rem] font-semibold leading-tight tracking-tight text-ink">
-                        Get your evaluation details
-                      </h2>
-                      <span className="mt-1 shrink-0 rounded-md border border-line bg-paper/70 px-2 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-muted">
-                        20 sec
-                      </span>
-                    </div>
-                    <p className="mt-2 text-[14.5px] leading-relaxed text-ink-2">
-                      Five quick fields. We&apos;ll email you exactly how it works and follow
-                      up personally - no account, no obligation.
-                    </p>
-                    <div className="mt-6">
-                      <LeadForm attribution={attribution} />
-                    </div>
-                  </div>
-                </div>
-              </InView>
-            </div>
-          </div>
+              </div>
+            }
+          />
         </div>
       </section>
 
@@ -202,7 +185,7 @@ export default async function PatentIdeaCheckPage({
           <span className="ml-1.5 text-ink">$49</span>
         </span>
         <span className="rounded-lg bg-gold px-4 py-2.5 text-[13px] font-medium tracking-tight text-ink shadow-[0_1px_2px_rgba(120,90,20,0.22)]">
-          Get my details
+          Evaluate for $49
         </span>
       </a>
     </main>

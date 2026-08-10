@@ -14,6 +14,7 @@ import {
 } from "@/lib/email/templates";
 import { type SubmissionInput } from "@/lib/types";
 import { generateReportContent } from "@/lib/report/generate-content";
+import { registeredAt } from "@/lib/report/registered-at";
 import { renderReportPdf } from "@/lib/pdf/render";
 import { certIdFor } from "@/lib/report/cert-id";
 import { documentPath } from "@/lib/storage/paths";
@@ -202,7 +203,9 @@ export const evaluateSubmission = inngest.createFunction(
         .update({ status: "processing" })
         .eq("id", submissionId)
         .eq("status", "paid")
-        .select("id, user_id, title, description, problem, industry, inventor_name, email")
+        .select(
+          "id, user_id, title, description, problem, industry, inventor_name, email, claim_token, paid_at",
+        )
         .maybeSingle();
 
       if (error) throw new Error(`Failed to claim submission: ${error.message}`);
@@ -282,11 +285,16 @@ export const evaluateSubmission = inngest.createFunction(
     // that already succeeded.
     const report = await step.run("render-and-upload-report", async () => {
       const now = new Date();
-      const year = now.getFullYear();
+      // The certificate's timestamp is when the customer paid, not when this
+      // job ran. paid_at is written by the Stripe webhook in the same update
+      // that moves the row to `paid`, so a submission cannot reach this step
+      // without one — the fallback only stops a missing value from throwing.
+      const registered = registeredAt(submission.paid_at, now);
+      const year = registered.getFullYear();
       // Full date + time + explicit timezone (PRD 6.3) — the timestamp is the
       // product; a date-only stamp undersells "secured at this moment".
-      const issuedAt = formatTimestamp(now.toISOString());
-      const path = documentPath(submission.user_id, submissionId, "report");
+      const issuedAt = formatTimestamp(registered.toISOString());
+      const path = documentPath(submissionId, "report");
       const admin = createAdminClient();
 
       // Printed in the report's attorney-referral ask. Fails loudly like
@@ -342,7 +350,7 @@ export const evaluateSubmission = inngest.createFunction(
               submission_id: submissionId,
               cert_id: certId,
               report_pdf_path: path,
-              issued_at: now.toISOString(),
+              issued_at: registered.toISOString(),
             },
             { onConflict: "submission_id" },
           );
@@ -379,7 +387,7 @@ export const evaluateSubmission = inngest.createFunction(
       };
 
       const pdf = await renderCertificatePdf(data);
-      const path = documentPath(submission.user_id, submissionId, "certificate");
+      const path = documentPath(submissionId, "certificate");
 
       const admin = createAdminClient();
       const { error: upErr } = await admin.storage
@@ -451,6 +459,7 @@ export const evaluateSubmission = inngest.createFunction(
             title: submission.title,
             submissionId,
             hasCertificate: Boolean(certPath),
+            claimToken: submission.claim_token ?? undefined,
           }),
           attachments,
         );

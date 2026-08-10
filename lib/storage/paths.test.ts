@@ -1,9 +1,13 @@
-import { describe, it, expect } from "vitest";
-import { documentPath } from "./paths";
+import { describe, expect, it } from "vitest";
+import { documentPath } from "@/lib/storage/paths";
 
 describe("documentPath", () => {
-  it("namespaces by user then submission then file type", () => {
-    expect(documentPath("user-1", "sub-9", "report")).toBe("user-1/sub-9/report.pdf");
-    expect(documentPath("user-1", "sub-9", "certificate")).toBe("user-1/sub-9/certificate.pdf");
+  // Keyed on the submission, never the owner: the PDFs for a payment-first
+  // submission are generated before anyone owns it, and the owner can change
+  // once — at claim time. A path with a user id in it would be wrong in both
+  // cases, and the storage policy would then deny the real owner.
+  it("namespaces by submission id", () => {
+    expect(documentPath("sub-1", "report")).toBe("sub-1/report.pdf");
+    expect(documentPath("sub-1", "certificate")).toBe("sub-1/certificate.pdf");
   });
 });
