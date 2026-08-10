@@ -77,41 +77,35 @@ function UserActions({ p }: { p: ProfileRow }) {
       <ConfirmForm
         action={toggleUserFlagged}
         message={`${p.is_flagged ? "Unflag" : "Flag"} ${p.full_name ?? "this user"}?`}
+        label={p.is_flagged ? "Unflag" : "Flag"}
+        pendingLabel="Saving…"
+        ariaLabel={`${p.is_flagged ? "Unflag" : "Flag"} ${p.full_name ?? "user"}`}
+        className={`${rowAction} border border-amber-200 text-amber-700 hover:bg-amber-50`}
       >
         <input type="hidden" name="userId" value={p.id} />
         <input type="hidden" name="next" value={String(!p.is_flagged)} />
-        <button
-          aria-label={`${p.is_flagged ? "Unflag" : "Flag"} ${p.full_name ?? "user"}`}
-          className={`${rowAction} border border-amber-200 text-amber-700 hover:bg-amber-50`}
-        >
-          {p.is_flagged ? "Unflag" : "Flag"}
-        </button>
       </ConfirmForm>
       <ConfirmForm
         action={toggleUserDisabled}
         message={`${p.is_disabled ? "Enable" : "Disable"} ${p.full_name ?? "this user"}?`}
+        label={p.is_disabled ? "Enable" : "Disable"}
+        pendingLabel="Saving…"
+        ariaLabel={`${p.is_disabled ? "Enable" : "Disable"} ${p.full_name ?? "user"}`}
+        className={`${rowAction} border border-red-200 text-red-700 hover:bg-red-50`}
       >
         <input type="hidden" name="userId" value={p.id} />
         <input type="hidden" name="next" value={String(!p.is_disabled)} />
-        <button
-          aria-label={`${p.is_disabled ? "Enable" : "Disable"} ${p.full_name ?? "user"}`}
-          className={`${rowAction} border border-red-200 text-red-700 hover:bg-red-50`}
-        >
-          {p.is_disabled ? "Enable" : "Disable"}
-        </button>
       </ConfirmForm>
       <ConfirmForm
         action={toggleUserAdmin}
         message={`${p.is_admin ? "Revoke admin from" : "Make"} ${p.full_name ?? "this user"}${p.is_admin ? "" : " an admin"}?`}
+        label={p.is_admin ? "Revoke admin" : "Make admin"}
+        pendingLabel="Saving…"
+        ariaLabel={`${p.is_admin ? "Revoke admin from" : "Make"} ${p.full_name ?? "user"}${p.is_admin ? "" : " an admin"}`}
+        className={`${rowAction} border border-line text-ink-2 hover:bg-ink/[0.04]`}
       >
         <input type="hidden" name="userId" value={p.id} />
         <input type="hidden" name="next" value={String(!p.is_admin)} />
-        <button
-          aria-label={`${p.is_admin ? "Revoke admin from" : "Make"} ${p.full_name ?? "user"}${p.is_admin ? "" : " an admin"}`}
-          className={`${rowAction} border border-line text-ink-2 hover:bg-ink/[0.04]`}
-        >
-          {p.is_admin ? "Revoke admin" : "Make admin"}
-        </button>
       </ConfirmForm>
     </div>
   );

@@ -13,6 +13,7 @@ import { one } from "@/lib/db/one";
 import { DIMENSIONS, type Verdict } from "@/lib/types";
 import { recommendationFor } from "@/lib/report/recommendation";
 import { REFUNDABLE_STATUSES, FAILABLE_STATUSES } from "@/lib/admin/submission-status";
+import { SOURCE_LABELS, leadSource } from "@/lib/admin/lead-source";
 import { refundSubmission, markFailed, setReferralContacted } from "../../actions";
 import { ConfirmForm } from "../../_components/confirm-form";
 import { ReturnTo } from "../../_components/return-to";
@@ -152,15 +153,24 @@ export default async function AdminSubmissionDetailPage({
   const evaluation = one(submission.evaluations as EvaluationRow | EvaluationRow[] | null);
   const cert = one(submission.certificates as CertEmbed | CertEmbed[] | null);
 
-  // The landing form is the only place we ever capture a phone number, and it
-  // writes to `leads`, not `submissions`. Matching on the lowercased email is
-  // what turns "I can email them" into "I can call them" — the whole point of
-  // paying for the click in the first place.
-  const { data: lead } = await admin
+  // The phone number and the originating page live on `leads`, not
+  // `submissions` — turning "I can email them" into "I can call them", which is
+  // the whole point of paying for the click.
+  //
+  // Every row for the address, newest first, then the one captured with THIS
+  // submission if there is one. Not `.maybeSingle()` on the email: 0016 dropped
+  // `leads.email`'s unique constraint so a second invention gets its own row,
+  // and maybeSingle errors outright on more than one match — which read as
+  // "no lead" and quietly emptied this panel for the best repeat customers.
+  const { data: leadRows } = await admin
     .from("leads")
-    .select("phone, country, stage, patent_type, utm_source, utm_campaign, status, created_at")
+    .select(
+      "submission_id, phone, country, stage, patent_type, landing_path, utm_source, utm_campaign, status, created_at",
+    )
     .eq("email", submission.email.toLowerCase())
-    .maybeSingle();
+    .order("created_at", { ascending: false });
+  const lead =
+    leadRows?.find((l) => l.submission_id === submission.id) ?? leadRows?.[0] ?? null;
 
   let reportUrl: string | null = null;
   let certificateUrl: string | null = null;
@@ -300,6 +310,11 @@ export default async function AdminSubmissionDetailPage({
               {lead?.stage && <Detail label="Stage they reported">{lead.stage}</Detail>}
               {lead?.patent_type && <Detail label="Patent type wanted">{lead.patent_type}</Detail>}
               {lead && (
+                <Detail label="Submitted on">
+                  {SOURCE_LABELS[leadSource(lead.landing_path)]}
+                </Detail>
+              )}
+              {lead && (
                 <Detail label="Came from">
                   {[lead.utm_source, lead.utm_campaign].filter(Boolean).join(" · ") ||
                     "direct / unknown"}
@@ -307,8 +322,8 @@ export default async function AdminSubmissionDetailPage({
               )}
               {!lead && (
                 <p className="text-[13px] leading-relaxed text-muted">
-                  No landing-page lead matches this email, so we have no phone number — they
-                  signed up directly.
+                  No lead row matches this email, so we have no phone number and no record of
+                  which page this was submitted on.
                 </p>
               )}
             </div>
@@ -414,26 +429,22 @@ export default async function AdminSubmissionDetailPage({
                   <ConfirmForm
                     action={refundSubmission}
                     message={`Refund "${submission.title}"? This charges Stripe's refund API.`}
+                    label="Refund"
+                    pendingLabel="Refunding…"
+                    className={`${rowAction} border border-red-200 text-red-700 hover:bg-red-50`}
                   >
                     <input type="hidden" name="submissionId" value={submission.id} />
-                    <button
-                      className={`${rowAction} border border-red-200 text-red-700 hover:bg-red-50`}
-                    >
-                      Refund
-                    </button>
                   </ConfirmForm>
                 )}
                 {canFail && (
                   <ConfirmForm
                     action={markFailed}
                     message={`Mark "${submission.title}" as failed? This does not issue a refund.`}
+                    label="Mark failed"
+                    pendingLabel="Marking…"
+                    className={`${rowAction} border border-line text-ink-2 hover:bg-ink/[0.04]`}
                   >
                     <input type="hidden" name="submissionId" value={submission.id} />
-                    <button
-                      className={`${rowAction} border border-line text-ink-2 hover:bg-ink/[0.04]`}
-                    >
-                      Mark failed
-                    </button>
                   </ConfirmForm>
                 )}
               </div>

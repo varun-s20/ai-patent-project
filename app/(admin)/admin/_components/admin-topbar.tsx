@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "@/app/auth/actions";
 import { Search, Gauge, SignOut, ChevronDown } from "@/components/ui/icons";
+import { startRouteProgress } from "@/components/ui/route-progress";
 import { AdminBrand, NAV_LINKS, isLinkActive } from "./admin-sidebar";
 
 /**
@@ -45,6 +46,8 @@ export function AdminTopbar({ name, email }: { name: string; email: string }) {
   const onSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const term = q.trim();
+    // No link click precedes a router.push, so the top loader has to be told.
+    startRouteProgress();
     router.push(term ? `/admin/submissions?q=${encodeURIComponent(term)}` : "/admin/submissions");
   };
 

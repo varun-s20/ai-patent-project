@@ -16,6 +16,7 @@ import { ActionNotice } from "../_components/notice";
 import { PAGE_SIZE, pageRange, parsePage } from "@/lib/admin/pagination";
 import { sanitizeSearch } from "@/lib/admin/search";
 import { REFUNDABLE_STATUSES, FAILABLE_STATUSES } from "@/lib/admin/submission-status";
+import { NOT_SITE_FORM, SITE_FORM_PATH, SOURCE_LABELS, leadSource } from "@/lib/admin/lead-source";
 
 export const dynamic = "force-dynamic";
 
@@ -30,24 +31,18 @@ export const dynamic = "force-dynamic";
  * filter — draft AND has-a-session — matched practically every draft and was
  * dropped. Telling them apart needs Stripe's own payment_status.)
  *
- * Ownership is a separate axis: a draft has a `user_id` when the submitter was
- * signed in or used the email of an existing account, and none at all when
- * they are new here. Both are drafts, so this view must not scope to owned
- * rows the way the paid statuses do.
+ * Status used to carry two other questions on its back — "does anyone own
+ * this?" and, implicitly, "where did it come from?" — as the synthetic
+ * `unclaimed` and `unclaimed-paid` options, next to a default view that
+ * silently hid every unowned row. Three questions in one dropdown meant no
+ * combination of them could be asked. They are now three filters, each with
+ * one job, and nothing is hidden by default:
+ *   ?status=  the real column
+ *   ?account= owned by a profile, or no account yet
+ *   ?source=  landing page vs the main site's own form
+ * "Paid, unclaimed" — the one support query that matters — is status=paid +
+ * account=unclaimed, and every other pairing now works too.
  */
-const DRAFT = "draft";
-
-/** Synthetic `?status=` value: paid-first ideas with no account behind them
- * yet. Excluded from every other view — a public form writes one of these on
- * every submit, and they'd otherwise bury the paid work this console is for.
- * They are already followed up as leads, with the idea attached. */
-const UNCLAIMED = "unclaimed";
-
-/** Synthetic `?status=` value: the subset of UNCLAIMED that already paid — a
- * customer who spent $49 and never made an account. That is the one support
- * query the operator actually needs; without it, a paid-but-unclaimed
- * customer is buried among every unpaid form fill under plain UNCLAIMED. */
-const UNCLAIMED_PAID = "unclaimed-paid";
 
 const th = "px-5 py-3 text-left text-[10px] font-medium uppercase tracking-[0.15em] text-muted";
 const td = "px-5 py-3";
@@ -62,28 +57,24 @@ function SubmissionActions({ s }: { s: SubRow }) {
         <ConfirmForm
           action={refundSubmission}
           message={`Refund "${s.title}"? This charges Stripe's refund API.`}
+          label="Refund"
+          pendingLabel="Refunding…"
+          ariaLabel={`Refund ${s.title}`}
+          className={`${rowAction} border border-red-200 text-red-700 hover:bg-red-50`}
         >
           <input type="hidden" name="submissionId" value={s.id} />
-          <button
-            aria-label={`Refund ${s.title}`}
-            className={`${rowAction} border border-red-200 text-red-700 hover:bg-red-50`}
-          >
-            Refund
-          </button>
         </ConfirmForm>
       )}
       {FAILABLE_STATUSES.includes(s.status) && (
         <ConfirmForm
           action={markFailed}
           message={`Mark "${s.title}" as failed? This does not issue a refund.`}
+          label="Mark failed"
+          pendingLabel="Marking…"
+          ariaLabel={`Mark ${s.title} failed`}
+          className={`${rowAction} border border-line text-ink-2 hover:bg-ink/[0.04]`}
         >
           <input type="hidden" name="submissionId" value={s.id} />
-          <button
-            aria-label={`Mark ${s.title} failed`}
-            className={`${rowAction} border border-line text-ink-2 hover:bg-ink/[0.04]`}
-          >
-            Mark failed
-          </button>
         </ConfirmForm>
       )}
     </div>
@@ -92,6 +83,9 @@ function SubmissionActions({ s }: { s: SubRow }) {
 
 type EvalEmbed = { avg_score: number; verdict: string };
 type ProfileEmbed = { full_name: string | null };
+/** The lead captured alongside this submission (0016), which is where the
+ * originating page is recorded — `submissions` itself has no such column. */
+type LeadEmbed = { landing_path: string | null };
 type SubRow = {
   id: string;
   title: string;
@@ -101,13 +95,36 @@ type SubRow = {
   user_id: string | null;
   evaluations: EvalEmbed | EvalEmbed[] | null;
   profiles: ProfileEmbed | ProfileEmbed[] | null;
+  leads: LeadEmbed | LeadEmbed[] | null;
 };
+
+/** Where this idea was typed. Submissions from before the payment-first funnel
+ * have no lead row at all, so their origin is genuinely unrecorded — say so
+ * rather than defaulting them into one of the two real answers. */
+function SourceCell({ s }: { s: SubRow }) {
+  const lead = one(s.leads);
+  if (!lead) return <span className="text-muted">—</span>;
+  const source = leadSource(lead.landing_path);
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${
+        source === "landing"
+          ? "border-gold/35 bg-gold/[0.10] text-ink-2"
+          : "border-line bg-paper/60 text-ink-2"
+      }`}
+    >
+      {SOURCE_LABELS[source]}
+    </span>
+  );
+}
 
 export default async function AdminSubmissionsPage({
   searchParams,
 }: {
   searchParams: Promise<{
     status?: string;
+    source?: string;
+    account?: string;
     q?: string;
     verdict?: string;
     sort?: string;
@@ -115,7 +132,8 @@ export default async function AdminSubmissionsPage({
     notice?: string;
   }>;
 }) {
-  const { status, q, verdict, sort, page: pageParam, notice } = await searchParams;
+  const { status, source, account, q, verdict, sort, page: pageParam, notice } =
+    await searchParams;
   const page = parsePage(pageParam);
   const admin = createAdminClient();
 
@@ -123,45 +141,47 @@ export default async function AdminSubmissionsPage({
   const evalEmbed = filterVerdict
     ? "evaluations!inner(avg_score, verdict)"
     : "evaluations(avg_score, verdict)";
+  // `!inner` only when the source filter is on: it drops submissions with no
+  // lead row (everything from before the payment-first funnel), which is right
+  // for "show me landing-page ideas" and wrong for the unfiltered ledger.
+  const filterSource = source === "landing" || source === "site";
+  const leadEmbed = filterSource ? "leads!inner(landing_path)" : "leads(landing_path)";
 
   const { from, to } = pageRange(page);
   const safeQ = sanitizeSearch(q);
 
   let subQuery = admin
     .from("submissions")
-    .select(`id, title, status, email, created_at, user_id, ${evalEmbed}, profiles(full_name)`)
+    .select(
+      `id, title, status, email, created_at, user_id, ${evalEmbed}, ${leadEmbed}, profiles(full_name)`,
+    )
     .order("created_at", { ascending: sort === "oldest" })
     .range(from, to);
   // Real total matching the active filters — the page's row array is capped
   // at PAGE_SIZE and must never be used as a stand-in for "how many total."
-  // Needs the same evaluations embed as the row query so the verdict filter
-  // (which targets an embedded column) applies identically to both.
+  // Needs the same embeds as the row query so the verdict and source filters
+  // (which target embedded columns) apply identically to both.
   let countQuery = admin
     .from("submissions")
-    .select(`id, ${evalEmbed}`, { count: "exact", head: true });
+    .select(`id, ${evalEmbed}, ${leadEmbed}`, { count: "exact", head: true });
 
-  if (status === DRAFT) {
-    // Owned and unowned together, unlike every other status. Most drafts have
-    // no account behind them, so the owned-rows scoping below hid nearly all
-    // of them — while the overview's "ideas awaiting a nudge" card counted
-    // drafts globally and linked straight here. The count said 40 and the
-    // list said none.
-    subQuery = subQuery.eq("status", DRAFT);
-    countQuery = countQuery.eq("status", DRAFT);
-  } else if (status === UNCLAIMED_PAID) {
-    subQuery = subQuery.is("user_id", null).in("status", ["paid", "processing", "complete"]);
-    countQuery = countQuery.is("user_id", null).in("status", ["paid", "processing", "complete"]);
-  } else if (status === UNCLAIMED) {
+  if (status && status !== "all") {
+    subQuery = subQuery.eq("status", status);
+    countQuery = countQuery.eq("status", status);
+  }
+  if (account === "unclaimed") {
     subQuery = subQuery.is("user_id", null);
     countQuery = countQuery.is("user_id", null);
-  } else {
-    // Every other view is about work that has an owner.
+  } else if (account === "claimed") {
     subQuery = subQuery.not("user_id", "is", null);
     countQuery = countQuery.not("user_id", "is", null);
-    if (status && status !== "all") {
-      subQuery = subQuery.eq("status", status);
-      countQuery = countQuery.eq("status", status);
-    }
+  }
+  if (source === "site") {
+    subQuery = subQuery.eq("leads.landing_path", SITE_FORM_PATH);
+    countQuery = countQuery.eq("leads.landing_path", SITE_FORM_PATH);
+  } else if (source === "landing") {
+    subQuery = subQuery.or(NOT_SITE_FORM, { referencedTable: "leads" });
+    countQuery = countQuery.or(NOT_SITE_FORM, { referencedTable: "leads" });
   }
   if (verdict && verdict !== "all") {
     subQuery = subQuery.eq("evaluations.verdict", verdict);
@@ -198,6 +218,7 @@ export default async function AdminSubmissionsPage({
               <tr>
                 <th className={th}>Title</th>
                 <th className={th}>User</th>
+                <th className={th}>Source</th>
                 <th className={th}>Status</th>
                 <th className={th}>Score</th>
                 <th className={th}>Verdict</th>
@@ -223,6 +244,9 @@ export default async function AdminSubmissionsPage({
                       {profile?.full_name ?? "—"}
                       <span className="block text-xs text-muted">{s.email}</span>
                     </td>
+                    <td className={`${td} whitespace-nowrap`}>
+                      <SourceCell s={s} />
+                    </td>
                     <td className={td}>
                       <StatusBadge status={s.status} />
                     </td>
@@ -241,7 +265,7 @@ export default async function AdminSubmissionsPage({
               })}
               {subs.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-5 py-8 text-center text-muted">
+                  <td colSpan={8} className="px-5 py-8 text-center text-muted">
                     No submissions match.
                   </td>
                 </tr>
@@ -276,6 +300,9 @@ export default async function AdminSubmissionsPage({
                     {s.email}
                   </a>
                 </Field>
+                <Field label="Source">
+                  <SourceCell s={s} />
+                </Field>
                 <Field label="Score">{evaluation ? `${evaluation.avg_score}/100` : "—"}</Field>
                 <Field label="Verdict">
                   {evaluation ? <VerdictBadge verdict={evaluation.verdict} /> : "—"}
@@ -300,7 +327,7 @@ export default async function AdminSubmissionsPage({
         page={page}
         hasNext={hasNext}
         basePath="/admin/submissions"
-        searchParams={{ status, q, verdict, sort }}
+        searchParams={{ status, source, account, q, verdict, sort }}
       />
     </main>
   );

@@ -3,18 +3,30 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, X } from "@/components/ui/icons";
+import { Spinner } from "@/components/ui/spinner";
+import { startRouteProgress } from "@/components/ui/route-progress";
 import { statusLabel } from "@/lib/ui/status";
 import { verdictLabel } from "@/lib/ui/verdict";
 
+/** Real column values only. Ownership and origin used to be smuggled in here
+ * as synthetic options ("Unclaimed", "Paid, unclaimed"), which meant the three
+ * questions could never be combined — see the header comment in
+ * admin/submissions/page.tsx. They are their own selects now. */
 const STATUSES = ["all", "draft", "paid", "processing", "complete", "failed", "refunded"] as const;
-/** Not a real status — see UNCLAIMED in admin/submissions/page.tsx. Every
- * other status option is scoped to owned rows only; this is the one way to
- * see the unowned ones this filter bar otherwise hides. */
-const UNCLAIMED_OPTION = ["unclaimed", "Unclaimed"] as const;
-/** Not a real status — see UNCLAIMED_PAID in admin/submissions/page.tsx. The
- * subset of "unclaimed" that already paid: the customer an operator actually
- * needs to find. */
-const UNCLAIMED_PAID_OPTION = ["unclaimed-paid", "Paid, unclaimed"] as const;
+/** Which form the idea was typed into. Both write the same rows, so this is
+ * the only thing separating an ad click from someone who found the site. */
+const SOURCES = [
+  ["all", "Any source"],
+  ["landing", "Landing page"],
+  ["site", "Main site"],
+] as const;
+/** Whether an account is attached yet. Paired with status=paid this is the
+ * support query that matters: someone spent $49 and never signed up. */
+const ACCOUNTS = [
+  ["all", "Claimed or not"],
+  ["claimed", "Has an account"],
+  ["unclaimed", "No account yet"],
+] as const;
 const VERDICTS = ["all", "PROCEED_NOW", "REFINE_FIRST", "DO_NOT_PATENT"] as const;
 const SORTS = [
   ["newest", "Newest first"],
@@ -92,6 +104,13 @@ export function FilterBar({
     // whatever the admin filters to next.
     sp.delete("notice");
     const qs = sp.toString();
+    // A filtered ledger is a server round-trip, and until it lands the old
+    // rows stay on screen — nothing about the page says the click registered.
+    // Drive the same top bar a link navigation drives, so filtering looks like
+    // every other page load in the console. Skipped when the URL doesn't
+    // actually change: nothing would commit, and the bar would hang until its
+    // own 8s safety timeout.
+    if (qs !== params.toString()) startRouteProgress();
     startTransition(() => router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false }));
   };
 
@@ -148,6 +167,7 @@ export function FilterBar({
           type="button"
           onClick={() => {
             setQ("");
+            if (params.toString()) startRouteProgress();
             startTransition(() => router.replace(pathname, { scroll: false }));
           }}
           className="h-9 rounded-full px-3 text-sm text-muted transition-colors hover:text-ink"
@@ -156,12 +176,19 @@ export function FilterBar({
         </button>
       )}
 
+      {/* In-place confirmation that the filter was taken, next to the control
+          that was just changed — the top bar alone is easy to miss when the
+          eye is on the dropdown. `role="status"` announces it too. */}
       <span
-        aria-hidden
-        className={`h-1.5 w-1.5 rounded-full bg-gold transition-opacity duration-200 ${
+        role="status"
+        aria-live="polite"
+        className={`inline-flex h-9 items-center gap-2 px-1 text-sm text-muted transition-opacity duration-200 ${
           isPending ? "opacity-100" : "opacity-0"
         }`}
-      />
+      >
+        <Spinner className="h-3.5 w-3.5" />
+        {isPending ? "Updating…" : ""}
+      </span>
     </div>
   );
 }
@@ -177,12 +204,12 @@ export function AdminFilters() {
           key: "status",
           label: "Status",
           fallback: "all",
-          options: [
-            ...STATUSES.map((s) => [s, s === "all" ? "All statuses" : statusLabel(s)] as const),
-            UNCLAIMED_OPTION,
-            UNCLAIMED_PAID_OPTION,
-          ],
+          options: STATUSES.map(
+            (s) => [s, s === "all" ? "All statuses" : statusLabel(s)] as const,
+          ),
         },
+        { key: "source", label: "Source", fallback: "all", options: SOURCES },
+        { key: "account", label: "Account", fallback: "all", options: ACCOUNTS },
         {
           key: "verdict",
           label: "Verdict",

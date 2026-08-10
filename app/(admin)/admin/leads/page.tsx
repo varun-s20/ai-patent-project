@@ -1,4 +1,5 @@
 // app/(admin)/admin/leads/page.tsx
+import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Card } from "@/components/ui/card";
 import { formatDate } from "@/lib/ui/format";
@@ -12,6 +13,7 @@ import { ReturnTo } from "../_components/return-to";
 import { PAGE_SIZE, pageRange, parsePage } from "@/lib/admin/pagination";
 import type { LeadStatus } from "@/lib/types";
 import { COUNTRIES, type CountryCode } from "@/lib/phone";
+import { NOT_SITE_FORM } from "@/lib/admin/lead-source";
 
 export const dynamic = "force-dynamic";
 
@@ -116,19 +118,30 @@ export default async function AdminLeadsPage({
   const admin = createAdminClient();
   const { from, to } = pageRange(page);
 
+  // Landing-page leads only, on all three counts. The main site's /submit form
+  // writes a lead row too — same action, same table — but this view is a
+  // qualification queue for paid traffic: someone who found the site on their
+  // own and abandoned checkout is an idea to follow up in Submissions, not an
+  // ad click to call. Stripe's cancel URL returns to /submit, so those retries
+  // are filtered out here as well.
   const rowsQuery = admin
     .from("leads")
     .select(
       "id, full_name, email, phone, country, stage, patent_type, title, description, utm_source, utm_campaign, status, created_at",
     )
+    .or(NOT_SITE_FORM)
     .order("created_at", { ascending: false })
     .range(from, to);
 
-  const countQuery = admin.from("leads").select("id", { count: "exact", head: true });
+  const countQuery = admin
+    .from("leads")
+    .select("id", { count: "exact", head: true })
+    .or(NOT_SITE_FORM);
 
   const pendingQuery = admin
     .from("leads")
     .select("id", { count: "exact", head: true })
+    .or(NOT_SITE_FORM)
     .eq("status", "new");
 
   const [
@@ -144,7 +157,11 @@ export default async function AdminLeadsPage({
     <main>
       <SectionHead title="Leads" count={totalCount ?? rows.length} />
       <p className="mt-2 text-sm text-muted">
-        Everyone who filled the ad landing-page form.{" "}
+        Ad landing-page form fills only — ideas submitted on the main site are in{" "}
+        <Link href="/admin/submissions?source=site" className="text-ink-2 underline-offset-2 hover:text-gold hover:underline">
+          Submissions
+        </Link>
+        .{" "}
         {(pendingCount ?? 0) > 0 ? (
           <span className="font-medium text-amber-700">{pendingCount} not contacted yet.</span>
         ) : (
@@ -229,7 +246,7 @@ export default async function AdminLeadsPage({
               {rows.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-5 py-8 text-center text-muted">
-                    No leads yet.
+                    No landing-page leads yet.
                   </td>
                 </tr>
               )}
@@ -270,7 +287,7 @@ export default async function AdminLeadsPage({
         ))}
         {rows.length === 0 && (
           <p className="rounded-xl border border-dashed border-line bg-paper/40 px-4 py-8 text-center text-sm text-muted">
-            No leads yet.
+            No landing-page leads yet.
           </p>
         )}
       </div>
