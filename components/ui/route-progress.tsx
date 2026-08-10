@@ -3,10 +3,24 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
+/** Manual start signal, for navigations that no link click precedes — the
+ * admin filter bar's `router.replace`, for instance. An event rather than an
+ * exported setter because the bar is mounted once, in the root layout, and
+ * has no other relationship with its callers. */
+const START_EVENT = "route-progress:start";
+
+/** Show the top loader for a navigation this component can't see coming. Only
+ * call it when the URL is genuinely about to change: with no route change to
+ * finish it, the bar hangs until its 8s safety timeout. */
+export function startRouteProgress(): void {
+  window.dispatchEvent(new Event(START_EVENT));
+}
+
 /**
  * Global page-navigation loader — an nprogress-style bar pinned to the very top
  * of the viewport. App Router gives no "navigation started" hook, so we infer it:
- *   • start  → a same-origin link click (covers every <Link>) or a back/forward
+ *   • start  → a same-origin link click (covers every <Link>), a back/forward,
+ *              or an explicit startRouteProgress() call
  *   • finish → the committed route actually changes (pathname/search effect)
  * The bar trickles toward 90% while in flight, then snaps to 100% and fades.
  */
@@ -83,12 +97,15 @@ export function RouteProgress() {
       start();
     };
     const onPopState = () => start();
+    const onManualStart = () => start();
 
     document.addEventListener("click", onClick, true);
     window.addEventListener("popstate", onPopState);
+    window.addEventListener(START_EVENT, onManualStart);
     return () => {
       document.removeEventListener("click", onClick, true);
       window.removeEventListener("popstate", onPopState);
+      window.removeEventListener(START_EVENT, onManualStart);
       clearTimers();
     };
   }, [start]);

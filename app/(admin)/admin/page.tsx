@@ -35,12 +35,22 @@ type RecentRow = {
 export default async function AdminOverviewPage() {
   const admin = createAdminClient();
 
-  const [total, paid, refunded, completed, failed, inFlight, users, pendingReferrals, drafts] =
-    await Promise.all([
-      // Scoped to owned rows: a public form fill now writes a draft on every
-      // visit whether or not anyone pays, and this is the console's headline
-      // count — it must describe owned work, not every idea ever typed in.
-      admin.from("submissions").select("id", { count: "exact", head: true }).not("user_id", "is", null),
+  const [
+    total,
+    paid,
+    refunded,
+    completed,
+    failed,
+    inFlight,
+    users,
+    pendingReferrals,
+    drafts,
+    engaged,
+  ] = await Promise.all([
+      // Every row, matching the unfiltered Submissions ledger exactly. It used
+      // to be scoped to owned rows, which made the console's headline number
+      // disagree with the ledger the card links to.
+      admin.from("submissions").select("id", { count: "exact", head: true }),
       admin.from("submissions").select("id", { count: "exact", head: true }).in("status", [...PAID_STATUSES]),
       admin.from("submissions").select("id", { count: "exact", head: true }).eq("status", "refunded"),
       admin.from("submissions").select("id", { count: "exact", head: true }).eq("status", "complete"),
@@ -55,6 +65,11 @@ export default async function AdminOverviewPage() {
       // Ideas described but never paid for. Not an error state — the warmest
       // list in the console, and nothing used to surface it.
       admin.from("submissions").select("id", { count: "exact", head: true }).eq("status", "draft"),
+      // Everything that got past payment. The throughput panels below are
+      // about the evaluation pipeline, so they must not divide by a total that
+      // is mostly abandoned form fills — "12% done" would describe checkout
+      // conversion, not whether the queue is moving.
+      admin.from("submissions").select("id", { count: "exact", head: true }).neq("status", "draft"),
     ]);
 
   const revenue = computeRevenue({
@@ -62,15 +77,15 @@ export default async function AdminOverviewPage() {
     refundedCount: refunded.count ?? 0,
   });
   const totalCount = total.count ?? 0;
+  const engagedCount = engaged.count ?? 0;
   const completedCount = completed.count ?? 0;
   const inFlightCount = inFlight.count ?? 0;
 
   const { data: recentData, error: recentError } = await admin
+    // Unscoped, like the total and the ledger: this is "the newest rows",
+    // and hiding the unowned ones made it disagree with both.
     .from("submissions")
-    // Same owned-rows scoping as the total above — otherwise this list is
-    // dominated by unpaid form fills instead of the work the console tracks.
     .select("id, title, status, email, created_at, evaluations(avg_score, verdict)")
-    .not("user_id", "is", null)
     .order("created_at", { ascending: false })
     .limit(8);
   const recent = (recentData ?? []) as RecentRow[];
@@ -87,6 +102,7 @@ export default async function AdminOverviewPage() {
     users,
     pendingReferrals,
     drafts,
+    engaged,
   ].find((r) => r.error)?.error;
 
   return (
@@ -107,7 +123,7 @@ export default async function AdminOverviewPage() {
         <Stat
           label="Total submissions"
           value={totalCount.toLocaleString()}
-          caption="all ideas on record"
+          caption={`all ideas on record · ${drafts.count ?? 0} still unpaid`}
           icon={Layers}
         />
         <Stat
@@ -119,7 +135,7 @@ export default async function AdminOverviewPage() {
         <ActiveEvalCard
           inFlight={inFlightCount}
           completed={completedCount}
-          total={totalCount}
+          total={engagedCount}
         />
       </div>
 
@@ -201,7 +217,7 @@ export default async function AdminOverviewPage() {
 
         <aside className="flex flex-col gap-5">
           <SystemHealth
-            total={totalCount}
+            total={engagedCount}
             completed={completedCount}
             inFlight={inFlightCount}
             users={users.count ?? 0}
