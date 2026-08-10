@@ -1,17 +1,25 @@
 import { Card } from "@/components/ui/card";
 import { RegisterForm } from "@/components/auth/register-form";
+import { lookupClaim } from "@/lib/claim/lookup";
 
 export default async function RegisterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; claim?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, claim } = await searchParams;
+  const claimed = await lookupClaim(claim);
+
   return (
     <main className="mx-auto flex w-full max-w-md flex-col px-6 py-16">
-      
-      <h1 className="mt-5 font-display text-4xl tracking-tight text-ink">
-        Create your account
+      {claimed && (
+        <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+          Payment received — &ldquo;{claimed.title}&rdquo; is registered and your evaluation is
+          running. Create your account to open your report and certificate.
+        </p>
+      )}
+      <h1 className="mt-5 text-4xl tracking-tight text-ink font-display">
+        {claimed ? "Finish your account" : "Create your account"}
       </h1>
       <Card className="mt-7">
         {error && (
@@ -19,10 +27,17 @@ export default async function RegisterPage({
             {error}
           </p>
         )}
-        <RegisterForm />
+        <RegisterForm
+          lockedEmail={claimed?.email}
+          lockedFullName={claimed?.fullName}
+          claimToken={claimed ? claim : undefined}
+        />
         <p className="mt-5 text-sm text-muted">
           Already have an account?{" "}
-          <a href="/login" className="font-medium text-gold underline-offset-2 hover:underline">
+          <a
+            href={claim ? `/login?claim=${encodeURIComponent(claim)}` : "/login"}
+            className="font-medium text-gold underline-offset-2 hover:underline"
+          >
             Log in
           </a>
         </p>

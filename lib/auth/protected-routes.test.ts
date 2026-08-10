@@ -7,7 +7,6 @@ describe("needsAuth", () => {
   // /submit, /dashboard and /admin — disabling a user stopped their next login
   // but not their current session's access to reports and Stripe checkout.
   it.each([
-    "/submit",
     "/dashboard",
     "/account",
     "/status/8f0c1e2a-0000-4000-8000-000000000000",
@@ -19,12 +18,14 @@ describe("needsAuth", () => {
     expect(needsAuth(path)).toBe(true);
   });
 
-  // Public by design: the marketing funnel, auth screens, and the certificate
+  // Public by design: the marketing funnel, auth screens, the payment-first
+  // submission form (open to anonymous visitors), and the certificate
   // verification page a customer shares with people who have no account.
   it.each([
     "/",
     "/login",
     "/register",
+    "/submit",
     "/patent-idea-check",
     "/verify/GC-AI-2026-A1B2C3",
   ])("leaves %s public", (path) => {

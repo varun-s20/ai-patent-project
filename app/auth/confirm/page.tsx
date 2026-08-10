@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { type EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { Eyebrow } from "@/components/ui/badge";
+import { claimAfterConfirm } from "@/app/auth/actions";
 
 /**
  * Email-confirmation landing — a CLIENT page on purpose.
@@ -56,7 +57,7 @@ export default function ConfirmPage() {
       // 1. Custom email template: `…/auth/confirm?token_hash=…&type=…`.
       if (tokenHash && type) {
         const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
-        if (!error) return done("/dashboard");
+        if (!error) return landing();
       }
 
       // 2. Default implicit flow: full session lands in the URL fragment. This is
@@ -66,23 +67,37 @@ export default function ConfirmPage() {
           access_token: accessToken,
           refresh_token: refreshToken,
         });
-        if (!error) return done("/dashboard");
+        if (!error) return landing();
       }
 
       // 3. PKCE flow: `?code=…` (only completes in the browser that signed up).
       else if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (!error) return done("/dashboard");
+        if (!error) return landing();
       }
 
       // Maybe a session already exists (e.g. detectSessionInUrl beat us to it).
       const { data } = await supabase.auth.getSession();
-      if (data.session) return done("/dashboard");
+      if (data.session) return landing();
 
       // The email is already confirmed by Supabase before this redirect; we just
       // couldn't establish a session here. Send them to sign in with a positive
       // notice — not a scary error.
       done("/login?notice=confirmed");
+    }
+
+    /** A payment-first signup has a submission waiting; everyone else goes to
+     * the dashboard as before. A claim failure is never fatal — the token
+     * stays live in their payment email, so the worst case is one extra
+     * click, not a lost report. */
+    async function landing() {
+      try {
+        const submissionId = await claimAfterConfirm();
+        if (submissionId) return done(`/status/${submissionId}`);
+      } catch (err) {
+        console.error("[confirm] claim failed:", err);
+      }
+      done("/dashboard");
     }
 
     function done(to: string) {
