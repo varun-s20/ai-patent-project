@@ -81,7 +81,17 @@ export function SiteFooter() {
             intellectual-property rights and is not a substitute for a registered patent
             attorney.
           </p>
-          <p className="mt-3 text-[13px] text-muted/70">© 2026 AI Patent Register</p>
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-muted/70">
+            <p>© 2026 AI Patent Register</p>
+            <a
+              href="https://digitalheroesco.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition-colors hover:text-ink"
+            >
+              Built by Digital Heroes
+            </a>
+          </div>
         </div>
       </div>
     </footer>
