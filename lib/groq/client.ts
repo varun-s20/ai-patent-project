@@ -9,9 +9,15 @@ import type { ChatClient, ChatCreateParams, ChatMessage } from "@/lib/ai/types";
 // (OpenRouter, Together, Fireworks) by just swapping env vars.
 const DEFAULT_BASE_URL = "https://api.groq.com/openai/v1";
 
-// A strong hosted Llama that comfortably fills the JSON our prompts demand —
-// unlike the local 8B, which under-fills arrays. Overridable via GROQ_MODEL.
-const DEFAULT_MODEL = "llama-3.3-70b-versatile";
+// Comfortably fills the JSON our prompts demand — unlike the local 8B, which
+// under-fills arrays. Overridable via GROQ_MODEL.
+//
+// Groq retires models without notice, and this default is load-bearing: on
+// 2026-08-24 `llama-3.3-70b-versatile` started 404ing ("model_not_found"),
+// which failed a paid evaluation through all its retries and auto-refunded a
+// real customer. Check `GET /openai/v1/models` before assuming this one is
+// still served.
+const DEFAULT_MODEL = "openai/gpt-oss-120b";
 
 /** The model Groq will actually run — what to record as `model_used`. */
 export function groqModel(): string {
