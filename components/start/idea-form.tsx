@@ -2,6 +2,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { startEvaluation, type StartState } from "@/app/(landing)/patent-idea-check/actions";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { CharacterCounter } from "@/components/ui/character-counter";
@@ -236,7 +237,16 @@ export function IdeaForm({
 
       <p className="text-[11.5px] leading-relaxed text-muted">
         Your idea is registered the moment you pay — not when the report finishes. No account
-        needed to start. We never share your idea with anyone.
+        needed to start. Your idea stays yours, and is never sold or published. By continuing
+        you agree to our{" "}
+        <Link href="/terms" className="underline underline-offset-2 hover:text-ink-2">
+          Terms
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="underline underline-offset-2 hover:text-ink-2">
+          Privacy Policy
+        </Link>
+        .
       </p>
     </form>
   );
