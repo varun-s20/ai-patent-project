@@ -2,6 +2,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { startEvaluation, type StartState } from "@/app/(landing)/patent-idea-check/actions";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { CharacterCounter } from "@/components/ui/character-counter";
@@ -44,6 +45,7 @@ export function IdeaForm({
   const [state, formAction] = useActionState<StartState, FormData>(startEvaluation, {});
   const referrerRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const trapRef = useRef<HTMLInputElement>(null);
 
   // Every field is controlled on purpose: React 19 resets a <form action={…}>
   // once the action returns, which wiped an entire hand-written invention
@@ -69,6 +71,10 @@ export function IdeaForm({
   // itself, not on its contents, so a second identical failure re-fires.
   useEffect(() => {
     if (!state.error && !state.fieldErrors) return;
+    // Whatever filled the honeypot would fill it again on the next submit,
+    // locking the visitor out of their own purchase in a loop. Clearing it
+    // here costs the trap nothing: a bot re-fills it, a browser won't.
+    if (trapRef.current) trapRef.current.value = "";
     const target =
       formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]') ?? formRef.current;
     target?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -204,10 +210,23 @@ export function IdeaForm({
       <input type="hidden" name="landingPath" value={attribution.landingPath} />
       <input ref={referrerRef} type="hidden" name="referrer" defaultValue="" />
 
-      {/* Honeypot. Off-screen rather than display:none, which some bots skip. */}
+      {/* Honeypot. Off-screen rather than display:none, which some bots skip.
+          readOnly on top of autoComplete/tabIndex because those two do not stop
+          a browser or password manager from filling it — readOnly does, while a
+          bot setting .value or posting the raw field still trips it. The label
+          text is part of the trap's addressing too: autofill matches on it as
+          well as on the name, so it must stay as anonymous as HONEYPOT_FIELD. */}
       <div className="absolute left-[-9999px] top-auto h-px w-px overflow-hidden" aria-hidden>
-        <label htmlFor="s-hp">Company website</label>
-        <input id="s-hp" name={HONEYPOT_FIELD} type="text" tabIndex={-1} autoComplete="off" />
+        <label htmlFor="s-hp">Subject</label>
+        <input
+          ref={trapRef}
+          id="s-hp"
+          name={HONEYPOT_FIELD}
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          readOnly
+        />
       </div>
 
       <div className="pt-1">
@@ -218,7 +237,16 @@ export function IdeaForm({
 
       <p className="text-[11.5px] leading-relaxed text-muted">
         Your idea is registered the moment you pay — not when the report finishes. No account
-        needed to start. We never share your idea with anyone.
+        needed to start. Your idea stays yours, and is never sold or published. By continuing
+        you agree to our{" "}
+        <Link href="/terms" className="underline underline-offset-2 hover:text-ink-2">
+          Terms
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="underline underline-offset-2 hover:text-ink-2">
+          Privacy Policy
+        </Link>
+        .
       </p>
     </form>
   );

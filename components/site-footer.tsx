@@ -18,6 +18,13 @@ const COLUMNS = [
       { href: "/", label: "Home" },
     ],
   },
+  {
+    heading: "Legal",
+    links: [
+      { href: "/terms", label: "Terms of Service" },
+      { href: "/privacy", label: "Privacy Policy" },
+    ],
+  },
 ];
 
 export function SiteFooter() {
@@ -28,7 +35,7 @@ export function SiteFooter() {
         className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent"
       />
       <div className="mx-auto max-w-6xl px-6 pt-16 pb-10">
-        <div className="grid gap-12 lg:grid-cols-[1.4fr_1fr]">
+        <div className="grid gap-12 lg:grid-cols-[1.1fr_1.2fr]">
           {/* Brand block with an action slot — the reference's footer CTA area. */}
           <div className="max-w-md">
             <div className="flex items-center gap-2.5">
@@ -55,7 +62,7 @@ export function SiteFooter() {
           </div>
 
           {/* Nav columns. */}
-          <div className="grid grid-cols-2 gap-8 text-[15px] sm:gap-16">
+          <div className="grid grid-cols-2 gap-8 text-[15px] sm:grid-cols-3 sm:gap-10">
             {COLUMNS.map((col) => (
               <div key={col.heading} className="flex flex-col gap-3">
                 <p className="text-xs uppercase tracking-[0.18em] text-muted/70">

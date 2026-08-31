@@ -6,10 +6,18 @@ import { COUNTRY_CODES, type CountryCode } from "@/lib/phone";
 export const FULL_NAME_MAX = 120;
 export const PHONE_MAX = 40;
 
-/** Bot trap. Named to look like a field worth filling, and lives here rather
- * than in actions.ts because a "use server" module may only export async
- * functions — the form and the action both need this exact string. */
-export const HONEYPOT_FIELD = "company_website";
+/** Bot trap. Lives here rather than in actions.ts because a "use server"
+ * module may only export async functions — the form and the action both need
+ * this exact string.
+ *
+ * The name matters more than it looks. This was `company_website`, which
+ * Chrome's autofill classifies as COMPANY_NAME (its matcher keys off the
+ * substring "company"), so picking a saved address profile on the visible
+ * name/email/phone fields silently filled the trap too — and a real paying
+ * customer was thrown away mid-form. Anything an autofill heuristic
+ * recognises (company, business, organisation, address, website, url, email,
+ * name, phone, fax, nickname) is unusable here. */
+export const HONEYPOT_FIELD = "subject_line";
 
 /** Attribution values arrive on the query string, so they are visitor-supplied
  * text on a page anyone can hit with any URL. Trimmed and capped rather than
