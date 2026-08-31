@@ -226,9 +226,31 @@ describe("startEvaluation", () => {
   it("writes nothing when the honeypot is filled", async () => {
     const fd = form();
     fd.set(HONEYPOT_FIELD, "https://spam.example");
-    expect(await caught(fd)).toBe("REDIRECT:/");
+
+    // Returned, never redirected: a redirect discards every field the visitor
+    // typed, and the trap fires on real people (browser autofill used to match
+    // the old field name) often enough that losing their work is the worse bug.
+    const result = await startEvaluation({}, fd);
+
+    expect(result.error).toBeTruthy();
     expect(leadInsert).not.toHaveBeenCalled();
     expect(insert).not.toHaveBeenCalled();
+    expect(sessionsCreate).not.toHaveBeenCalled();
+  });
+
+  it("gives a tripped honeypot the same wording as a failed save", async () => {
+    const fd = form();
+    fd.set(HONEYPOT_FIELD, "spam");
+    const trapped = await startEvaluation({}, fd);
+
+    // A distinguishable rejection tells the next attempt which field to leave
+    // alone, so the trap must sound exactly like an ordinary server failure.
+    insert.mockReturnValue({
+      select: () => ({ single: async () => ({ data: null, error: { message: "boom" } }) }),
+    });
+    const failedSave = await startEvaluation({}, form());
+
+    expect(trapped.error).toBe(failedSave.error);
   });
 
   it("blocks the submit when the IP has hit the hourly throttle, before any writes", async () => {

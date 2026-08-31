@@ -23,9 +23,13 @@ export type StartState = {
   fieldErrors?: Record<string, string>;
 };
 
-/** Where a bot is sent. Indistinguishable from a page a human could land on,
- * so a distinguishable rejection never teaches the next attempt what to avoid. */
-const DECOY_PATH = "/";
+/** What a tripped honeypot returns. Deliberately the same generic wording as
+ * a failed save below, so a rejection never teaches the next attempt what to
+ * avoid — but a RETURN, not a redirect. This used to redirect to "/", which
+ * threw away everything a false-positive victim had typed, wrote no row and
+ * logged nothing, so the loss was both total and invisible. Returned state
+ * re-renders the form with every controlled field intact. */
+const TRAP_MESSAGE = "We couldn't save that — please try again, or email us directly.";
 
 /**
  * The payment-first entry point: contact details and the idea arrive together
@@ -44,7 +48,18 @@ export async function startEvaluation(
   _prev: StartState,
   formData: FormData,
 ): Promise<StartState> {
-  if (String(formData.get(HONEYPOT_FIELD) ?? "").trim()) redirect(DECOY_PATH);
+  const trap = String(formData.get(HONEYPOT_FIELD) ?? "").trim();
+  if (trap) {
+    // Logged, because the only other honeypot false positive we know about was
+    // found by a customer complaining, not by us. A value that reads like a
+    // person's own details (rather than link spam) means autofill tripped it
+    // again, and the email is who to go apologise to.
+    console.error("[start] honeypot tripped", {
+      value: trap,
+      email: String(formData.get("email") ?? ""),
+    });
+    return { error: TRAP_MESSAGE };
+  }
 
   // x-forwarded-for is the first proxy hop's list; the leftmost entry is the
   // client. It is spoofable in principle, which is exactly why this is a spam

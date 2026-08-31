@@ -20,7 +20,7 @@ function mockFetch(response: object, ok = true, status = 200) {
 describe("getGroq adapter", () => {
   it("sends a bearer-authed system + user message to /chat/completions and returns the reply", async () => {
     vi.stubEnv("GROQ_API_KEY", "test-key");
-    vi.stubEnv("GROQ_MODEL", "llama-3.3-70b-versatile");
+    vi.stubEnv("GROQ_MODEL", "qwen/qwen3.8-27b");
     const fetchFn = mockFetch({
       choices: [{ message: { role: "assistant", content: '{"ok":true}' } }],
     });
@@ -40,7 +40,7 @@ describe("getGroq adapter", () => {
     const headers = (init as RequestInit).headers as Record<string, string>;
     expect(headers.Authorization).toBe("Bearer test-key");
     const body = JSON.parse((init as RequestInit).body as string);
-    expect(body.model).toBe("llama-3.3-70b-versatile"); // from GROQ_MODEL, not params.model
+    expect(body.model).toBe("qwen/qwen3.8-27b"); // from GROQ_MODEL, not params.model
     expect(body.temperature).toBe(0);
     expect(body.max_tokens).toBe(256);
     expect(body.response_format).toEqual({ type: "json_object" });

@@ -33,7 +33,7 @@ describe("activeModel — what gets recorded as model_used", () => {
   it("defaults to the Groq model when AI_PROVIDER is unset", () => {
     vi.stubEnv("AI_PROVIDER", "");
     vi.stubEnv("GROQ_MODEL", "");
-    expect(activeModel()).toBe("llama-3.3-70b-versatile");
+    expect(activeModel()).toBe("openai/gpt-oss-120b");
   });
 
   it("honors GROQ_MODEL on the Groq provider", () => {

@@ -2,10 +2,13 @@ import { ShieldCheck, Clock, Check } from "@/components/ui/icons";
 import { InView } from "@/components/motion/in-view";
 
 // The privacy promises we can stand behind honestly — no fabricated guarantees.
+// "Never sold or published" rather than "never shared with third parties": the
+// invention text does go to our AI provider, under a no-training agreement, and
+// /terms says so. A claim the terms contradict is worse than a narrower true one.
 const GUARANTEES = [
-  "Never shared with third parties",
+  "Never sold or published",
   "You keep 100% ownership",
-  "Encrypted & access-controlled",
+  "Never used to train AI",
 ];
 
 /**
@@ -31,10 +34,10 @@ export function Assurance() {
               Your idea is yours. We won&apos;t take it.
             </h3>
             <p className="mt-4 max-w-xl text-base leading-relaxed text-ink-2">
-              Your submission is totally private and confidential. We never share it
-              with anyone — if you decide to file, we forward your report only to an
-              attorney <span className="text-ink">you</span> choose, and only with your
-              say-so.
+              Your submission is confidential. It is processed by our AI provider under a
+              written agreement that forbids training on it, and it is never sold or
+              published — if you decide to file, we forward your report only to an attorney{" "}
+              <span className="text-ink">you</span> choose, and only with your say-so.
             </p>
             <ul className="mt-7 flex flex-wrap gap-2">
               {GUARANTEES.map((g) => (
