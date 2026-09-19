@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { buildCheckoutParams, PRICE_CENTS } from "@/lib/stripe/checkout";
+import {
+  buildCheckoutParams,
+  PRICE_CENTS,
+  PRODUCT_DESCRIPTION,
+  SUBMIT_MESSAGE,
+} from "@/lib/stripe/checkout";
 
 describe("buildCheckoutParams", () => {
   const params = buildCheckoutParams({
@@ -88,5 +93,31 @@ describe("buildCheckoutParams for an owned submission with no session", () => {
   it("still prefers the claim route when a token exists", () => {
     const params = buildCheckoutParams({ ...base, claimToken: "tok", needsLogin: true });
     expect(params.success_url).toBe("https://x.test/register?claim=tok");
+  });
+});
+
+// The hosted page is the only screen where someone is asked for a card, and by
+// default it shows a bare product name and "$49.00". These two strings are the
+// entire explanation of what the money buys, so a silent drop is a conversion
+// bug nothing else would catch.
+describe("what the buyer actually sees on the Stripe page", () => {
+  const params = buildCheckoutParams({
+    submissionId: "sub-1",
+    email: "buyer@example.com",
+    baseUrl: "https://app.test",
+  });
+
+  it("describes the deliverables under the line item", () => {
+    const description = params.line_items![0].price_data!.product_data!.description;
+    expect(description).toBe(PRODUCT_DESCRIPTION);
+    expect(description).toMatch(/Certificate of Idea Registration/);
+  });
+
+  it("puts the delivery and refund promise above the pay button", () => {
+    // Stripe types `submit` as `"" | Submit` — the empty string is how you clear
+    // the field — so it needs narrowing before reading .message.
+    const submit = params.custom_text!.submit as { message: string };
+    expect(submit.message).toBe(SUBMIT_MESSAGE);
+    expect(SUBMIT_MESSAGE).toMatch(/refunded automatically/);
   });
 });

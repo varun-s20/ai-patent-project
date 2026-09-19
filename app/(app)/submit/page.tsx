@@ -47,8 +47,10 @@ export default async function SubmitPage({
               )}
               {canceled && (
                 <p className="mt-6 rounded-xl border border-line bg-card p-3 text-sm text-ink-2">
-                  No payment was taken. Your details are saved — fill the form again when
-                  you&apos;re ready and we&apos;ll pick up where you left off.
+                  {/* Said "we'll pick up where you left off" while handing back an
+                      empty form. Until a resume link exists, don't promise one. */}
+                  No payment was taken and nothing was charged. Fill the form in again whenever
+                  you&apos;re ready — it only takes a minute.
                 </p>
               )}
             </div>

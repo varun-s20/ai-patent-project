@@ -5,6 +5,7 @@ import { useState, type ReactNode } from "react";
 import { IdeaForm, type Attribution } from "@/components/start/idea-form";
 import { CertificatePreview } from "@/components/start/certificate-preview";
 import { UrgencyBadges } from "@/components/start/urgency-badges";
+import { OfferStrip } from "@/components/start/offer-strip";
 
 export type { Attribution };
 
@@ -43,6 +44,9 @@ export function StartPanel({
     <div className="grid items-start gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:gap-14">
       <div className="flex min-w-0 flex-col gap-10">
         {intro}
+        {/* Rendered here rather than by each page so /submit and
+            /patent-idea-check can never end up promising different things. */}
+        <OfferStrip />
         <CertificatePreview title={title} inventorName={name} />
       </div>
 

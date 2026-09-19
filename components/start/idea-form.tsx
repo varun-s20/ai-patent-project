@@ -7,7 +7,9 @@ import { startEvaluation, type StartState } from "@/app/(landing)/patent-idea-ch
 import { SubmitButton } from "@/components/ui/submit-button";
 import { CharacterCounter } from "@/components/ui/character-counter";
 import { CountrySelect } from "@/components/ui/country-select";
+import { Check, ShieldCheck } from "@/components/ui/icons";
 import { INDUSTRIES } from "@/lib/types";
+import { INCLUDED, REFUND_LINE, SECURE_LINE } from "@/lib/offer";
 import { FULL_NAME_MAX, HONEYPOT_FIELD, PHONE_MAX } from "@/lib/validation/lead";
 import { DESCRIPTION_MIN, TITLE_MAX } from "@/lib/validation/submission";
 
@@ -229,10 +231,48 @@ export function IdeaForm({
         />
       </div>
 
+      {/* What the $49 buys, immediately above the button that charges it. The
+          left column said this too, but on a phone that copy is scrolled a full
+          screen away by the time the button is in view — the summary has to sit
+          where the decision is actually made. */}
+      <div className="rounded-xl border border-line bg-paper/60 p-4">
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="text-[13px] font-semibold tracking-tight text-ink">Patent Idea Check</span>
+          <span className="text-[13px] font-semibold tabular-nums text-ink">
+            $49 <span className="font-normal text-muted">one-time</span>
+          </span>
+        </div>
+        <ul className="mt-3 flex flex-col gap-2 border-t border-line pt-3">
+          {INCLUDED.map((item) => (
+            <li key={item} className="flex items-start gap-2 text-[12.5px] leading-snug text-ink-2">
+              <Check aria-hidden className="mt-[2px] h-3.5 w-3.5 shrink-0 text-gold" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
       <div className="pt-1">
         <SubmitButton variant="gold" className="w-full py-3.5 text-base" pendingLabel="Opening checkout…">
           Evaluate for $49
         </SubmitButton>
+      </div>
+
+      {/* The two questions a buyer asks with their card already out. Both are
+          literally true and stay that way: Stripe hosts the card fields so they
+          never reach us, and evaluate-submission's onFailure really does refund
+          once its retries are exhausted. Terms clause 6 is the same promise in
+          full. Do not soften either line into a vaguer "guarantee" — and do not
+          strengthen it into a change-of-mind refund we don't offer. */}
+      <div className="flex flex-col gap-1.5">
+        <span className="flex items-start gap-2 text-[12px] leading-snug text-ink-2">
+          <ShieldCheck aria-hidden className="mt-[1px] h-3.5 w-3.5 shrink-0 text-gold" />
+          <span>{SECURE_LINE}</span>
+        </span>
+        <span className="flex items-start gap-2 text-[12px] leading-snug text-ink-2">
+          <Check aria-hidden className="mt-[2px] h-3.5 w-3.5 shrink-0 text-gold" />
+          <span>{REFUND_LINE}</span>
+        </span>
       </div>
 
       <p className="text-[11.5px] leading-relaxed text-muted">

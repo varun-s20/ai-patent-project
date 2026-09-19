@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Eyebrow } from "@/components/ui/badge";
 import { Check } from "@/components/ui/icons";
+import { REFUND_LINE } from "@/lib/offer";
 
 export default async function PayPage({
   params,
@@ -81,8 +82,12 @@ export default async function PayPage({
             Pay &amp; Evaluate
           </SubmitButton>
         </form>
+        {/* The refund promise comes from lib/offer so this card, the public
+            form and Stripe's own page can never word it differently. */}
         <p className="mt-3 text-center text-xs text-muted">
           Secure checkout via Stripe · Apple Pay &amp; Google Pay supported.
+          <br />
+          {REFUND_LINE}
         </p>
       </Card>
     </main>

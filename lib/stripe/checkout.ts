@@ -4,6 +4,23 @@ import { siteMeta } from "@/lib/stripe/client";
 export const PRICE_CENTS = 4900;
 export const PRODUCT_NAME = "AI Invention Evaluation";
 
+/** Shown as grey text under the product name in Stripe's order summary. Stripe
+ * renders it as plain text — markdown, HTML and newlines are all ignored and the
+ * field wraps as a single paragraph — so it has to read as one continuous
+ * sentence. Without it the buyer sees a bare "$49.00" and has to remember what
+ * they were told two pages ago. */
+export const PRODUCT_DESCRIPTION =
+  "Scored on novelty, commercial potential, defensibility, licensing and timing. " +
+  "Delivered as a PDF report plus a timestamped Certificate of Idea Registration.";
+
+/** Sits directly above the Pay button — the last thing read before committing.
+ * The refund sentence is not marketing: evaluate-submission's onFailure really
+ * does refund once retries are exhausted, so this promises nothing the pipeline
+ * doesn't already keep. If that behaviour ever changes, change this too. */
+export const SUBMIT_MESSAGE =
+  "Your report and certificate arrive by email within minutes. " +
+  "If the evaluation fails, you are refunded automatically.";
+
 /**
  * Builds the params for a one-time $49 Hosted Checkout Session.
  * Apple Pay / Google Pay appear automatically on the hosted page alongside cards.
@@ -48,11 +65,12 @@ export function buildCheckoutParams(args: {
         price_data: {
           currency: "usd",
           unit_amount: PRICE_CENTS,
-          product_data: { name: PRODUCT_NAME },
+          product_data: { name: PRODUCT_NAME, description: PRODUCT_DESCRIPTION },
         },
       },
     ],
     metadata,
+    custom_text: { submit: { message: SUBMIT_MESSAGE } },
     payment_intent_data: {
       metadata,
       ...(suffix ? { statement_descriptor_suffix: suffix } : {}),
