@@ -67,7 +67,7 @@ export async function generateMetadata({
   const loaded = await loadCertificate(certId);
   if (!loaded?.submission) return { title: "Certificate — AI Patent Register" };
   const title = `${loaded.submission.title} — Verified Certificate`;
-  const description = `${loaded.submission.title} by ${loaded.submission.inventor_name} is timestamped and AI-certified on the AI Patent Register.`;
+  const description = `${loaded.submission.title} by ${loaded.submission.inventor_name} is timestamped and AI-evaluated on the AI Patent Register.`;
   return {
     title,
     description,
@@ -131,7 +131,7 @@ export default async function VerifyPage({
               doc comment — and never rendered on this public page. */}
 
           <div className="mt-7 flex flex-wrap gap-2">
-            {["VERIFIED", "TIMESTAMPED", "AI CERTIFIED"].map((badge) => (
+            {["VERIFIED", "TIMESTAMPED", "AI EVALUATED"].map((badge) => (
               <span
                 key={badge}
                 className="rounded-full border border-gold/40 px-3 py-1 text-[10px] font-semibold tracking-[0.12em] text-gold"

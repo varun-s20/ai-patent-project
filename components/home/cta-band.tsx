@@ -20,7 +20,7 @@ export function CtaBand() {
           <div className="relative mx-auto grid max-w-[1500px] items-center gap-10 px-6 py-14 sm:px-12 sm:py-16 lg:grid-cols-[1.45fr_0.55fr] lg:px-20 lg:py-20">
             <div className="max-w-5xl">
               <h2 className="font-display text-[2.5rem] font-semibold leading-[1.04] tracking-tight text-cream sm:text-5xl lg:text-6xl">
-                Your next <span className="text-gold text-6xl font-extrabold lg:text-7xl">BIG</span> idea deserves a second opinion and protection today.
+                Your next <span className="text-gold text-6xl font-extrabold lg:text-7xl">BIG</span> idea deserves a second opinion before you pay for protection.
               </h2>
               <p className="mt-5 max-w-xl text-xl leading-relaxed text-cream/70">
                 Five minutes to know whether to file, refine, or walk away.

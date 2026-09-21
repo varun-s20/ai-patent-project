@@ -16,7 +16,7 @@ export const cert = {
 export const SEALS: { label: string }[] = [
   { label: "VERIFIED" },
   { label: "TIMESTAMPED" },
-  { label: "AI CERTIFIED" },
+  { label: "AI EVALUATED" },
 ];
 
 export const certStyles = StyleSheet.create({

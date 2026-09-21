@@ -127,7 +127,7 @@ export default async function PatentIdeaCheckPage({
                   </div>
                 </div>
                 <p className="mt-3 max-w-md text-[13px] leading-relaxed text-muted">
-                  The same five-dimension first read, one flat fee, no retainer.
+                  A five-dimension first read, one flat fee, no retainer.
                 </p>
               </InView>
 

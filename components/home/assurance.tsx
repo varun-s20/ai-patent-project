@@ -62,14 +62,14 @@ export function Assurance() {
               <Clock className="h-5 w-5 text-gold-bright" />
             </div>
             <h3 className="relative mt-6 font-display text-2xl font-semibold tracking-tight text-cream sm:text-3xl">
-              An unprotected idea has no record.
+              An idea with no record is hard to prove.
             </h3>
             <p className="relative mt-4 max-w-xl text-base leading-relaxed text-cream/75">
               IP theft costs the U.S. an estimated{" "}
               <span className="text-gold-bright">$225 to $600 billion</span> a year, yet only
               about <span className="text-cream">1 in 10</span> inventors take even the first
-              step to protect an idea. A timestamped registration is proof of who had it
-              first.
+              step to protect an idea. A timestamped record shows when you had it; it is
+              not a patent.
             </p>
             <p className="relative mt-5 text-[11px] leading-relaxed text-cream/60">
               Sources: U.S. IP Commission estimate; FindLaw inventor survey.

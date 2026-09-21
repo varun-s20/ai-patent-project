@@ -35,15 +35,16 @@ export function Hero() {
         <div className="max-w-7xl">
           <InView>
             <h1 className="font-display text-[2.75rem] font-semibold leading-[1.04] tracking-tight text-ink sm:text-6xl lg:text-7xl">
-              Got a great idea worth protecting? Save thousands before you file.
+              Know if your idea is worth protecting, before you pay thousands to file.
             </h1>
           </InView>
 
           <InView delay={0.1}>
             <p className="mt-6 max-w-[52ch] text-lg leading-relaxed text-ink-2 sm:text-xl">
               A patent attorney charges up to <span className="text-ink">$10,000</span> to
-              evaluate an idea and certify it. We do the same five-dimension read, report,
-              and timestamped record for <span className="text-ink">$49</span>.
+              evaluate an idea and certify it. We do a five-dimension read, report, and
+              timestamped record for <span className="text-ink">$49</span>, before you pay
+              thousands for the next step: patent protection with an attorney.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <CtaLink href="/submit">Evaluate for $49</CtaLink>
