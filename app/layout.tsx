@@ -8,6 +8,7 @@ import { SiteAtmosphere } from "@/components/site-atmosphere";
 import { RecoveryGate } from "@/components/auth/recovery-gate";
 import { ChromeGate } from "@/components/chrome-gate";
 import { RouteProgress } from "@/components/ui/route-progress";
+import { GoogleTagManagerHead, GoogleTagManagerNoScript } from "@/components/google-tag-manager";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,7 +36,11 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <GoogleTagManagerHead />
+      </head>
       <body className="flex min-h-full flex-col overflow-x-clip bg-paper text-ink">
+        <GoogleTagManagerNoScript />
         {/* Without JS, Framer Motion's `initial={{opacity:0}}` never flips to
             visible (it only resolves via a mount effect) — every scroll-reveal
             component (InView/Stagger/StaggerItem, tagged `.js-reveal`) would
