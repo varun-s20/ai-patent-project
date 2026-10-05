@@ -29,18 +29,14 @@ export function buildCheckoutParams(args: {
   submissionId: string;
   email: string;
   baseUrl: string;
-  /** Set only for the payment-first path. An anonymous payer has no session to
-   * return to, so success lands on registration carrying the claim token
-   * instead of on the auth-gated status page, which would bounce them to
-   * /login with no explanation of what just happened to their $49. */
+  /** Set only for the payment-first path. Success no longer depends on it (see
+   * success_url), but a cancelled anonymous payer can't open the auth-gated
+   * /pay page, so cancel returns them to the public form instead. */
   claimToken?: string;
-  /** The third case: signed out, but the email already belongs to an account,
-   * so the submission is owned at insert and there is no token to claim. They
-   * still can't open the gated status page — send them through login with the
-   * destination attached rather than dumping them on a bare form. */
+  /** Signed out, but the email already belongs to an account: same reason as
+   * claimToken, the cancel route has to be the public form. */
   needsLogin?: boolean;
 }): Stripe.Checkout.SessionCreateParams {
-  const statusPath = `/status/${args.submissionId}`;
   // Session metadata does NOT propagate to the PaymentIntent, so the same tags
   // go on both: `checkout.session.*` events read one, `payment_intent.*` and
   // `charge.*` (refunds, disputes) read the other. Tag only one and half the
@@ -75,11 +71,12 @@ export function buildCheckoutParams(args: {
       metadata,
       ...(suffix ? { statement_descriptor_suffix: suffix } : {}),
     },
-    success_url: args.claimToken
-      ? `${args.baseUrl}/register?claim=${encodeURIComponent(args.claimToken)}`
-      : args.needsLogin
-        ? `${args.baseUrl}/login?next=${encodeURIComponent(statusPath)}&notice=paid`
-        : `${args.baseUrl}${statusPath}?paid=1`,
+    // ONE landing page for every paid checkout: marketing tracks
+    // /payment-confirmed as the purchase URL. The /return hop stashes the
+    // session id in a cookie; the page verifies it with Stripe, then routes
+    // onward (register / login / status) via lib/payment/next-step.ts. Stripe
+    // fills in the literal {CHECKOUT_SESSION_ID} — it must not be URL-encoded.
+    success_url: `${args.baseUrl}/payment-confirmed/return?session_id={CHECKOUT_SESSION_ID}`,
     // ponytail: a cancelled anonymous payer loses the typed form and starts
     // over; the lead row is already saved so nothing is lost on our side. Add
     // a /resume/<token> page if abandoned checkouts turn out to come back.

@@ -40,7 +40,9 @@ describe("buildCheckoutParams", () => {
   });
 
   it("routes success and cancel urls", () => {
-    expect(params.success_url).toBe("https://app.test/status/sub-1?paid=1");
+    expect(params.success_url).toBe(
+      "https://app.test/payment-confirmed/return?session_id={CHECKOUT_SESSION_ID}",
+    );
     expect(params.cancel_url).toBe("https://app.test/pay/sub-1?canceled=1");
   });
 
@@ -57,10 +59,12 @@ describe("buildCheckoutParams", () => {
 describe("buildCheckoutParams with a claim token", () => {
   const base = { submissionId: "sub-1", email: "ada@example.com", baseUrl: "https://x.test" };
 
-  it("sends an anonymous payer to registration carrying the token", () => {
+  // The onward register/login/status choice moved to the landing page
+  // (lib/payment/next-step.ts) so marketing has one purchase URL to track.
+  it("lands an anonymous payer on the shared confirmation page", () => {
     const params = buildCheckoutParams({ ...base, claimToken: "tok+en/with=chars" });
     expect(params.success_url).toBe(
-      "https://x.test/register?claim=tok%2Ben%2Fwith%3Dchars",
+      "https://x.test/payment-confirmed/return?session_id={CHECKOUT_SESSION_ID}",
     );
   });
 
@@ -71,7 +75,9 @@ describe("buildCheckoutParams with a claim token", () => {
 
   it("leaves the logged-in flow exactly as it was", () => {
     const params = buildCheckoutParams(base);
-    expect(params.success_url).toBe("https://x.test/status/sub-1?paid=1");
+    expect(params.success_url).toBe(
+      "https://x.test/payment-confirmed/return?session_id={CHECKOUT_SESSION_ID}",
+    );
     expect(params.cancel_url).toBe("https://x.test/pay/sub-1?canceled=1");
   });
 });
@@ -80,19 +86,14 @@ describe("buildCheckoutParams for an owned submission with no session", () => {
   const base = { submissionId: "sub-1", email: "ada@example.com", baseUrl: "https://x.test" };
 
   // Signed out, but the email already had an account: the row is owned at
-  // insert, so there is no claim token — and the status page is auth-gated,
-  // so landing there directly would bounce them to /login with no context.
-  it("sends them through login carrying the status page as the destination", () => {
+  // insert, so there is no claim token. The confirmation page routes them
+  // through login; cancel can't use the auth-gated /pay page.
+  it("lands on the confirmation page and cancels to the public form", () => {
     const params = buildCheckoutParams({ ...base, needsLogin: true });
     expect(params.success_url).toBe(
-      "https://x.test/login?next=%2Fstatus%2Fsub-1&notice=paid",
+      "https://x.test/payment-confirmed/return?session_id={CHECKOUT_SESSION_ID}",
     );
     expect(params.cancel_url).toBe("https://x.test/submit?canceled=1");
-  });
-
-  it("still prefers the claim route when a token exists", () => {
-    const params = buildCheckoutParams({ ...base, claimToken: "tok", needsLogin: true });
-    expect(params.success_url).toBe("https://x.test/register?claim=tok");
   });
 });
 
